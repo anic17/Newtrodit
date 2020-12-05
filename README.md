@@ -13,7 +13,6 @@ Simple console text editor written in C.
 Newtrodit will be released in a short time.
 
 **Copyright (c) 2020 anic17 Software**  
-
-
+  
 
 **_TUI based on GNU's Nano._**
