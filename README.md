@@ -8,6 +8,9 @@ Simple console text editor written in C.
 - File encoding changing ANSI/UTF-8
 - Line and column of cursor
 
+## Manual
+To get future information and usage, press F1 at Newtrodit or run `newtrodit --help`
+
 ## When will Newtrodit released?
 
 Newtrodit will be released in a short time.
