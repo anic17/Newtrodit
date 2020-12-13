@@ -1,0 +1,52 @@
+
+[37;3mWhat is it Newtrodit?
+
+Newtrodit is a console text editor to modify files directly from terminal, without having to open new windows. Main goal is your efficency while working.
+
+
+
+[38;2;217;10;37;4mCommand line usage:[0m
+newtrodit [file] [switch]
+
+            --ansi  Reads file as ANSI (Default)
+            --help  Shows Newtrodit's help manual
+            --utf8  Reads file as UTF-8
+				
+
+				
+
+[38;2;217;10;37;4mUsage inside application[0m
+
+
+[37;113;235;37;1mKeyboard shortcuts[0m
+
+Keyboard shortcuts are abreviated. Here's a small list:
+
+'[38;2;207;50;68;4m^[0m'     = Control
+'[38;2;207;50;68;4mM-[0m'    = Alt
+'[38;2;207;50;68;4mS-[0m'    = Shift
+
+
+
+Control shortcuts:
+
+[38;2;207;50;68;4m^A[0m        = Selects all file text
+[38;2;207;50;68;4m^C[0m        = Copy selected text to clipboard; if no text is selected, copies the whole line
+[38;2;207;50;68;4m^F[0m        = Find string into the file
+[38;2;207;50;68;4m^G[0m        = Go to a specific line and column
+[38;2;207;50;68;4m^N[0m        = New file
+[38;2;207;50;68;4m^O[0m        = Open file
+[38;2;207;50;68;4m^R[0m        = Find and replace string
+[38;2;207;50;68;4m^S[0m        = Save file
+[38;2;207;50;68;4m^X[0m        = Exit Newtrodit
+[38;2;207;50;68;4m^0[0m - [38;2;207;50;68;4m^9[0m   = Change file to be edited (1/9)
+
+Function keys shortcuts:
+
+[38;2;207;50;68;4mF1[0m        = Shows help (manual)
+[38;2;207;50;68;4mF3[0m        = Searches next word when [38;2;207;50;68;4m^F[0m is pressed
+[38;2;207;50;68;4mF10[0m       = Opens a new terminal instance
+[38;2;207;50;68;4mS-F10[0m     = Opens a new terminal instance in current directory
+[38;2;207;50;68;4mM-F4[0m      = Same as [38;2;207;50;68;4m^X[0m (Exits Newtrodit)
+
+
