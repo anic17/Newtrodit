@@ -1,6 +1,9 @@
 # Newtrodit
 Simple console text editor written in C. 
 
+<img src="https://i.imgur.com/BtKcMDX.png">
+
+
 ## Ideas
 
 - Keyboard shortcuts
@@ -14,6 +17,7 @@ To get future information and usage, press F1 at Newtrodit or run `newtrodit --h
 ## When will Newtrodit released?
 
 Newtrodit will be released in a short time.
+
 
 **Copyright (c) 2020 anic17 Software**  
   
