@@ -58,6 +58,7 @@ void ShowBottomMenu()
 	printf("F1");
 	SetColor(0x07);
 	printf(" Help");
+	return;
 }
 
 void SetBackgroundColor()
@@ -86,11 +87,12 @@ void NewtroditNameLoad()
 	printf(" Newtrodit %s", newtrodit_version);
 }
 
-void BS()
+int BS(int x_position)
 {
 	putchar('\b');
 	putchar(' ');
 	putchar('\b');
+	return --x_position;
 }
 
 int QuitProgram(int posx, int posy)
@@ -122,8 +124,8 @@ int QuitProgram(int posx, int posy)
 
 int main(int argc, char *argv[])
 {
+	//char* str_save[] = { "blah", "hmm" };
 	int edit_file = 0;
-
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	WORD start_color;
 	HANDLE hConsoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -159,7 +161,7 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 		int c_read;
-		gotoxy(1, 0);
+		gotoxy(0, 1);
 		strcpy(filename_text, argv[1]);
 		while ((c_read = getc(newtrodit_write_argv)) != EOF)
 		{
@@ -177,6 +179,7 @@ int main(int argc, char *argv[])
 	char fileopenread[512];
 	char findstring[8192];
 	ClearScreen();
+
 	SetColor(0x70);
 
 	int xpos = 0, ypos = 1;
@@ -186,13 +189,17 @@ int main(int argc, char *argv[])
 
 	ShowBottomMenu();
 
+	
 	SetBackgroundColor();
 	CursorSettings(TRUE, 20);
+	
 	gotoxy(xpos, ypos);
+
 	char str[65536];
 	int index = 0;
 	int c;
 	int ch;
+
 	SetColor(0x07);
 	while (1)
 	{
@@ -248,11 +255,11 @@ int main(int argc, char *argv[])
 			{
 				puts("yunm");
 				//  || (getc(fread)) != 10
-				if (c == 10)
+				if (c == 13)
 				{
+					putchar('\r');
 					gotoxy(xpos, ++ypos);
 				}
-				else
 				{
 					putchar(c);
 				}
@@ -275,7 +282,7 @@ int main(int argc, char *argv[])
 
 		if(ch == 8)
 		{
-			BS();
+			xpos = BS(xpos);
 			putchar(' ');
 		}
 
@@ -298,14 +305,14 @@ int main(int argc, char *argv[])
 			{
 			case 72:
 				// Up arrow
-				if (ypos > 2)
+				if (ypos > 1)
 				{
 					gotoxy(xpos, --ypos);
 				}
 				break;
 			case 75:
 				// Left arrow
-				if (xpos > 2)
+				if (xpos > -1)
 				{
 					gotoxy(--xpos, ypos);
 				}
@@ -327,8 +334,9 @@ int main(int argc, char *argv[])
 		if (ch == 13)
 		{
 			index = 0;
-			xpos = 0;
-			gotoxy(xpos, ++ypos);
+			xpos = 0, ++ypos;
+			printf("\r\n");
+
 			continue;
 		}
 		if (ch == 6)
@@ -344,7 +352,6 @@ int main(int argc, char *argv[])
 				find_substring_len = strlen(str) - find_substring_index;
 				gotoxy(0, ypos);
 				gotoxy(find_substring_index, 2);
-				HANDLE Color = GetStdHandle(STD_OUTPUT_HANDLE);
 				SetColor(0x0e);
 				printf("yellow");
 			}
@@ -384,8 +391,10 @@ int main(int argc, char *argv[])
 			CloseClipboard();
 			// _! continue;
 		}
+
 		putchar(ch);
 		xpos++;
+
 		
 	}
 	SetColor(start_color);
