@@ -5,13 +5,14 @@
 #include <conio.h>
 #include <errno.h>
 #include <stdbool.h>
-#include "anictools.h"
+//#include "newtrodit_core.h"
 #include "manual.c"
+#include "dialog.h"
 
-#define XSIZE 120
-#define YSIZE 30
+#define XSIZE GetConsoleXDimension()
+#define YSIZE GetConsoleYDimension()
 
-const char newtrodit_version[20] = "0.1";
+
 
 char filename_text[MAX_FILENAME] = "Untitled";
 
@@ -87,12 +88,21 @@ void NewtroditNameLoad()
 	printf(" Newtrodit %s", newtrodit_version);
 }
 
-int BS(int x_position)
+void BS()
 {
+	putchar(' ');
+	putchar('\b');
 	putchar('\b');
 	putchar(' ');
 	putchar('\b');
-	return --x_position;
+}
+
+
+int PrintBottomString(char* bottom_string)
+{
+	gotoxy(0, GetConsoleYDimension()-1);
+	printf("%s", bottom_string);
+	return errno;
 }
 
 int QuitProgram(int posx, int posy)
@@ -100,7 +110,7 @@ int QuitProgram(int posx, int posy)
 	int rows = GetConsoleYDimension();
 	gotoxy(1, rows - 1);
 	SetColor(0x70);
-	printf("Are you sure you want to quit? (y/n)");
+	printf("%s", NEWTRODIT_PROMPT_QUIT);
 	int confirmquit = getch();
 	if (confirmquit == 89 || confirmquit == 121)
 	{
@@ -124,7 +134,7 @@ int QuitProgram(int posx, int posy)
 
 int main(int argc, char *argv[])
 {
-	//char* str_save[] = { "blah", "hmm" };
+	char str_save[][] = {0};
 	int edit_file = 0;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	WORD start_color;
@@ -138,7 +148,7 @@ int main(int argc, char *argv[])
 	int rows = GetConsoleYDimension();
 	if (cols < 54 || rows < 6)
 	{
-		MessageBox(0, "Console window is too small. Please resize it.", "Newtrodit", 16);
+		MessageBox(0, NEWTRODIT_ERROR_WINDOW_TOO_SMALL, "Newtrodit", 16);
 		return 0;
 	}
 	if (argc > 1)
@@ -171,7 +181,9 @@ int main(int argc, char *argv[])
 		SetColor(start_color);
 		return EXIT_SUCCESS;
 	}
-
+	int biggest_y_line = 1;
+	char save_destination[MAX_FILENAME];
+	int show_cursor_pos_window_size, save_file_dialog;
 	char *find_substring;
 	int find_substring_index;
 	int find_substring_len;
@@ -180,8 +192,6 @@ int main(int argc, char *argv[])
 	char findstring[8192];
 	ClearScreen();
 
-	SetColor(0x70);
-
 	int xpos = 0, ypos = 1;
 	SetColor(0x07);
 	NewtroditNameLoad();
@@ -189,10 +199,9 @@ int main(int argc, char *argv[])
 
 	ShowBottomMenu();
 
-	
 	SetBackgroundColor();
 	CursorSettings(TRUE, 20);
-	
+
 	gotoxy(xpos, ypos);
 
 	char str[65536];
@@ -203,9 +212,19 @@ int main(int argc, char *argv[])
 	SetColor(0x07);
 	while (1)
 	{
+		show_cursor_pos_window_size = GetConsoleYDimension();
+		gotoxy(0, show_cursor_pos_window_size - 1);
+		for (int i = 0; i < 17; ++i)
+		{
+			putchar(' ');
+		}
+		gotoxy(0, show_cursor_pos_window_size - 1);
+		printf("Ln %d, Col %d", ypos, xpos + 1);
+		gotoxy(xpos, ypos);
+
 		ch = getch();
 		str[index++] = ch;
-		
+
 		if (ch == 8)
 		{
 			if (xpos > 0)
@@ -225,7 +244,7 @@ int main(int argc, char *argv[])
 			gotoxy(1, rows - 1);
 			SetColor(0x70);
 
-			printf("File to open: ");
+			printf("%s", NEWTRODIT_PROMPT_FOPEN);
 			fgets(fileopenread, sizeof fileopenread, stdin);
 
 			fileread = fopen(fileopenread, "r");
@@ -268,7 +287,7 @@ int main(int argc, char *argv[])
 
 		if (ch == 3) // ^C
 		{
-			
+
 			size_t len = strlen(str) + 1;
 			HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
 			memcpy(GlobalLock(hMem), str, len);
@@ -280,23 +299,62 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-		if(ch == 8)
+		if (ch == 19) // ^S = Save
 		{
-			xpos = BS(xpos);
+		}
+		if (ch == 8)
+		{
+			xpos--;
 			putchar(' ');
 		}
 
-		if(ch == 7)
+		if (ch == 7) // ^G = Goto line
 		{
 
-			gotoxy(0,2);
-			printf("%d:%d", GetConsoleYDimension()-1, rows);
-			gotoxy(10, 0);
-			printf("Line number: ");
-			int line_number;
-			scanf("%d", &line_number);
-			gotoxy(xpos, line_number);
-			ypos = line_number;
+			int console_cols_gotoxy = GetConsoleXDimension();
+			gotoxy(0, GetConsoleYDimension()-1);
+			for(int i = 0; i < console_cols_gotoxy-1; ++i)
+			{
+				putchar(' ');
+			}
+
+			gotoxy(0, GetConsoleYDimension()-1);	
+			printf("%s", NEWTRODIT_PROMPT_GOTO_LINE);
+			char line_number_str[6];
+			int line_number_chr = 0, line_number_chr_index = 0;
+
+			while(line_number_chr != 13)
+			{
+				line_number_chr = getch();
+				if(line_number_chr > 47 && line_number_chr < 58)
+				{
+					if(atoi(line_number_str) >= 10000)
+					{
+						Alert();
+					} else {
+						line_number_str[line_number_chr_index++] = line_number_chr;
+					}
+				}
+				if(line_number_chr == 8)
+				{
+					BS();
+					line_number_chr_index--;
+				}
+			}
+			printf("%s", line_number_str);
+			getch();
+			exit(0);
+			if(atoi(line_number_str) < GetConsoleYDimension())
+			{
+				gotoxy(0, GetConsoleYDimension()-1);
+				printf("%s", NEWTRODIT_ERROR_CON_BUFFER_LIMIT);
+			}
+			ypos = atoi(line_number_str) ;
+			gotoxy(0, ypos);
+			printf("%d:%d", xpos, ypos);
+			ShowBottomMenu();
+			
+
 		}
 		if (ch == 224)
 		{
@@ -312,7 +370,7 @@ int main(int argc, char *argv[])
 				break;
 			case 75:
 				// Left arrow
-				if (xpos > -1)
+				if (xpos >= 1)
 				{
 					gotoxy(--xpos, ypos);
 				}
@@ -324,7 +382,13 @@ int main(int argc, char *argv[])
 
 			case 80:
 				// Down arrow
-				gotoxy(xpos, ++ypos);
+				if((ypos+1) >= 27)
+				{
+					Alert();
+				} else {
+					gotoxy(xpos, ++ypos);
+				}
+				
 				break;
 			}
 			continue;
@@ -333,16 +397,22 @@ int main(int argc, char *argv[])
 
 		if (ch == 13)
 		{
-			index = 0;
-			xpos = 0, ++ypos;
-			printf("\r\n");
 
+			index = 0;
+
+			xpos = 0;
+			str_save[ypos++][xpos] = '\n';
+			printf("\n");
+			if(biggest_y_line < ypos)
+			{
+				biggest_y_line++;
+			}
 			continue;
 		}
 		if (ch == 6)
 		{
 			gotoxy(1, YSIZE);
-			printf("String to find: ");
+			printf("%s", NEWTRODIT_PROMPT_FIND_STRING);
 			fgets(findstring, sizeof findstring, stdin);
 
 			if (strstr(str, findstring) != NULL)
@@ -378,6 +448,53 @@ int main(int argc, char *argv[])
 				getch();
 			}
 		}
+		if (ch == 19)
+		{
+			save_file_dialog = GetConsoleYDimension();
+
+			gotoxy(0, save_file_dialog);
+			for (int i = 0; i < save_file_dialog; ++i)
+			{
+				putchar(' ');
+			}
+			gotoxy(0, save_file_dialog);
+			printf("%s", NEWTRODIT_PROMPT_SAVE_FILE);
+			fgets(save_destination, sizeof save_destination, stdin);
+			size_t len_savedest = strlen(save_destination);
+			save_destination[len_savedest - 1] = '\0';
+			FILE *fp_savefile;
+			fp_savefile = fopen(save_destination, "w");
+
+
+			if (!fp_savefile)
+			{
+				gotoxy(0, save_file_dialog);
+				for (int i = 0; i < save_file_dialog; ++i)
+				{
+					putchar(' ');
+				}
+				gotoxy(0, save_file_dialog);
+				printf("%s: %s", save_destination, strerror(errno));
+				continue;
+			}
+
+			int save_index_x = 0, save_index_y = 1; // Save index
+			ClearScreen();
+			for(int i = 0; i < ypos; ++i)
+			{
+				printf("CHAR: \"%s\"\n", str_save[i]);
+			}
+
+			/* 
+			while(str_save[save_index_y] == NULL)
+			{
+				//for(int i = 0; i < )
+				fprintf(stdout, "%s", str_save[save_index_y]);
+			}
+			*/
+			fclose(fp_savefile);
+		}
+
 		if (ch == 22)
 		{
 			char *buffer;
@@ -391,10 +508,14 @@ int main(int argc, char *argv[])
 			CloseClipboard();
 			// _! continue;
 		}
-
-		putchar(ch);
 		xpos++;
-
+		str_save[ypos][xpos] = ch;
+		if(ch == 8)
+		{
+			BS();
+		} else {
+			putchar(ch);
+		}
 		
 	}
 	SetColor(start_color);
