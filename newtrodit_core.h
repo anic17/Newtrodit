@@ -1,10 +1,49 @@
+/*
+  Copyright 2020 anic17 Software
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of 
+  this software and associated documentation files (the "Software"), to deal in 
+  the Software without restriction, including without limitation the rights to 
+  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of 
+  the Software, and to permit persons to whom the Software is furnished to do so, 
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all 
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
+  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
+  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
+  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
+
 #include <string.h>
 #include <stdlib.h>
 #include <Windows.h>
 #include <ctype.h>
 #include <stdbool.h>
 
-const char newtrodit_version[20] = "0.1";
+#define XSIZE GetConsoleXDimension()
+#define YSIZE GetConsoleYDimension()
+
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#define DISABLE_NEWLINE_AUTO_RETURN  0x0008
+#define MAX_FILENAME 8192
+
+const char newtrodit_version[20] = "0.2";
+
+char *strlasttok(const char* path, int chartok)
+{
+    char *bs = strrchr(path, '\\');
+    if (!bs){
+      return strdup(path);
+    } else {
+      return strdup(bs+1);
+    } 
+}
 
 int gotoxy(int cursorx, int cursory)
 {
@@ -18,12 +57,12 @@ int gotoxy(int cursorx, int cursory)
     SetConsoleCursorPosition(hConsoleHandle,dwPos);
 }
 
+
+
 int SetColor(int color_hex)
 {
-    int h_1 = color_hex/16;
-    int h_2 = color_hex%16;
     HANDLE hConsoleColor = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(hConsoleColor, h_1<<4 | h_2);
+    SetConsoleTextAttribute(hConsoleColor, (color_hex/16)<<4 | (color_hex%16));
     return 0;
 }
 
@@ -34,39 +73,36 @@ void Alert()
 
 void ClearScreen()
 {
-  HANDLE					 hStdOut;
+  HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO csbi;
   DWORD					  count;
   DWORD					  cellCount;
   COORD					  homeCoords = { 0, 0 };
 
-  hStdOut = GetStdHandle( STD_OUTPUT_HANDLE );
-  if (hStdOut == INVALID_HANDLE_VALUE) return;
+  if (hStdOut == INVALID_HANDLE_VALUE){
+    return;
+  }
 
-  /* Get the number of cells in the current buffer */
-  if (!GetConsoleScreenBufferInfo( hStdOut, &csbi )) return;
+  if(!GetConsoleScreenBufferInfo(hStdOut, &csbi))
+  {
+    return;
+  }
   cellCount = csbi.dwSize.X *csbi.dwSize.Y;
 
-  /* Fill the entire buffer with spaces */
-  if (!FillConsoleOutputCharacter(
-	hStdOut,
-	(TCHAR) ' ',
-	cellCount,
-	homeCoords,
-	&count
+  if(!FillConsoleOutputCharacter(
+    hStdOut,
+    (TCHAR) ' ',
+    cellCount,
+    homeCoords,
+    &count
 	)) return;
 
 
-  if (!FillConsoleOutputAttribute(
-	hStdOut,
-	csbi.wAttributes,
-	cellCount,
-	homeCoords,
-	&count
-	)) return;
-
-  /* Move the cursor home */
-  SetConsoleCursorPosition( hStdOut, homeCoords );
+  if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
+  {
+    return;
+  }
+  SetConsoleCursorPosition(hStdOut, homeCoords);
 }
 
 int GetConsoleXDimension()
@@ -74,9 +110,9 @@ int GetConsoleXDimension()
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	int columns;
 
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-    columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-    return columns;
+  GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+  columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+  return columns;
 }
 
 int GetConsoleYDimension()
@@ -86,4 +122,21 @@ int GetConsoleYDimension()
   GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
   rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
   return rows;
+}
+void ClearLine(int line_clear)
+{
+	gotoxy(0, line_clear);
+	int console_size_clearline = GetConsoleXDimension();
+	for(int i = 0; i <console_size_clearline-1; i++)
+	{
+		putchar(' ');
+	}
+
+}
+
+int PrintBottomString(char* bottom_string)
+{
+	gotoxy(0, GetConsoleYDimension()-1);
+	printf("%s", bottom_string);
+	return 0;
 }
