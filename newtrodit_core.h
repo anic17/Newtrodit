@@ -30,40 +30,55 @@
 #define YSIZE GetConsoleYDimension()
 
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
-#define DISABLE_NEWLINE_AUTO_RETURN  0x0008
+#define DISABLE_NEWLINE_AUTO_RETURN 0x0008
 #define MAX_FILENAME 8192
 
 const char newtrodit_version[20] = "0.2";
 
-char *strlasttok(const char* path, int chartok)
+char *strlasttok(const char *path, int chartok)
 {
-    char *bs = strrchr(path, '\\');
-    if (!bs){
-      return strdup(path);
-    } else {
-      return strdup(bs+1);
-    } 
+  char *bs = strrchr(path, '\\');
+  if (!bs)
+  {
+    return strdup(path);
+  }
+  else
+  {
+    return strdup(bs + 1);
+  }
 }
 
 int gotoxy(int cursorx, int cursory)
 {
-    HANDLE hConsoleHandle;
-    hConsoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+  HANDLE hConsoleHandle;
+  hConsoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    COORD dwPos;
-    dwPos.X = cursorx;
-    dwPos.Y = cursory;
+  COORD dwPos;
+  dwPos.X = cursorx;
+  dwPos.Y = cursory;
 
-    SetConsoleCursorPosition(hConsoleHandle,dwPos);
+  SetConsoleCursorPosition(hConsoleHandle, dwPos);
 }
-
-
 
 int SetColor(int color_hex)
 {
-    HANDLE hConsoleColor = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(hConsoleColor, (color_hex/16)<<4 | (color_hex%16));
-    return 0;
+  HANDLE hConsoleColor = GetStdHandle(STD_OUTPUT_HANDLE);
+  SetConsoleTextAttribute(hConsoleColor, (color_hex / 16) << 4 | (color_hex % 16));
+  return 0;
+}
+
+int GetColor()
+{
+    WORD consolecolor;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+    {
+      consolecolor = csbi.wAttributes;
+    }
+        
+
+    return consolecolor;
 }
 
 void Alert()
@@ -75,28 +90,28 @@ void ClearScreen()
 {
   HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO csbi;
-  DWORD					  count;
-  DWORD					  cellCount;
-  COORD					  homeCoords = { 0, 0 };
+  DWORD count;
+  DWORD cellCount;
+  COORD homeCoords = {0, 0};
 
-  if (hStdOut == INVALID_HANDLE_VALUE){
-    return;
-  }
-
-  if(!GetConsoleScreenBufferInfo(hStdOut, &csbi))
+  if (hStdOut == INVALID_HANDLE_VALUE)
   {
     return;
   }
-  cellCount = csbi.dwSize.X *csbi.dwSize.Y;
 
-  if(!FillConsoleOutputCharacter(
-    hStdOut,
-    (TCHAR) ' ',
-    cellCount,
-    homeCoords,
-    &count
-	)) return;
+  if (!GetConsoleScreenBufferInfo(hStdOut, &csbi))
+  {
+    return;
+  }
+  cellCount = csbi.dwSize.X * csbi.dwSize.Y;
 
+  if (!FillConsoleOutputCharacter(
+          hStdOut,
+          (TCHAR)' ',
+          cellCount,
+          homeCoords,
+          &count))
+    return;
 
   if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
   {
@@ -107,8 +122,8 @@ void ClearScreen()
 
 int GetConsoleXDimension()
 {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	int columns;
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  int columns;
 
   GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
   columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
@@ -117,26 +132,25 @@ int GetConsoleXDimension()
 
 int GetConsoleYDimension()
 {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	int rows;
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  int rows;
   GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
   rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
   return rows;
 }
 void ClearLine(int line_clear)
 {
-	gotoxy(0, line_clear);
-	int console_size_clearline = GetConsoleXDimension();
-	for(int i = 0; i <console_size_clearline-1; i++)
-	{
-		putchar(' ');
-	}
-
+  gotoxy(0, line_clear);
+  int console_size_clearline = GetConsoleXDimension();
+  for (int i = 0; i < console_size_clearline; i++)
+  {
+    putchar(' ');
+  }
 }
 
-int PrintBottomString(char* bottom_string)
+int PrintBottomString(char *bottom_string)
 {
-	gotoxy(0, GetConsoleYDimension()-1);
-	printf("%s", bottom_string);
-	return 0;
+  gotoxy(0, GetConsoleYDimension() - 1);
+  printf("%s", bottom_string);
+  return 0;
 }
