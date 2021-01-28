@@ -4,12 +4,17 @@ Simple console text editor written in C.
 <img src="https://i.imgur.com/BtKcMDX.png">
 
 
-## Ideas
+## Features
 
-- Keyboard shortcuts
-- String finding
-- File encoding changing ANSI/UTF-8
+- Easy to use
+- Fast and light
 - Line and column of cursor
+
+## More features to come
+
+- String finding and string replacing
+- File encoding changing ANSI/UTF-8
+- Maybe hex editor?
 
 ## Manual
 To get future information and usage, press F1 at Newtrodit or run `newtrodit --help`
@@ -21,5 +26,3 @@ Newtrodit will be released in a short time.
 
 **Copyright (c) 2020 anic17 Software**  
   
-
-**_TUI based on GNU's Nano._**
