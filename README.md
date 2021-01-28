@@ -14,6 +14,7 @@ Simple console text editor written in C.
 
 - String finding and string replacing
 - File encoding changing ANSI/UTF-8
+- Syntax highlighting supporting different languages
 - Maybe hex editor?
 
 ## Manual
