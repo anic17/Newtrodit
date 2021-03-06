@@ -598,10 +598,11 @@ int main(int argc, char *argv[])
 					end_key_len = strlen(str_save[ypos - 1]);
 					xpos = end_key_len;
 					// printf("strlen(%d), \"%s\"", end_key_len, str_save[ypos]);
-					if (ypos == 2) {
-						xpos = 1;
-					}
 					gotoxy(xpos, --ypos);
+				}
+				else
+				{
+					Alert();
 				}
 				xpos--;
 			}
