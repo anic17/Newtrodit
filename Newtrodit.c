@@ -591,23 +591,20 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				xpos--;
-				//xpos-=2;
-				if (ypos < 2)
+				/* Act as END key */
+				if (ypos > 1) 
 				{
-					Alert();
-					xpos -= 1;
+					str_save[ypos][xpos - 1] = '\0';
+					end_key_len = strlen(str_save[ypos - 1]);
+					xpos = end_key_len;
+					// printf("strlen(%d), \"%s\"", end_key_len, str_save[ypos]);
+					gotoxy(xpos, --ypos);
 				}
 				else
 				{
-					/* Act as END key */
-
-					str_save[ypos][xpos - 1] = '\0';
-					end_key_len = strlen(str_save[ypos - 1]);
-					printf("strlen(%d), \"%s\"", end_key_len, str_save[ypos]);
-					xpos = end_key_len - 1;
-					gotoxy(end_key_len, --ypos);
+					Alert();
 				}
+				xpos--;
 			}
 		}
 		else
