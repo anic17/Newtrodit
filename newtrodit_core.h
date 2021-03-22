@@ -37,8 +37,8 @@
 #define DISABLE_NEWLINE_AUTO_RETURN 0x0008
 #define MAX_FILENAME 8192
 
-const char newtrodit_version[20] = "0.2";
-const char newtrodit_build_date[20] = "20/02/2020";
+const char newtrodit_version[20] = "0.3";
+const char newtrodit_build_date[20] = "22/03/2020";
 const char manual_file[] = "newtrodit.man";
 const int BUFFER_X = 6144;
 const int BUFFER_Y = 2048;
