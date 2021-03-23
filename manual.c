@@ -1,6 +1,5 @@
 #include "newtrodit_core.h"
 
-const char manual_file[] = "newtrodit.man";
 
 void TopHelpBar()
 {

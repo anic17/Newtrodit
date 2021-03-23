@@ -1,13 +1,3 @@
-void TopHelpBar()
-{
-	gotoxy(0, 0);
-	SetColor(0x70);
-	ClearLine(0);
-	gotoxy(0, 0);
-	printf("Newtrodit help");
-	SetColor(0x07);
-}
-
 //XSIZE-((XSIZE/2)+len/2)-1
 
 void CenterFileName(char *filename)

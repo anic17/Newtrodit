@@ -29,6 +29,7 @@
 #include <stdbool.h>
 #include <locale.h>
 #include "manual.c"
+#include "newtrodit_gui.h"
 
 int line = 0;
 int col = 0;
