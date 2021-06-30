@@ -26,4 +26,3 @@ Newtrodit will be released in a short time.
 
 
 **Copyright (c) 2020 anic17 Software**  
-  <img src="https://komarev.com/ghpvc/?username=anic17&color=ffffff" width="0" height="0">
