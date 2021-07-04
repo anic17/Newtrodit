@@ -25,26 +25,64 @@
 #include <Windows.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <direct.h>
+#include <tchar.h>
 #include "dialog.h"
+
 
 #define XSIZE GetConsoleXDimension()
 #define YSIZE GetConsoleYDimension()
 
-#define BOTTOM GetConsoleYDimension()-1
+#define BOTTOM GetConsoleYDimension() - 1
 
+#define ALT VK_MENU
+#define LALT VK_LMENU
+#define RALT VK_RMENU
+
+#define SHIFT VK_SHIFT
+#define LSHIFT VK_LSHIFT
+#define RSHIFT VK_RSHIFT
 
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #define DISABLE_NEWLINE_AUTO_RETURN 0x0008
 #define MAX_FILENAME 8192
 
 const char newtrodit_version[20] = "0.3";
-const char newtrodit_build_date[20] = "22/03/2020";
+const char newtrodit_build_date[20] = "30/06/2021";
 const char manual_file[] = "newtrodit.man";
 const int BUFFER_X = 6144;
 const int BUFFER_Y = 2048;
 
 char filename_text[MAX_FILENAME] = "Untitled";
+char settings_file[MAX_FILENAME] = "newtrodit.config";
 
+char *GetDir()
+{
+  char *curr_dir_buf = _getcwd(NULL, 0);
+}
+
+void StartProcess(char *command_line)
+{
+  STARTUPINFO si;
+  PROCESS_INFORMATION pi;
+  ZeroMemory(&si, sizeof(si));
+  si.cb = sizeof(si);
+  ZeroMemory(&pi, sizeof(pi));
+  CreateProcess(NULL, command_line, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
+  return;
+}
+
+int CheckKey(int keycode)
+{
+  if (GetKeyState(keycode) <= -127)
+  {
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
+}
 
 char *strlasttok(const char *path, int chartok)
 {
@@ -149,7 +187,6 @@ int GetConsoleYDimension()
   return rows;
 }
 
-
 void ClearLine(int line_clear)
 {
   gotoxy(0, line_clear);
@@ -182,9 +219,25 @@ void DisplayCursor(int disp)
   SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
 }
 
+void SetConsoleSize(int xs, int ys)
+{
+  HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+  COORD a;
+  a.X = xs;
+  a.Y = 300;
+
+  SMALL_RECT rect;
+  rect.Top = 0;
+  rect.Left = 0;
+  rect.Bottom = xs - 1;
+  rect.Right = ys - 1;
+
+  SetConsoleScreenBufferSize(handle, a);
+
+  SetConsoleWindowInfo(handle, 1, &rect);
+}
+
 void NewtroditBSOD(int errcode)
 {
-  SetColor(0x9f);
-  printf(":(\nNewtrodit ran into a problem and it crashed: %x", errcode);
-  SetColor(0x07);
+  printf("Newtrodit ran into a problem and it crashed: 0x%x", errcode);
 }
