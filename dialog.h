@@ -12,12 +12,18 @@ char NEWTRODIT_ERROR_INVALID_YPOS[] = "Invalid Y position for cursor.";
 char NEWTRODIT_ERROR_MEMORY_OVERFLOW[] = "Internal memory overflow.";
 char NEWTRODIT_ERROR_WINDOW_TOO_SMALL[] = "Console window is too small. Please resize it.";
 char NEWTRODIT_WARNING_RESIZED[] = "Warning: Newtrodit window resized.";
+char NEWTRODIT_WARNING_UNEXPECTED_ERRORS[] = "Warning: Unexpected errors may happen.";
+
+// Command-line arguments
+char NEWTRODIT_ERROR_ARGUMENT_WS[] = "Missing parameter. Usage: newtrodit --ws <file>";
+
+
 
 // File IO dialogs
 char NEWTRODIT_FS_FILE_TOO_BIG[] = "File too big: ";
 char NEWTRODIT_FS_FILE_CORRUPTED[] = "File corrupted and/or unreadable: ";
-char NEWTRODIT_FS_FILE_OPEN_ERR[] = "Deny of access while trying to open the file.";
-char NEWTRODIT_FS_FILE_SAVE_ERR[] = "Deny of access while trying to save the file.";
+char NEWTRODIT_FS_FILE_OPEN_ERR[] = "Error while trying to open the file.";
+char NEWTRODIT_FS_FILE_SAVE_ERR[] = "Error while trying to save the file.";
 char NEWTRODIT_FS_FILE_NOT_FOUND[] = "File not found: ";
 
 // Prompts
@@ -33,3 +39,10 @@ char NEWTRODIT_PROMPT_SAVE_FILE_AS[] = "Save file as: ";
 
 // Informational dialogas
 char NEWTRODIT_FILE_SAVED[] = "File saved successfully.";
+
+char NEWTRODIT_FIND_STRING_NOT_FOUND[] = "String not found.";
+char NEWTRODIT_FIND_STRING_F3_NEXT[] = "F3: Next occurrence\nESC: Quit";
+
+// Other dialogs
+
+char NEWTRODIT_DIALOG_BASIC_SHORTCUTS[] = "Basic shortcuts: ";
