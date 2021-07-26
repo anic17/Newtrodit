@@ -24,6 +24,7 @@ char NEWTRODIT_FS_FILE_TOO_BIG[] = "File too big: ";
 char NEWTRODIT_FS_FILE_CORRUPTED[] = "File corrupted and/or unreadable: ";
 char NEWTRODIT_FS_FILE_OPEN_ERR[] = "Error while trying to open the file.";
 char NEWTRODIT_FS_FILE_SAVE_ERR[] = "Error while trying to save the file.";
+char NEWTRODIT_FS_FILE_INVALID_NAME[] = "Invalid file name: ";
 char NEWTRODIT_FS_FILE_NOT_FOUND[] = "File not found: ";
 
 // Prompts
