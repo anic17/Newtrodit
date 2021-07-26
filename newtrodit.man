@@ -1,4 +1,4 @@
-  [1mWhat is Newtrodit?
+[1mWhat is Newtrodit?
  
  Newtrodit is a console-based text editor. As Windows doesn't include a console text editor, 
  Newtrodit is probably your best choice. Main goal is your efficency while working. 
@@ -19,8 +19,7 @@
          --lfunix
          --lfwin
 
- [38;2;217;10;37;4mUsage inside application[0m
-
+ [1m[38;2;217;10;37;4mUsage inside application[0m
 
  [37;113;235;37;1mNavigation[0m
 [0m
@@ -48,19 +47,20 @@
 
  Control shortcuts
 
- [38;2;207;50;68;4m^C[0m        = Copy selected text to clipboard; 
-             if no text is selected, copies the whole line
+ [38;2;207;50;68;4m^C[0m        = Copy line to clipboard
  [38;2;207;50;68;4m^G[0m        = Go to a specific line
  [38;2;207;50;68;4m^N[0m        = New file
  [38;2;207;50;68;4m^O[0m        = Open file
  [38;2;207;50;68;4m^S[0m        = Save file
+ [38;2;207;50;68;4mS-^S[0m      = Save file as
+ 
  [38;2;207;50;68;4m^X[0m        = Exit Newtrodit
 
  Function keys shortcuts
 
  [38;2;207;50;68;4mF1[0m        = Shows help (manual)
  [38;2;207;50;68;4mF10[0m       = Opens containing directory in Windows Explorer
- [38;2;207;50;68;4mS-F10[0m     = Opens a terminal instance
+ [38;2;207;50;68;4mS-F10[0m     = Opens a terminal instance in current directory
  [38;2;207;50;68;4mM-F4[0m      = Same as [38;2;207;50;68;4m^X[0m (Exits Newtrodit)
 
 
@@ -97,12 +97,11 @@
    - Karanveer Chouhan (TheKvc)
    - Tim Greller (timlg07)
    - Teoman Deniz (TeomanDeniz)
-   - sintrode (sintrode)
    - Teddy Astie (TSnake41)
 
  I would like to give special thanks to Kvc for his help and his feedback while developing Newtrodit.
 
- Newtrodit [$V]
- Build date [$B]
+ Newtrodit [0.3]
+ Build date [26/7/2021]
 
  Feel free to contribute here: [4mhttps://github.com/anic17/Newtrodit[0m
