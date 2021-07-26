@@ -1,22 +1,19 @@
 /*
-  Copyright 2020 anic17 Software
+	Newtrodit: A console text editor
+  Copyright (C) 2021  anic17 Software
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy of 
-  this software and associated documentation files (the "Software"), to deal in 
-  the Software without restriction, including without limitation the rights to 
-  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of 
-  the Software, and to permit persons to whom the Software is furnished to do so, 
-  subject to the following conditions:
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-  The above copyright notice and this permission notice shall be included in all 
-  copies or substantial portions of the Software.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
-  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
-  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>
 
 */
 
@@ -24,11 +21,10 @@
 #include <stdlib.h>
 #include <Windows.h>
 #include <ctype.h>
-#include <stdbool.h>
 #include <direct.h>
 #include <tchar.h>
+#include "newtrodit_buf.h"
 #include "dialog.h"
-
 
 #define XSIZE GetConsoleXDimension()
 #define YSIZE GetConsoleYDimension()
@@ -45,16 +41,20 @@
 
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #define DISABLE_NEWLINE_AUTO_RETURN 0x0008
-#define MAX_FILENAME 8192
 
-const char newtrodit_version[20] = "0.3";
-const char newtrodit_build_date[20] = "30/06/2021";
+#define SHIFT_RIGHT 1
+#define SHIFT_LEFT 0
+
+const char newtrodit_version[] = "0.3";
+const char newtrodit_build_date[] = "26/7/2021";
 const char manual_file[] = "newtrodit.man";
 const int BUFFER_X = 6144;
 const int BUFFER_Y = 2048;
+const int TAB_WIDE = 4;
+const int CURSIZE = 20;
 
-char filename_text[MAX_FILENAME] = "Untitled";
-char settings_file[MAX_FILENAME] = "newtrodit.config";
+char filename_text[FILENAME_MAX] = "Untitled";
+char settings_file[FILENAME_MAX] = "newtrodit.config";
 
 char *GetDir()
 {
@@ -197,11 +197,11 @@ void ClearLine(int line_clear)
   }
 }
 
-int PrintBottomString(char *bottom_string)
+void PrintBottomString(char *bottom_string)
 {
   gotoxy(0, GetConsoleYDimension() - 1);
   printf("%s", bottom_string);
-  return 0;
+  return;
 }
 
 void DisplayCursor(int disp)
@@ -237,7 +237,122 @@ void SetConsoleSize(int xs, int ys)
   SetConsoleWindowInfo(handle, 1, &rect);
 }
 
-void NewtroditBSOD(int errcode)
+char *shift_right(unsigned char insert_char, char *str_shift, int startpos)
 {
-  printf("Newtrodit ran into a problem and it crashed: 0x%x", errcode);
+
+  char sr_temp;
+  size_t len_shift_right = strlen(str_shift);
+
+  sr_temp = str_shift[len_shift_right - 1];                                     // Save last character because it'll be trimmed
+  memmove(str_shift + 1 + startpos, str_shift + startpos, len_shift_right - 1); // Move every character by one to the right
+  str_shift[startpos] = insert_char;                                            // Put the initial character
+  return str_shift;
+}
+
+char *shift_left(char *str_shift, int startpos)
+{
+  char sl_temp;
+  size_t len_shift_left = strlen(str_shift);
+  sl_temp = str_shift[0];                                                      // Save first character because it'll be trimmed
+  memmove(str_shift - 1 + startpos, str_shift + startpos, len_shift_left - 1); // Move every character by one to the left                                                                      // Restore first character
+  str_shift[len_shift_left] = '\0';                                            // Put a null character at the end
+  str_shift[0] = sl_temp;                                                      // Put the initial character back
+  return str_shift;
+}
+
+int nolflen(char *len_str)
+{
+  unsigned int n = 0, i = 0;
+  while (len_str[i] != NULL)
+  {
+    if (len_str[i] != 0x0A && len_str[n] != 0x0D)
+    {
+      n++;
+    }
+
+    i++;
+  }
+  return n;
+}
+
+void PrintTab(int tab_size)
+{
+  for (int i = 0; i < tab_size; ++i)
+  {
+    putchar(' ');
+  }
+}
+
+int CheckFile(char *filename)
+{
+  if ((_access(filename, 0)) != -1 && (_access(filename, 6)) != -1)
+  {
+    return 0;
+  }
+  else
+  {
+    return 1;
+  }
+}
+
+int FindString(char *str, char *find)
+{
+  int position_found = 0;
+  size_t find_len = strlen(str);
+  if (find_len > 0)
+  {
+    char *str_find = strstr(str, find);
+    if (str_find != NULL)
+    {
+      position_found = str_find - str;
+    }
+    else
+    {
+      return -1;
+    }
+  }
+  else
+  {
+    return -2;
+  }
+  return position_found;
+}
+
+char *tokback(char *s, char p)
+{
+  for (int i = strlen(s); i > 0; i--)
+  {
+    if (s[i] == p)
+    {
+      s[i] = '\0';
+      return s;
+    }
+  }
+  return s;
+}
+
+int tokback_pos(char *s, char p)
+{
+  for (int i = strlen(s); i > 0; i--)
+  {
+    if (s[i] == p)
+    {
+      return i;
+    }
+  }
+  return -1;
+}
+
+void BS()
+{
+  printf("\b \b");
+}
+
+
+char* join(char* s1, char* s2)
+{
+  char* s = (char*)malloc(strlen(s1) + strlen(s2) + 1);
+  strcpy(s, s1);
+  strcat(s, s2);
+  return s;
 }

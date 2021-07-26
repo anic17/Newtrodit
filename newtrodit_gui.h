@@ -1,3 +1,22 @@
+/*
+	Newtrodit: A console text editor
+    Copyright (C) 2021  anic17 Software
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>
+
+*/
+
 void TopHelpBar()
 {
 	gotoxy(0, 0);
@@ -6,6 +25,18 @@ void TopHelpBar()
 	gotoxy(0, 0);
 	printf(" Newtrodit help");
 	SetColor(0x07);
+	gotoxy(0, 1);
+	return;
+}
+
+void BottomHelpBar()
+{
+	SetColor(0x70);
+	ClearLine(YSIZE - 1);
+	PrintBottomString("^X  Close help  M-F4 Quit Newtrodit");
+	SetColor(0x07);
+	gotoxy(0, 1);
+	return;
 }
 
 //XSIZE-((XSIZE/2)+len/2)-1
@@ -21,6 +52,15 @@ void CenterFileName(char *filename)
 	SetColor(0x07);
 }
 
+void ShowFindMenu()
+{
+	ClearLine(YSIZE - 2);
+	ClearLine(YSIZE - 1);
+
+	gotoxy(0, GetConsoleYDimension() - 2);
+	printf("%s", NEWTRODIT_FIND_STRING_F3_NEXT);
+}
+
 void ShowBottomMenu()
 {
 	ClearLine(YSIZE - 2);
@@ -29,7 +69,7 @@ void ShowBottomMenu()
 	gotoxy(0, GetConsoleYDimension() - 2);
 
 	SetColor(0x07);
-	printf("Basic shortcuts: ");
+	printf(NEWTRODIT_DIALOG_BASIC_SHORTCUTS);
 	SetColor(0x70);
 	printf("^C");
 	SetColor(0x07);
@@ -43,7 +83,10 @@ void ShowBottomMenu()
 	SetColor(0x07);
 	printf(" Quit Newtrodit\n");
 	SetColor(0x07);
-	printf("                 ");
+	for (int i = 0; i < strlen(NEWTRODIT_DIALOG_BASIC_SHORTCUTS); i++)
+	{
+		printf(" ");
+	}
 	SetColor(0x70);
 	printf("^O");
 	SetColor(0x07);
@@ -71,22 +114,23 @@ void CursorSettings(int visible, int size)
 int QuitProgram(int color_quit)
 {
 	ClearLine(GetConsoleYDimension() - 1);
-	gotoxy(0, GetConsoleYDimension() - 1);
-	printf("%s", NEWTRODIT_PROMPT_QUIT);
+	PrintBottomString(NEWTRODIT_PROMPT_QUIT);
 	int confirmquit = getch();
-	if (confirmquit == 89 || confirmquit == 121)
+	if (toupper(confirmquit) == 89) // Y was answered
 	{
 		SetColor(color_quit);
 		ClearScreen();
+		RestoreBuffer();
 		exit(0);
 	}
 	else
 	{
+
 		if (confirmquit == 0 && getch() == 107)
 		{
 			printf("\a");
 		}
-
+		ClearLine(GetConsoleYDimension() - 1);
 		ShowBottomMenu();
 		SetColor(0x07);
 	}
@@ -95,36 +139,21 @@ int QuitProgram(int color_quit)
 
 void NewtroditNameLoad()
 {
-	gotoxy(0,0);
+	gotoxy(0, 0);
 	SetColor(0x70);
 	ClearLine(0);
-	gotoxy(0,0);
+	gotoxy(0, 0);
 	printf(" Newtrodit %s", newtrodit_version);
 	SetColor(0x07);
 }
 
-void BottomLineInput(const char *bottom_string)
-{
-	SetColor(0x07);
-	ClearLine(GetConsoleYDimension() - 1);
-	printf("%s", bottom_string);
-}
-
-void BS()
-{
-	putchar('\b');
-	putchar(' ');
-	putchar('\b');
-}
-
 void LoadAllNewtrodit()
 {
-	SetColor(0x07);
 	ClearScreen();
 	NewtroditNameLoad();
 	CenterFileName(filename_text);
 
 	ShowBottomMenu();
 
-	CursorSettings(TRUE, 20);
+	CursorSettings(TRUE, CURSIZE);
 }
