@@ -9,10 +9,11 @@ Simple console text editor written in C.
 - Easy to use
 - Fast and light
 - Line and column of cursor
+- String finding
 
 ## More features to come
 
-- String finding and string replacing
+- String replacing
 - File encoding changing ANSI/UTF-8
 - Syntax highlighting supporting different languages
 - Maybe hex editor?
@@ -25,4 +26,4 @@ To get future information and usage, press F1 at Newtrodit or run `newtrodit --h
 Newtrodit will be released in a short time.
 
 
-**Copyright (c) 2020 anic17 Software**  
+**Copyright (c) 2021 anic17 Software**  
