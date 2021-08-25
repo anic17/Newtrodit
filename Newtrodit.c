@@ -166,10 +166,6 @@ int main(int argc, char *argv[])
 		{
 			setlocale(LC_ALL, "");
 		}
-		if (!strcmp(argv[argc_shift - 1], "--utf8")) // File will be opened as UTF-8
-		{
-			setlocale(LC_ALL, "");
-		}
 		if (!strcmp(argv[argc_shift - 1], "--lfunix")) // Use UNIX new line
 		{
 			newlinestring[0] = '\n';
@@ -588,7 +584,7 @@ int main(int argc, char *argv[])
 					c = getch();
 					if(getch() == 0 && getch() == 61)
 					{
-						printf("next");
+						printf("Feature not available yet");
 						getche();
 					}
 					break;
