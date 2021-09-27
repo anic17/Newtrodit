@@ -29,8 +29,6 @@
 #include <signal.h>
 #include <time.h>
 
-char **str_save;
-
 struct SMALL_RECT
 {
 	SHORT left;
@@ -129,9 +127,8 @@ int LoadSettings(char *newtrodit_config_file, int *sigsegv, int *linecount, int 
 					}
 					if (!strcmp(setting_list[i], "devmode"))
 					{
-						printf("%d", abs(atoi(strtok(NULL, equalchar))));
-						MakePause();
-						if (1 == 1)
+
+						if (atoi(strtok(NULL, equalchar)) == 1)
 						{
 							*devmode = true;
 						}
@@ -210,7 +207,7 @@ int main(int argc, char *argv[])
 {
 	int hasNewLine = false; // Bool for newline in insert char
 	int lineCount = false;	// Bool for line count
-	int dev_tools = true;	// Bool to enable or disable the dev tools
+	int dev_tools = false;	// Bool to enable or disable the dev tools
 	int isSaved = false;	// Bool to check if file is saved
 	int insertChar = false; // Bool to check if replace instead of insert
 	int isModified = false;
@@ -231,7 +228,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	str_save = calloc(BUFFER_Y, BUFFER_X); // Allocate 1024 char pointers
+	char** str_save = calloc(BUFFER_Y, BUFFER_X); // Allocate 1024 char pointers
 	for (int i = 0; i < BUFFER_Y; ++i)
 	{
 		str_save[i] = calloc(BUFFER_Y, BUFFER_X); // Allocate 1024 bytes for each string
