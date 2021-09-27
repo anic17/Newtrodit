@@ -46,7 +46,7 @@ const char newtrodit_build_date[] = "27/9/2021";
 char manual_file[_MAX_PATH] = "newtrodit.man";
 char settings_file[_MAX_PATH] = "newtrodit.config";
 
-const char newtrodit_commit[] = "f3eab1"; // Example commit
+const char newtrodit_commit[] = ""; // Example commit
 
 char newlinestring[100] = "\n";
 

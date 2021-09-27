@@ -162,7 +162,7 @@
 
  I would like to give special thanks to Kvc for his help and his feedback while developing Newtrodit.
 
- Newtrodit $V [Commit $C]
+ Newtrodit $V
  Build date [$B]
 
  Feel free to contribute here: [4mhttps://github.com/anic17/Newtrodit[0m
