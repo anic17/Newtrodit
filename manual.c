@@ -18,23 +18,42 @@
 */
 
 #include "newtrodit_core.h"
-#include "newtrodit_gui.h"
+#include "newtrodit_gui.c"
+#include "newtrodit_func.c"
 
-
+int DownArrow(int man_line_count)
+{
+	if ((man_line_count - (1 * (YSIZE - 3) - 1)) > 0)
+	{
+		man_line_count = man_line_count - (1 * (YSIZE - 3) - 1);
+	}
+	else
+	{
+		man_line_count = man_line_count - (1 * (YSIZE - 3));
+	}
+	return man_line_count;
+}
 
 int NewtroditHelp()
 {
-	CursorSettings(FALSE, 20);
+	SetConsoleTitle("Newtrodit help");
+
+	CursorSettings(FALSE, CURSIZE);
 	int manual_ch;
 	ClearScreen();
 
-	DWORD l_mode;
+	gotoxy(0, 0);
+	TopHelpBar();
+
+	DWORD l_mode; // Process ANSI escape sequences
 	HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+
 	GetConsoleMode(hStdout, &l_mode);
 	SetConsoleMode(hStdout, l_mode |
 								ENABLE_VIRTUAL_TERMINAL_PROCESSING |
 								DISABLE_NEWLINE_AUTO_RETURN);
-	char manual_read_buffer;
+	SetColor(bg_color);
+
 	FILE *manual;
 	manual = fopen(manual_file, "rb");
 	if (!manual)
@@ -42,91 +61,222 @@ int NewtroditHelp()
 		char error_manual_not_found[512];
 		sprintf(error_manual_not_found, "%s: %s", manual_file, strerror(errno));
 		PrintBottomString(error_manual_not_found);
-		getch();
+			CursorSettings(TRUE, CURSIZE);
+		MakePause();
 		return errno;
 	}
-	int manual_buf_len = 0, old_manual_buf_len;
-	int finished_manual = 1;
-	char manual_buffer[8192];
+	int quit_manual = 0, max_manual_lines = 0;
+	int find_escape = false;
 
-	while (!feof(manual))
+	int man_line_count = 1, disable_clear = 0;
+	char **manual_buf = calloc(MANUAL_BUFFER_Y, MANUAL_BUFFER_X); // Allocate 300 char pointers
+	for (int i = 0; i < MANUAL_BUFFER_X; ++i)
 	{
-		TopHelpBar();
-		BottomHelpBar();
-		old_manual_buf_len = manual_buf_len;
-		manual_buf_len = 0;
+		manual_buf[i] = malloc(MANUAL_BUFFER_Y); // Allocate 2048 bytes for each string
+	}
+
+	while (fgets(manual_buf[man_line_count], MANUAL_BUFFER_X, manual)) // Load manual into memory
+	{
+		if (man_line_count + 1 >= MANUAL_BUFFER_X)
+		{
+			PrintBottomString(NEWTRODIT_ERROR_MANUAL_TOO_BIG);
+			MakePause();
+			return 1;
+		}
+		man_line_count++;
+		max_manual_lines++;
+	}
+	man_line_count = 1; // Reset line count
+
+	while (quit_manual == 0)
+	{
+
 		if (manual_ch != 0)
 		{
-			for (int i = 1; i < GetConsoleYDimension() - 2; i++)
+			TopHelpBar();
+			BottomHelpBar();
+			for (int i = 1; i < YSIZE - 2; i++)
 			{
 
-				if (fgets(manual_buffer, sizeof manual_buffer, manual))
+				if (man_line_count <= max_manual_lines)
 				{
-					manual_buffer[strlen(manual_buffer) - 1] = 0;
-					printf("%s\n", manual_buffer);
+					gotoxy(0, i);
+					if (manual_buf[man_line_count][strlen(manual_buf[man_line_count]) - 1] == '\n')
+					{
+						manual_buf[man_line_count][strlen(manual_buf[man_line_count]) - 1] = '\0';
+					}
+					if (FindString(manual_buf[man_line_count], "$") != -1)
+					{
+						for (int k = 0; k < strlen(manual_buf[man_line_count]); ++k)
+						{
+
+							if (manual_buf[man_line_count][k] == '$' && manual_buf[man_line_count][k + 1] != '\0')
+							{
+								find_escape = true;
+
+								switch (manual_buf[man_line_count][k+1])
+								{
+
+								case 'X':
+									printf("%d", BUFFER_X);
+									break;
+								case 'Y':
+									printf("%d", BUFFER_Y);
+
+									break;
+								case 'B':
+									printf("%s", newtrodit_build_date);
+
+									break;
+								case 'V':
+									printf("%s", newtrodit_version);
+									break;
+								case 'C':
+									printf("%s", newtrodit_commit);
+									break;
+								case '$':
+									putchar('$');
+									break;
+
+								default:
+								
+									break;
+								}
+							}
+							else
+							{
+								if (find_escape)
+								{
+									find_escape = !find_escape;
+								}
+								else
+								{
+									putchar(manual_buf[man_line_count][k]);
+								}
+							}
+						}
+						putchar('\n');
+					}
+					else
+					{
+						printf("%s\n", manual_buf[man_line_count]);
+					}
+
+					man_line_count++;
+					printf("%s", reset_color); // Clear all text attributes
 				}
-				manual_buf_len += strlen(manual_buffer);
+				else
+				{
+					quit_manual = 1;
+					printf("%s", reset_color);
+				}
 			}
 		}
-		printf("\e[0m"); // Clear all text attributes
-		manual_ch = getch();
 
-		switch (manual_ch)
+		if (quit_manual == 0)
 		{
-		case 24:
-			return 0;
-			break;
-		case 27:
-			return 0;
-			break;
-		case 0:
 			manual_ch = getch();
-			if (manual_ch == 107) // M-F4
+			switch (manual_ch)
 			{
-				QuitProgram(0x07);
-				manual_ch = 0;
-			}
-			break;
-		case 224:
+			case 24:
+				return 0;
+				break;
+			case 27:
+				return 0;
+				break;
+			case 0:
+				manual_ch = getch();
+				if (manual_ch == 107) // A-F4
+				{
+					QuitProgram(bg_color);
+					printf("%s", reset_color); // Clear all text attributes
+					BottomHelpBar();
+					manual_ch = 0;
+					break;
+				}
+				break;
+			case 13: // Enter
+				printf("%s", reset_color);
+				man_line_count = DownArrow(man_line_count);
+				break;
+			case 224:
+				manual_ch = getch();
+				switch (manual_ch)
+				{
+				case 73: // PageUp
+					printf("%s", reset_color);
 
-			manual_ch = getch();
-			if (manual_ch == 81) // PGDW key
-			{
+					ClearScreen();
+
+					if ((man_line_count - (YSIZE - 3)) > (YSIZE - 3))
+					{
+						man_line_count -= (2 * (YSIZE - 3)); // Multiplied by 2
+					}
+					else
+					{
+						disable_clear = true;
+						man_line_count = 1; // Set manual position to first line
+					}
+					break;
+				case 71: // HOME key
+					printf("%s", reset_color);
+
+					ClearScreen();
+					man_line_count = 1;
+					disable_clear = true;
+					break;
+
+				case 79: // END key
+					printf("%s", reset_color);
+
+					ClearScreen();
+					man_line_count = max_manual_lines - (YSIZE - 4);
+					break;
+
+				case 72: // Up arrow
+					printf("%s", reset_color);
+					if ((man_line_count - (1 * (YSIZE - 3) + 1)) > 0)
+					{
+						man_line_count = man_line_count - (1 * (YSIZE - 3) + 1);
+					}
+					else
+					{
+						man_line_count = man_line_count - (1 * (YSIZE - 3));
+						disable_clear = true;
+					}
+					break;
+				case 80: // Down arrow
+					printf("%s", reset_color);
+					man_line_count = DownArrow(man_line_count);
+					break;
+				default:
+					//man_line_count = man_line_count - (1 * (YSIZE - 3));
+
+					break;
+				}
+			default:
+
 				break;
 			}
-			if (manual_ch == 73) // PGUP key
-			{
-				ClearScreen();
-				fseek(manual, -(old_manual_buf_len), SEEK_CUR);
-			}
-			if (manual_ch == 80) // Down arrow
-			{
-				ClearScreen();
-				fseek(manual, -(old_manual_buf_len), SEEK_CUR);
-				if (manual_ch != 0)
-				{
-					for (int i = 1; i < GetConsoleYDimension() - 2; i++)
-					{
-
-						if (fgets(manual_buffer, sizeof manual_buffer, manual))
-						{
-							manual_buffer[strlen(manual_buffer) - 1] = 0;
-							printf("%s\n", manual_buffer);
-						}
-						manual_buf_len += strlen(manual_buffer);
-					}
-				}
-			}
-			break;
-		default:
-			break;
 		}
+
 		if (manual_ch != 0)
 		{
-			ClearScreen();
+			if (disable_clear == 1)
+			{
+				disable_clear = 0;
+			}
+			else
+			{
+				ClearScreen();
+			}
 		}
 		gotoxy(0, 1);
 	}
-	CursorSettings(TRUE, 20);
+	for (int i = 0; i < MANUAL_BUFFER_Y; i++)
+	{
+		free(manual_buf[i]);
+	}
+	CursorSettings(TRUE, CURSIZE);
 	return 0;
 }
