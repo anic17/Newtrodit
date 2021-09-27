@@ -1,28 +1,32 @@
-[1mWhat is Newtrodit?
+[1mWhat is Newtrodit?[0m
  
  Newtrodit is a console-based text editor. As Windows doesn't include a console text editor, 
- Newtrodit is probably your best choice. Main goal is your efficency while working. 
+ Newtrodit is probably your best choice. The editor is designed to be minimalistic and easy to use.
+ It doesn't use the mouse, and even if it uses only keyboard shortcuts, they're still easy to remember
+ due to the fact that they're similar to other text editors.
+ Main goal is your efficency when working.
 
 
  [38;2;217;10;37;4mCommand line usage:[0m
+
  newtrodit [switches] [file]
 
-         --ansi  Reads file as ANSI (Default)
-         --help  Shows Newtrodit's help manual
-         --utf8  Reads file as UTF-8
-         --log   Creates a log about the execution
-
-  It includes new line support for Unix (LF), Windows (CRLF) and Macintosh (CR). 
+         --line (-l) Displays line number
+         --help (-h) Shows Newtrodit's help manual
+         --sigsegv (-s) Displays a message when a SIGSEGV is caught
+         --version (-v) Shows Newtrodit's version
+         --bgcolor (-b) Changes the background color
+         
+  It includes new line support for Unix (LF) and Windows (CRLF).
   They are written as follows:
 
-         --lfmac
-         --lfunix
-         --lfwin
+         --lfunix (-n)
+         --lfwin (-w)
 
  [1m[38;2;217;10;37;4mUsage inside application[0m
 
  [37;113;235;37;1mNavigation[0m
-[0m
+
  You can use any other raw text editor navigation features. 
  To move between lines and columns, you may use arrow keys. 
  Minimal position is line 1 and column 1. 
@@ -36,64 +40,121 @@
  Keyboard shortcuts are written as follows:
 
  '[38;2;207;50;68;4m^[0m'     = Control
- '[38;2;207;50;68;4mM-[0m'    = Alt
+ '[38;2;207;50;68;4mA-[0m'    = Alt
  '[38;2;207;50;68;4mS-[0m'    = Shift
- '[38;2;207;50;68;4m~[0m'     = Enter
-
+ 
  Navigation inside the manual:
  
- '[38;2;207;50;68;4m^X[0m'      = Go back to Newtrodit
- [38;2;207;50;68;4mM-F4[0m      = Exit Newtrodit
+ [38;2;207;50;68;4m^X[0m        = Go back to Newtrodit
+ [38;2;207;50;68;4mA-F4[0m      = Exit Newtrodit
+ [38;2;207;50;68;4mPageUp[0m    = Go to the previous page
+ [38;2;207;50;68;4mPageDown[0m  = Go to the next page
+ [38;2;207;50;68;4mUp[0m        = Go to the previous line
+ [38;2;207;50;68;4mDown[0m      = Go to the next line
+ 
 
  Control shortcuts
 
  [38;2;207;50;68;4m^C[0m        = Copy line to clipboard
+ [38;2;207;50;68;4m^D[0m        = Show current line (dev mode needs to be enabled)
+
+ [38;2;207;50;68;4m^F[0m        = Find string
  [38;2;207;50;68;4m^G[0m        = Go to a specific line
  [38;2;207;50;68;4m^N[0m        = New file
  [38;2;207;50;68;4m^O[0m        = Open file
+ [38;2;207;50;68;4m^R[0m        = Reload file (same as '^N' and '^O')
  [38;2;207;50;68;4m^S[0m        = Save file
- [38;2;207;50;68;4mS-^S[0m      = Save file as
- 
+ [38;2;207;50;68;4m^V[0m        = Paste line from clipboard
  [38;2;207;50;68;4m^X[0m        = Exit Newtrodit
+
+ [38;2;207;50;68;4mS-^D[0m      = Enable/Disable dev mode
+ [38;2;207;50;68;4mS-^F[0m      = Find string (case insensitive)
+ [38;2;207;50;68;4mS-^L[0m      = Enable/Disable line count
+ [38;2;207;50;68;4mS-^S[0m      = Save file as
+
 
  Function keys shortcuts
 
  [38;2;207;50;68;4mF1[0m        = Shows help (manual)
+ [38;2;207;50;68;4mF2[0m        = Renames current file
+ [38;2;207;50;68;4mF3[0m        = Next find occurrence (can only be used after '[38;2;207;50;68;4m^F[0m')
+ [38;2;207;50;68;4mF5[0m        = Adds current date and time
+ [38;2;207;50;68;4m^F1[0m       = About Newtrodit
  [38;2;207;50;68;4mF10[0m       = Opens containing directory in Windows Explorer
  [38;2;207;50;68;4mS-F10[0m     = Opens a terminal instance in current directory
- [38;2;207;50;68;4mM-F4[0m      = Same as [38;2;207;50;68;4m^X[0m (Exits Newtrodit)
+ [38;2;207;50;68;4mA-F4[0m      = Same as [38;2;207;50;68;4m^X[0m (exits Newtrodit)
 
+ [37;113;235;37;1mSettings[0m
 
- [38;2;217;10;3  7;4mSettings[0m
- You may change default parameters by creating a file called 'newtrodit.config'
+ Newtrodit can be customizable by changing the settings.
 
- Brief explanation of the format:
+ Settings file must be located in the same directory as Newtrodit with the name 'newtrodit.config'.
+ It's a simple text file with one line per setting, with INI-like syntax.
 
-	Different settings have different names:
+ Comments are allowed in the settings file with the '[38;2;207;50;68m;[0m' and '[38;2;207;50;68m#[0m' characters.
+ 
+ [37;113;235;37;1mList of settings types[0m
 
-	CP (Default code page)
-	XS (Console size in columns)
-	YS (Console size in lines)
+   [1mString[0m       = String. This setting type stores a string of text.
+   [1mInteger[0m      = Integer. This setting type stores an integer.
+   [1mBoolean[0m      = Boolean. This setting type stores a boolean value (either 1 or 0).
 
-  Format structure:
-  The name of the setting and 2 ASCII characters from 0 to 255
+ [37;113;235;37;1mList of all settings:[0m
 
-  2 ASCII characters represent an unsigned short integer, with values from 0 to 65535.
-  Short integer is calculated as follows:
-  0xh1 + (255 * 0xh2)
+  -[1m converttab[0m    = Enable/Disable tab conversion from tabs to spaces. Boolean type.
+  -[1m devmode[0m       = Enable/Disable developer mode. Boolean type.
+  -[1m linecount[0m     = Enable/Disable line count. Boolean type.
+  -[1m sigsegv[0m       = Enable/Disable SIGSEGV handler. Boolean type.
 
-  Where 0xh1 is an hexadecimal value (e.g: 0xe9) and 0xh2 is the other value (e.g: 0xfd, in this case
-  the short integer would be 65001 (Unicode codepage))
+  -[1m bgcolor[0m       = Background color. Integer type (0-255).
+  -[1m codepage[0m      = Codepage. Integer type.
+  -[1m cursize[0m       = Console cursor size. Integer type.
+  -[1m fgcolor[0m       = Foreground color. Integer type (0-255).
+  -[1m linecountwide[0m = Line count width. Integer type.
+  -[1m tabwide[0m       = Tab width. Integer type.
+  -[1m xsize[0m         = X size of the window. Integer type.
+  -[1m ysize[0m         = Y size of the window. Integer type.
 
-  Finally, a line feed character (0x0a) is required to jump to the other setting
+  -[1m manfile[0m       = Name of the manual file. String type.
+  -[1m newline[0m       = New line string. Will be added to the end of each line. String type.
 
+  In case that a boolean or an integer setting is not a valid value, 0 will be used by default.
 
- [37;113;235;37;1mAbout Newtrodit:[0m
+  Warning: [1mnewline[0m must not be changed if you don't know what you're doing.
+           It can cause unexpected behavior and even crashes.
+
+ [38;2;255;255;160;1mExample of a settings file:[0m
+
+ [1m ; Settings file for Newtrodit[0m
+ [1m codepage=437[0m
+ [1m xsize=120[0m
+ [1m ysize=30[0m
+ [1m linecount=0[0m
+ [1m tabwide=8[0m
+ [1m manfile=newtrodit.man[0m
+ [1m linecountwide=3[0m
+[0m
+ [37;113;235;37;1mInternal working[0m
+
+ At the moment, Newtrodit has a buffer of $X x $Y, however, it has been found that this limit
+ can reach 6615 characters in X position without crashing. It may change depending on the system.
+ Newtrodit will crash at more than 1023 lines. This is due to the fact that the buffer is
+ a 2D array of characters. This is one of the main issues that Newtrodit has to deal with.
+
+ It has been coded in C to have maximum performance. At the moment it's only compatible with
+ Windows because it uses the Windows API to display the GUI.
+
+ [37;113;235;37;1mLicense[0m
+ 
+ Newtrodit is licensed under the GNU General Public License version 3.0.
+ See [4mhttps://www.gnu.org/licenses[0m for more details.
+
+ [37;113;235;37;1mAbout Newtrodit[0m
  
  Newtrodit is a free open-source program created by anic17 with some contributions by other members.
  Started working at the ending of 2020, it's now another way to code in Windows.
 
- Here's a list of people who contributed and helped to the creation of this project:
+ Here's a list of people who contributed and helped in the creation of this project:
    - Karanveer Chouhan (TheKvc)
    - Tim Greller (timlg07)
    - Teoman Deniz (TeomanDeniz)
@@ -101,7 +162,7 @@
 
  I would like to give special thanks to Kvc for his help and his feedback while developing Newtrodit.
 
- Newtrodit [0.3]
- Build date [26/7/2021]
+ Newtrodit $V [Commit $C]
+ Build date [$B]
 
  Feel free to contribute here: [4mhttps://github.com/anic17/Newtrodit[0m
