@@ -26,8 +26,10 @@
 #include <wchar.h>
 #include "dialog.h"
 
+#pragma once
+
 #ifndef _MAX_PATH
-#define _MAX_PATH 260
+	#define _MAX_PATH 260
 #endif
 
 #define XSIZE GetConsoleXDimension()
@@ -40,6 +42,10 @@
 
 #define BUFFER_X 1024
 #define BUFFER_Y 1024
+
+#define TAB_WIDE_ 7 // Standard length of the tab key is 8 characters. This has to be 7 because an index of 1 is always added.
+#define CURSIZE_ 20
+#define LINECOUNT_WIDE_ 3; // To backup original value
 
 const char newtrodit_version[] = "0.4";
 const char newtrodit_build_date[] = "27/9/2021";
@@ -55,19 +61,19 @@ const int MANUAL_BUFFER_Y = 300;
 
 
 
-const int TAB_WIDE_ = 7; // Standard length of the tab key is 8 characters. This has to be 7 because an index of 1 is always added.
-int TAB_WIDE = 7;
 
-int convertTabtoSpaces = true;
 
-const int CURSIZE_ = 20;
-int CURSIZE = 20;
+int TAB_WIDE = TAB_WIDE_;
+int CURSIZE = CURSIZE_;
+int LINECOUNT_WIDE = LINECOUNT_WIDE_;
+
+// Boolean
+int convertTabtoSpaces = false;
 
 int bg_color = 0x07;
 int fg_color = 0x70;
 
-const int LINECOUNT_WIDE_ = 3; // To backup original value
-int LINECOUNT_WIDE = 3;		   // Not const
+
 
 const char reset_color[] = "\e[0m";
 
@@ -88,14 +94,7 @@ void StartProcess(char *command_line)
 
 int CheckKey(int keycode)
 {
-	if (GetKeyState(keycode) <= -127)
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
+    return GetKeyState(keycode) <= -127;
 }
 
 char *strlasttok(const char *path, int chartok)
@@ -286,7 +285,7 @@ void PrintTab(int tab_size)
 	return;
 }
 
-int CheckFile(char *filename)
+int CheckFile(char *filename) // Will return 0 if file exists
 {
 	if ((_access(filename, 0)) != -1 && (_access(filename, 6)) != -1)
 	{
@@ -346,11 +345,6 @@ int tokback_pos(char *s, char *p, char *p2)
 		}
 	}
 	return 0;
-}
-
-void BS()
-{
-	printf("\b \b");
 }
 
 char *join(const char *s1, const char *s2)

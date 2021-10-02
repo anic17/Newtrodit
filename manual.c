@@ -178,10 +178,14 @@ int NewtroditHelp()
 			manual_ch = getch();
 			switch (manual_ch)
 			{
-			case 24:
+			case 24: // ^X
+				CursorSettings(TRUE, CURSIZE);
+
 				return 0;
 				break;
-			case 27:
+			case 27: // ESC
+				CursorSettings(TRUE, CURSIZE);
+
 				return 0;
 				break;
 			case 0:

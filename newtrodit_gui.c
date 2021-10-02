@@ -95,9 +95,16 @@ void ShowFindMenu()
 {
 	ClearLine(YSIZE - 2);
 	ClearLine(YSIZE - 1);
-
 	gotoxy(0, GetConsoleYDimension() - 2);
-	printf("%s", NEWTRODIT_FIND_STRING_F3_NEXT);
+
+	SetColor(fg_color);
+	printf("F3");
+	SetColor(bg_color);
+	printf(": Next occurrence\n");
+	SetColor(fg_color);
+	printf("ESC");
+	SetColor(bg_color);
+	printf(": Quit");
 }
 
 void ShowBottomMenu()

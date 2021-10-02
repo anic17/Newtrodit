@@ -7,7 +7,7 @@
  Main goal is your efficency when working.
 
 
- [38;2;217;10;37;4mCommand line usage:[0m
+ [38;2;217;10;37;4mCommand line usage[0m
 
  newtrodit [switches] [file]
 
@@ -16,6 +16,10 @@
          --sigsegv (-s) Displays a message when a SIGSEGV is caught
          --version (-v) Shows Newtrodit's version
          --bgcolor (-b) Changes the background color
+         --fgcolor (-f) Changes the foreground color
+         --converttab (-t) Converts tabs to spaces
+         --save (-s) Saves the file at exit
+
          
   It includes new line support for Unix (LF) and Windows (CRLF).
   They are written as follows:
@@ -29,9 +33,9 @@
 
  You can use any other raw text editor navigation features. 
  To move between lines and columns, you may use arrow keys. 
- Minimal position is line 1 and column 1. 
  You can see the current cursor position at the bottom left part, 
  where [1mLn[0m means line and [1mCol[0m means column  
+
 
  [1mEnd[0m and [1mHome[0m, [1mPageUp, [1mPageDown
 
@@ -51,7 +55,6 @@
  [38;2;207;50;68;4mPageDown[0m  = Go to the next page
  [38;2;207;50;68;4mUp[0m        = Go to the previous line
  [38;2;207;50;68;4mDown[0m      = Go to the next line
- 
 
  Control shortcuts
 
@@ -88,16 +91,19 @@
 
  Newtrodit can be customizable by changing the settings.
 
- Settings file must be located in the same directory as Newtrodit with the name 'newtrodit.config'.
+ Settings file must be located in the same directory as Newtrodit with the name '[1mnewtrodit.config[0m'.
  It's a simple text file with one line per setting, with INI-like syntax.
 
- Comments are allowed in the settings file with the '[38;2;207;50;68m;[0m' and '[38;2;207;50;68m#[0m' characters.
+ Comments are allowed in the settings file with the '[38;2;207;50;68m;[0m' (semicolon) character.
  
  [37;113;235;37;1mList of settings types[0m
 
    [1mString[0m       = String. This setting type stores a string of text.
    [1mInteger[0m      = Integer. This setting type stores an integer.
    [1mBoolean[0m      = Boolean. This setting type stores a boolean value (either 1 or 0).
+
+   In case that a boolean or an integer setting is not a valid value, 0 will be used by default.
+
 
  [37;113;235;37;1mList of all settings:[0m
 
@@ -107,7 +113,7 @@
   -[1m sigsegv[0m       = Enable/Disable SIGSEGV handler. Boolean type.
 
   -[1m bgcolor[0m       = Background color. Integer type (0-255).
-  -[1m codepage[0m      = Codepage. Integer type.
+  -[1m codepage[0m      = Codepage. Integer type
   -[1m cursize[0m       = Console cursor size. Integer type.
   -[1m fgcolor[0m       = Foreground color. Integer type (0-255).
   -[1m linecountwide[0m = Line count width. Integer type.
@@ -118,14 +124,12 @@
   -[1m manfile[0m       = Name of the manual file. String type.
   -[1m newline[0m       = New line string. Will be added to the end of each line. String type.
 
-  In case that a boolean or an integer setting is not a valid value, 0 will be used by default.
 
-  Warning: [1mnewline[0m must not be changed if you don't know what you're doing.
-           It can cause unexpected behavior and even crashes.
+ [38;2;210;156;12;1mWARNING: Wrongly configuring settings cause unexpected behavior and major issues.[0m
 
  [38;2;255;255;160;1mExample of a settings file:[0m
 
- [1m ; Settings file for Newtrodit[0m
+ [1m ; Example settings file for Newtrodit[0m
  [1m codepage=437[0m
  [1m xsize=120[0m
  [1m ysize=30[0m
@@ -133,7 +137,7 @@
  [1m tabwide=8[0m
  [1m manfile=newtrodit.man[0m
  [1m linecountwide=3[0m
-[0m
+
  [37;113;235;37;1mInternal working[0m
 
  At the moment, Newtrodit has a buffer of $X x $Y, however, it has been found that this limit
@@ -155,10 +159,12 @@
  Started working at the ending of 2020, it's now another way to code in Windows.
 
  Here's a list of people who contributed and helped in the creation of this project:
-   - Karanveer Chouhan (TheKvc)
-   - Tim Greller (timlg07)
-   - Teoman Deniz (TeomanDeniz)
-   - Teddy Astie (TSnake41)
+   - Karanveer Chouhan (TheKvc): Helped in lots of things.
+   - rxx (rxx-git): Improving code quality.
+   - Teddy Astie (TSnake41): Issue solving.
+   - Teoman Deniz (TeomanDeniz): Feedback and testing.
+   - Tim Greller (timlg07): Issue solving.
+
 
  I would like to give special thanks to Kvc for his help and his feedback while developing Newtrodit.
 

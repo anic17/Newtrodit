@@ -61,7 +61,6 @@ char NEWTRODIT_NEW_FILE_CREATED[] = "New file created successfully.";
 char NEWTRODIT_FILE_RENAMED[] = "File renamed successfully to: ";
 
 char NEWTRODIT_FIND_STRING_NOT_FOUND[] = "String not found: ";
-char NEWTRODIT_FIND_STRING_F3_NEXT[] = "F3: Next occurrence\nESC: Quit";
 char NEWTRODIT_DEV_TOOLS[] = "Developer tools: ";
 
 // Other dialogs
