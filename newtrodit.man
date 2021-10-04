@@ -160,7 +160,6 @@
 
  Here's a list of people who contributed and helped in the creation of this project:
    - Karanveer Chouhan (TheKvc): Helped in lots of things.
-   - rxx (rxx-git): Improving code quality.
    - Teddy Astie (TSnake41): Issue solving.
    - Teoman Deniz (TeomanDeniz): Feedback and testing.
    - Tim Greller (timlg07): Issue solving.
