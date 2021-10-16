@@ -1,8 +1,3 @@
-<style>
-.newtrodit-md {line-height:23px;}
-
-</style>
-
 <div class="newtrodit-md">
 
 
