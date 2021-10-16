@@ -10,10 +10,9 @@ Simple console text editor written in C.
 - Fast and light
 - Line and column of cursor
 - String finding
+- String replacing
 
 ## More features to come
-
-- String replacing
 - File encoding changing ANSI/UTF-8
 - Syntax highlighting supporting different languages
 - Maybe hex editor?
