@@ -18,9 +18,11 @@ Simple console text editor written in C.
 
 - Easy to use
 - Fast and light
-- Line and column of cursor
+- Real time position of cursor
 - String finding
 - String replacing
+- ROT13 encoding
+- Line counting
 
 ## More features to come
 
