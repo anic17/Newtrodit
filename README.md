@@ -65,7 +65,7 @@ Join the Newtrodit development channel!
 <a href="https://discord.gg/J628dBqQgb"><img src="https://img.shields.io/discord/728958932210679869"></a>
 
 
-## When will Newtrodit released?
+## Release
 
 Newtrodit will be released in a short time, but you can compile using <a href="https://bellard.org/tcc/" style="text-decoration: none">TCC</a> and running the script `make.bat`
 
