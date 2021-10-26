@@ -1,97 +1,141 @@
 <head>
+  <link
+    rel="shortcut icon"
+    type="image/png"
+    href="data:image/png;base64,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"
+  />
   <title>Newtrodit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic&display=swap" rel="stylesheet"> 
   <style type="text/css">
-    .newtrodit-md
-    {
-        font-size: 12pt;
-        font-family: 'Calibri';
-        line-height: 130%;
-        margin-top:50px;
-        margin-left:70px;
-        margin-right:70px;
-    
+    .newtrodit-md {
+      font-size: 12pt;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      line-height: 130%;
+      margin-top: 50px;
+      margin-left: 70px;
+      margin-right: 70px;
     }
     code {
-        font-family: 'Consolas';
-        font-size: 12pt;
-        color: #393939;
-        margin-top:2px;
-        margin-bottom:2px;
+      font-family: "Consolas";
+      font-size: 12pt;
+      color: #292929;
+      margin-top: 2px;
+      margin-bottom: 2px;
     }
-    
   </style>
 </head>
 
 <body>
-<div class="newtrodit-md">
-  <h1> Newtrodit</h1><br>
-  Simple console text editor written in C.<br>
-  <img src="https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow" style="margin-bottom: 5px;"><br>
-  <img src="https://img.shields.io/github/forks/anic17/Newtrodit" style="margin-bottom: 5px;"><br>
-  <img src="https://img.shields.io/github/license/anic17/Newtrodit" style="margin-bottom: 5px;"><br>
-  <img src="https://img.shields.io/github/issues/anic17/Newtrodit" style="margin-bottom: 20px;"><br>
-  <img src="https://user-images.githubusercontent.com/58483910/137585130-ca273f69-f83a-4313-a49b-671fb6fe8929.png" style="margin-bottom: 20px;"><br>
+  <div class="newtrodit-md">
+    <h1>Newtrodit</h1>
+    <br />
+    Simple console text editor written in C.<br /><br />
+    <a href="https://github.com/anic17/Newtrodit/stargazers"
+      ><img
+        src="https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow"
+        style="margin-bottom: 5px"
+    /></a>
+    <a href="https://github.com/anic17/Newtrodit/network/members"
+      ><img
+        src="https://img.shields.io/github/forks/anic17/Newtrodit"
+        style="margin-bottom: 5px"
+    /></a>
+    <a href="https://www.gnu.org/licenses/gpl-3.0"
+      ><img
+        src="https://img.shields.io/github/license/anic17/Newtrodit"
+        style="margin-bottom: 5px"
+    /></a>
+    <a href="https://github.com/anic17/Newtrodit/issues"
+      ><img
+        src="https://img.shields.io/github/issues/anic17/Newtrodit"
+        style="margin-bottom: 5px" /></a
+    ><br />
+    <img
+      src="https://user-images.githubusercontent.com/58483910/137585130-ca273f69-f83a-4313-a49b-671fb6fe8929.png"
+      style="margin-bottom: 20px"
+    /><br />
 
-  <h1>Features</h1>
+    <h1>Features</h1>
 
-  <li>Easy to use</li>
-  <li>Fast and light</li>
-  <li>Line and column of cursor</li>
-  <li>String finding</li>
-  <li>String replacing</li>
+    <li>Easy to use</li>
+    <li>Fast and light</li>
+    <li>Line and column of cursor</li>
+    <li>String finding</li>
+    <li>String replacing</li>
 
-  <h2>More features to come</h2>
+    <h2>More features to come</h2>
 
-  <li>Syntax highlighting supporting different languages</li> <li>Maybe hex editor?</li>
+    <li>Syntax highlighting supporting different languages</li>
+    <li>Maybe hex editor?</li>
 
-  <h2>Small history</h2>
+    <h2>Small history</h2>
 
-  <h3>Why I started to code Newtrodit?</h3>
+    <h3>Why I started to code Newtrodit?</h3>
 
-  It was at a day when I tried to make a clone of the old MS-DOS EDIT.COM in
-  batch, but in the making I realized it would be really complicated to make in
-  batch and performance issues were starting to appear.<br>As I was very new to C,
-  it was a challenge to see how good I could recode it, but with more features.<br>
-  The UI got changed a lot of times, before it had blue background, and it was a
-  lot different. I started to love coding it, and that's why today I'm
-  continuing to develop Newtrodit
+    It was at a day when I tried to make a clone of the old MS-DOS EDIT.COM in
+    batch, but in the making I realized it would be really complicated to make
+    in batch and performance issues were starting to appear.<br />As I was very
+    new to C, it was a challenge to see how good I could recode it, but with
+    more features.<br />
+    The UI got changed a lot of times, before it had blue background, and it was
+    a lot different. I started to love coding it, and that's why today I'm
+    continuing to develop Newtrodit
 
-  <span id="project-building"><h2>Project building</h2></span>
+    <span id="project-building"><h2>Project building</h2></span>
 
-  Compiling and running Newtrodit doesn't require any external libraries apart
-  from the WinAPI simple libraries.<br>Build Newtrodit running <code>make.bat</code> or with the following command
-  line: <br><code>tcc newtrodit.c -o Newtrodit.exe -luser32</code><br>
-   Or if you prefer using GCC:<br>
-  <code>gcc Newtrodit.c -o Newtrodit.exe -luser32 -O2</code>
+    Compiling and running Newtrodit doesn't require any external libraries apart
+    from the WinAPI simple libraries.<br />Build Newtrodit running
+    <code>make.bat</code> or with the following command line: <br /><code
+      >tcc newtrodit.c -o Newtrodit.exe -luser32</code
+    ><br />
+    Or if you prefer using GCC:<br />
+    <code>gcc Newtrodit.c -o Newtrodit.exe -luser32 -O2</code>
 
-  <h2>Bug reports</h2>
+    <h2>Bug reports</h2>
 
-  To report a bug, feel free to create an <a style="text-decoration: none" href="https://github.com/anic17/Newtrodit/issues">issue</a> explaining the bug and the way
-  to get it. Contribution is highly appreciated as Newtrodit is still on beta,
-  so there's a bunch of bugs needing to be fixed.
+    To report a bug, feel free to create an
+    <a
+      style="text-decoration: none"
+      href="https://github.com/anic17/Newtrodit/issues"
+      >issue</a
+    >
+    explaining the bug and the way to get it. Contribution is highly appreciated
+    as Newtrodit is still on beta, so there's a bunch of bugs needing to be
+    fixed.
 
-  <h2>Contributing</h2>
+    <h2>Contributing</h2>
 
-  If you want to contribute to Newtrodit, fork the project and create a pull
-  request with the changes you want to do, describing a bit the changes you did.
+    If you want to contribute to Newtrodit, fork the project and create a pull
+    request with the changes you want to do, describing a bit the changes you
+    did.
 
-  <h2>Manual</h2>
-  To get information about the usage of Newtrodit, press F1 at Newtrodit or run
-  <code>newtrodit --help</code>.<br> It shows all the information you need to know to use
-  Newtrodit. If you have any doubts, contact me on
-  <a href="#contact" style="text-decoration: none">Discord</a>.
+    <h2>Manual</h2>
+    To get information about the usage of Newtrodit, press F1 at Newtrodit or
+    run
+    <code>newtrodit --help</code>.<br />
+    It shows all the information you need to know to use Newtrodit. If you have
+    any doubts, contact me on
+    <a href="#contact" style="text-decoration: none">Discord</a>.
 
-  <span id="contact"><h2>Contact</h2></span>
-  Join the Newtrodit development channel!<br>
-  <a href="https://discord.gg/J628dBqQgb"><img src="https://img.shields.io/discord/728958932210679869" style="margin-top: 5px;"
-  /></a>
+    <span id="contact"><h2>Contact</h2></span>
+    Join the Newtrodit development channel!<br />
+    <a href="https://discord.gg/J628dBqQgb"
+      ><img
+        src="https://img.shields.io/discord/728958932210679869"
+        style="margin-top: 5px"
+    /></a>
 
-  <h2>When will Newtrodit released?</h2>
+    <h2>When will Newtrodit released?</h2>
 
-  Newtrodit will be released in a short time, but you can compile using
-  <a href="https://bellard.org/tcc/" style="text-decoration: none">TCC</a> and
-  running the script <a style="text-decoration: none" href="#project-building"><code>make.bat</code></a>
+    Newtrodit will be released in a short time, but you can compile using
+    <a href="https://bellard.org/tcc/" style="text-decoration: none">TCC</a> and
+    running the script
+    <a style="text-decoration: none" href="#project-building"
+      ><code>make.bat</code></a
+    >
 
-  <h4>Copyright &copy; 2021 anic17 Software</h4>
-</div>
+    <h4>Copyright &copy; 2021 anic17 Software</h4>
+  </div>
 </body>
