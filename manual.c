@@ -1,21 +1,26 @@
 /*
 	Newtrodit: A console text editor
-    Copyright (C) 2021  anic17 Software
+	Copyright (C) 2021 anic17 Software
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <https://www.gnu.org/licenses/>
 
 */
+#pragma once
+
+void DisplayLineCount(char *strsave[], int size, int yps);
+int SaveFile(char *strsave[], char *filename, int size, int *is_modified, int *is_untitled);
+int DisplayFileContent(char *strsave[], char newlinestring[], FILE *fstream);
 
 #include "newtrodit_core.h"
 #include "newtrodit_gui.c"
@@ -34,6 +39,15 @@ int DownArrow(int man_line_count)
 	return man_line_count;
 }
 
+void DisableVT()
+{
+	DWORD lmode; // Process ANSI escape sequences
+	HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	GetConsoleMode(hStdout, &lmode);
+	SetConsoleMode(hStdout, lmode &= ~ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
+}
+
 int NewtroditHelp()
 {
 	SetConsoleTitle("Newtrodit help");
@@ -41,9 +55,9 @@ int NewtroditHelp()
 	CursorSettings(FALSE, CURSIZE);
 	int manual_ch;
 	ClearScreen();
-
-	gotoxy(0, 0);
 	TopHelpBar();
+
+	FILE *manual;
 
 	DWORD l_mode; // Process ANSI escape sequences
 	HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -54,25 +68,36 @@ int NewtroditHelp()
 								DISABLE_NEWLINE_AUTO_RETURN);
 	SetColor(bg_color);
 
-	FILE *manual;
-	manual = fopen(manual_file, "rb");
-	if (!manual)
-	{
-		char error_manual_not_found[512];
-		sprintf(error_manual_not_found, "%s: %s", manual_file, strerror(errno));
-		PrintBottomString(error_manual_not_found);
-			CursorSettings(TRUE, CURSIZE);
-		MakePause();
-		return errno;
-	}
-	int quit_manual = 0, max_manual_lines = 0;
+	const char reset_color[] = "\e[0m";
+
+	int quit_manual = 0, end_manual = 0, max_manual_lines = 0;
+	int man_line_count = 1, disable_clear = 0;
+
 	int find_escape = false;
 
-	int man_line_count = 1, disable_clear = 0;
 	char **manual_buf = calloc(MANUAL_BUFFER_Y, MANUAL_BUFFER_X); // Allocate 300 char pointers
 	for (int i = 0; i < MANUAL_BUFFER_X; ++i)
 	{
 		manual_buf[i] = malloc(MANUAL_BUFFER_Y); // Allocate 2048 bytes for each string
+	}
+
+	char *gotoline_man = (char *)malloc(MANUAL_BUFFER_X);
+	manual = fopen(manual_file, "r");
+	if (!manual)
+	{
+		PrintBottomString(join(NEWTRODIT_ERROR_MISSING_MANUAL, strlasttok(manual_file, '\\')));
+		CursorSettings(TRUE, CURSIZE);
+		MakePause();
+		DisableVT();
+		return -1;
+	}
+
+	if (CountLines(manual) >= MANUAL_BUFFER_Y)
+	{
+		PrintBottomString(NEWTRODIT_ERROR_MANUAL_TOO_BIG);
+		MakePause();
+		DisableVT();
+		return 1;
 	}
 
 	while (fgets(manual_buf[man_line_count], MANUAL_BUFFER_X, manual)) // Load manual into memory
@@ -81,16 +106,21 @@ int NewtroditHelp()
 		{
 			PrintBottomString(NEWTRODIT_ERROR_MANUAL_TOO_BIG);
 			MakePause();
+			DisableVT();
 			return 1;
 		}
 		man_line_count++;
 		max_manual_lines++;
 	}
+
 	man_line_count = 1; // Reset line count
 
 	while (quit_manual == 0)
 	{
-
+		if (end_manual == 1)
+		{
+			quit_manual = 1;
+		}
 		if (manual_ch != 0)
 		{
 			TopHelpBar();
@@ -107,14 +137,14 @@ int NewtroditHelp()
 					}
 					if (FindString(manual_buf[man_line_count], "$") != -1)
 					{
-						for (int k = 0; k < strlen(manual_buf[man_line_count]); ++k)
+						for (int k = 0; k < (unsigned)strlen(manual_buf[man_line_count]); ++k)
 						{
 
 							if (manual_buf[man_line_count][k] == '$' && manual_buf[man_line_count][k + 1] != '\0')
 							{
 								find_escape = true;
 
-								switch (manual_buf[man_line_count][k+1])
+								switch (manual_buf[man_line_count][k + 1])
 								{
 
 								case 'X':
@@ -139,7 +169,7 @@ int NewtroditHelp()
 									break;
 
 								default:
-								
+
 									break;
 								}
 							}
@@ -159,7 +189,8 @@ int NewtroditHelp()
 					}
 					else
 					{
-						printf("%s\n", manual_buf[man_line_count]);
+
+						printf("%.*s\n", MANUAL_BUFFER_X, manual_buf[man_line_count]);
 					}
 
 					man_line_count++;
@@ -167,8 +198,11 @@ int NewtroditHelp()
 				}
 				else
 				{
-					quit_manual = 1;
 					printf("%s", reset_color);
+
+					man_line_count = max_manual_lines - (YSIZE - 4);
+					disable_clear = false;
+					quit_manual = 1;
 				}
 			}
 		}
@@ -180,24 +214,36 @@ int NewtroditHelp()
 			{
 			case 24: // ^X
 				CursorSettings(TRUE, CURSIZE);
-
+				DisableVT();
 				return 0;
 				break;
 			case 27: // ESC
 				CursorSettings(TRUE, CURSIZE);
-
+				DisableVT();
 				return 0;
 				break;
 			case 0:
+
 				manual_ch = getch();
 				if (manual_ch == 107) // A-F4
 				{
-					QuitProgram(bg_color);
+					QuitProgram(start_color);
 					printf("%s", reset_color); // Clear all text attributes
 					BottomHelpBar();
 					manual_ch = 0;
 					break;
 				}
+				if (manual_ch == 59) // F1
+				{
+					CursorSettings(TRUE, CURSIZE);
+					DisableVT();
+					for (int i = 0; i < MANUAL_BUFFER_Y; i++)
+					{
+						free(manual_buf[i]);
+					}
+					return 0;
+				}
+
 				break;
 			case 13: // Enter
 				printf("%s", reset_color);
@@ -210,17 +256,15 @@ int NewtroditHelp()
 				case 73: // PageUp
 					printf("%s", reset_color);
 
-					ClearScreen();
-
 					if ((man_line_count - (YSIZE - 3)) > (YSIZE - 3))
 					{
 						man_line_count -= (2 * (YSIZE - 3)); // Multiplied by 2
 					}
 					else
 					{
-						disable_clear = true;
 						man_line_count = 1; // Set manual position to first line
 					}
+
 					break;
 				case 71: // HOME key
 					printf("%s", reset_color);
@@ -229,10 +273,21 @@ int NewtroditHelp()
 					man_line_count = 1;
 					disable_clear = true;
 					break;
+				case 119: // ^HOME key
+					printf("%s", reset_color);
+
+					man_line_count = 1;
+					disable_clear = true;
+					break;
 
 				case 79: // END key
 					printf("%s", reset_color);
 
+					ClearScreen();
+					man_line_count = max_manual_lines - (YSIZE - 4);
+					break;
+				case 117: // ^END key
+					printf("%s", reset_color);
 					ClearScreen();
 					man_line_count = max_manual_lines - (YSIZE - 4);
 					break;
@@ -254,10 +309,31 @@ int NewtroditHelp()
 					man_line_count = DownArrow(man_line_count);
 					break;
 				default:
-					//man_line_count = man_line_count - (1 * (YSIZE - 3));
+					// man_line_count = man_line_count - (1 * (YSIZE - 3));
 
 					break;
 				}
+				break;
+			case 7: // ^G
+				PrintBottomString(NEWTRODIT_PROMPT_GOTO_LINE);
+
+				gotoline_man = TypingFunction('0', '9', strlen(itoa_n(MANUAL_BUFFER_Y)));
+				if (atoi(gotoline_man) < 1 || atoi(gotoline_man) > max_manual_lines || atoi(gotoline_man) >= MANUAL_BUFFER_Y) // Line is less than 1
+				{
+					PrintBottomString(NEWTRODIT_ERROR_INVALID_YPOS);
+					MakePause();
+					man_line_count = man_line_count - (1 * (YSIZE - 3));
+					continue;
+				}
+				else
+				{
+					if ((man_line_count - (1 * (YSIZE - 3) + 1)) > 0)
+					{
+						man_line_count = atoi(gotoline_man) - (1 * (YSIZE - 3) + 1);
+					}
+				}
+				ClearScreen();
+				break;
 			default:
 
 				break;
@@ -272,15 +348,15 @@ int NewtroditHelp()
 			}
 			else
 			{
-				ClearScreen();
+				ClearBuffer();
 			}
 		}
-		gotoxy(0, 1);
 	}
 	for (int i = 0; i < MANUAL_BUFFER_Y; i++)
 	{
 		free(manual_buf[i]);
 	}
 	CursorSettings(TRUE, CURSIZE);
+	DisableVT();
 	return 0;
 }

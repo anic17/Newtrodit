@@ -1,5 +1,5 @@
 /*
-	Newtrodit: A console text editor
+	 Newtrodit: A console text editor
   Copyright (C) 2021  anic17 Software
 
   This program is free software: you can redistribute it and/or modify
@@ -16,70 +16,63 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>
 
 */
+#pragma once
+
+#ifndef _NEWTRODIT_CORE_H_
+#define _NEWTRODIT_CORE_H_
+#endif
 
 #include <string.h>
 #include <stdlib.h>
+
 #include <Windows.h>
+#include <conio.h>
+
 #include <ctype.h>
-#include <direct.h>
+#include <direct.h> // _access()
 #include <tchar.h>
-#include <wchar.h>
 #include "dialog.h"
 
-#pragma once
+#define TAB_WIDE_ 8 // Standard length of the tab key is 8 characters. This has to be 7 because an index of 1 is always added.
+#define CURSIZE_ 20
+#define LINECOUNT_WIDE_ 4 // To backup original value
+#define MIN_BUFSIZE 100
+
+#ifndef __bool_true_false_are_defined
+#define __bool_true_false_are_defined
+#define true 1
+#define false 0
+#define bool short
+#endif
 
 #ifndef _MAX_PATH
-	#define _MAX_PATH 260
+#warning "_MAX_PATH not defined. Using 260 as a value"
+#define _MAX_PATH 260
 #endif
+#define filename_text_ "Untitled"
+
+#include "globals.h"
 
 #define XSIZE GetConsoleXDimension()
 #define YSIZE GetConsoleYDimension()
 
 #define BOTTOM GetConsoleYDimension() - 1
+#define TOP 0
 
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #define DISABLE_NEWLINE_AUTO_RETURN 0x0008
 
-#define BUFFER_X 1024
-#define BUFFER_Y 1024
+int BUFFER_X = 640;
+int BUFFER_Y = 5600;
 
-#define TAB_WIDE_ 7 // Standard length of the tab key is 8 characters. This has to be 7 because an index of 1 is always added.
-#define CURSIZE_ 20
-#define LINECOUNT_WIDE_ 3; // To backup original value
+int BUFFER_INCREMENT = 100; // How much to increment the buffer size by when it is full.
 
-const char newtrodit_version[] = "0.4";
-const char newtrodit_build_date[] = "27/9/2021";
-char manual_file[_MAX_PATH] = "newtrodit.man";
-char settings_file[_MAX_PATH] = "newtrodit.config";
-
-const char newtrodit_commit[] = ""; // Example commit
-
-char newlinestring[100] = "\n";
-
-const int MANUAL_BUFFER_X = 300;
-const int MANUAL_BUFFER_Y = 300;
-
-
-
-
-
-int TAB_WIDE = TAB_WIDE_;
-int CURSIZE = CURSIZE_;
-int LINECOUNT_WIDE = LINECOUNT_WIDE_;
-
-// Boolean
-int convertTabtoSpaces = false;
-
-int bg_color = 0x07;
-int fg_color = 0x70;
-
-
-
-const char reset_color[] = "\e[0m";
-
-const char filename_text_[FILENAME_MAX] = "Untitled"; // To backup original value
-char filename_text[FILENAME_MAX] = "Untitled";
-
+typedef struct
+{
+	char *str;
+	int len;
+	size_t size;
+} Line;
 
 void StartProcess(char *command_line)
 {
@@ -89,12 +82,14 @@ void StartProcess(char *command_line)
 	si.cb = sizeof(si);
 	ZeroMemory(&pinf, sizeof(pinf));
 	CreateProcess(NULL, command_line, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pinf);
+	CloseHandle(pinf.hProcess);
+	CloseHandle(pinf.hThread);
 	return;
 }
 
 int CheckKey(int keycode)
 {
-    return GetKeyState(keycode) <= -127;
+	return GetKeyState(keycode) <= -127;
 }
 
 char *strlasttok(const char *path, int chartok)
@@ -110,16 +105,13 @@ char *strlasttok(const char *path, int chartok)
 	}
 }
 
-void gotoxy(int cursorx, int cursory) // Change cursor position to x,y
+void gotoxy(int x, int y) // Change cursor position to x,y
 {
-	HANDLE hConsoleHandle;
-	hConsoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-
 	COORD dwPos;
-	dwPos.X = cursorx;
-	dwPos.Y = cursory;
+	dwPos.X = x;
+	dwPos.Y = y;
 
-	SetConsoleCursorPosition(hConsoleHandle, dwPos);
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), dwPos);
 	return;
 }
 
@@ -132,25 +124,23 @@ int SetColor(int color_hex)
 
 int GetColor()
 {
-	WORD consolecolor;
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
 	if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
 	{
-		consolecolor = csbi.wAttributes;
+		return csbi.wAttributes;
 	}
-
-	return consolecolor;
+	return 0;
 }
 
-void Alert()
+void Alert(void)
 {
-	printf("\a");
-	return;
+	putchar('\a');
 }
 
-void ClearScreen() // Clears the screen
+void ClearScreen(void) // Clears the screen
 {
+#ifdef WIN32
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	DWORD count;
@@ -179,38 +169,68 @@ void ClearScreen() // Clears the screen
 	}
 	SetConsoleCursorPosition(hStdOut, homeCoords);
 	return;
+#else
+	write(STDOUT_FILENO, "\e[2J", 5);
+#endif
+}
+
+void ClearBuffer(void)
+{
+	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	DWORD count;
+	DWORD cellCount;
+	COORD homeCoords = {0, 1};
+
+	if (hStdOut == INVALID_HANDLE_VALUE)
+	{
+		return;
+	}
+
+	if (!GetConsoleScreenBufferInfo(hStdOut, &csbi))
+	{
+		return;
+	}
+	cellCount = csbi.dwSize.X * (csbi.dwSize.Y - 1);
+
+	if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
+	{
+		return;
+	}
+
+	if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
+	{
+		return;
+	}
+	SetConsoleCursorPosition(hStdOut, homeCoords);
+	return;
 }
 
 int GetConsoleXDimension()
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	int columns;
-
 	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-	columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-	return columns;
+
+	return csbi.srWindow.Right - csbi.srWindow.Left + 1;
 }
 
 int GetConsoleYDimension()
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	int rows;
 	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-	rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-	return rows;
+	return csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 }
 
 void ClearLine(int line_clear) // Clears the specified line
 {
 	gotoxy(0, line_clear);
-	int console_size_clearline = GetConsoleXDimension() - 1;
+	int console_size_clearline = XSIZE - 1;
 
-
-	for (int i = 0; i < console_size_clearline/2; i++) // Doubled the speed by printing 2 spaces instead of 1
+	for (int i = 0; i < console_size_clearline / 2; i++) // Doubled the speed by printing 2 spaces instead of 1
 	{
 		fputs("  ", stdout);
 	}
-	if(console_size_clearline % 2 != 0) 
+	if (console_size_clearline % 2 != 0)
 	{
 		putchar(' ');
 	}
@@ -276,13 +296,25 @@ size_t nolflen(char *len_str) // Line length without line feed
 	return n;
 }
 
-void PrintTab(int tab_size)
+void PrintTab(int tab_count)
 {
-	for (int i = 0; i < tab_size; i++)
+	for (int i = 0; i < tab_count; i++)
 	{
 		putchar(' ');
 	}
 	return;
+}
+
+void PrintLine(char *line)
+{
+	if (wrapLine)
+	{
+		printf("%s", line);
+	}
+	else
+	{
+		printf("%.*s", wrapSize, line);
+	}
 }
 
 int CheckFile(char *filename) // Will return 0 if file exists
@@ -311,11 +343,41 @@ int FindString(char *str, char *find)
 	return -1;
 }
 
+char *ReplaceString(char *s, char *find, char *replace, int *occurenceCount)
+{
+	char *result;
+	int c = 0;
+	int replacelen = strlen(replace);
+	int findlen = strlen(find);
+	result = malloc(strlen(s) + 1 + BUFFER_X);
+	for (int i = 0; s[i] != '\0'; i++)
+	{
+		if (strncmp(&s[i], find, findlen) == 0)
+		{
+			strcpy(&result[c], replace);
+			++(*occurenceCount);
+			c += replacelen;
+			i += findlen - 1;
+		}
+		else
+		{
+			result[c++] = s[i];
+		}
+	}
+	result[c] = '\0';
+
+	if (!strcmp(result, s))
+	{
+		return NULL;
+	}
+	return result;
+}
+
 int tokback_pos(char *s, char *p, char *p2)
 {
-	/* 
-    	p is the delimiter on the last position
-    	p2 is the delimiter for an index of + 1
+	/*
+			 p is the delimiter on the last position
+			 p2 is the delimiter for an index of + 1
 	*/
 	for (int i = strlen(s); i > 0; i--)
 	{
@@ -428,7 +490,7 @@ char *strncpy_n(char *dest, const char *src, size_t count)
 
 	if (count)
 	{
-		*dest = '\0';
+		memset(dest, 0, count);
 		strncat(dest, src, count);
 		return dest;
 	}
@@ -450,7 +512,7 @@ char *ProgInfo()
 {
 
 	char *info = (char *)malloc(1024);
-	info = join(join(join(join(join(join("Newtrodit ", newtrodit_version), " [Built at "), (char *)__DATE__), " "), (char *)__TIME__), "]");
+	snprintf(info, 1024, "Newtrodit %s [Built at %s %s]", newtrodit_version, newtrodit_build_date, __TIME__);
 	return info;
 }
 
@@ -469,11 +531,11 @@ int ValidSize()
 
 void MakePause()
 {
-	int mk_pause;
-	mk_pause = getch();
-	if (mk_pause == 0 || mk_pause == 0xE0)
+	int mp;
+	mp = getch();
+	if (mp == 0 || mp == 0xE0)
 	{
-		mk_pause = getch();
+		mp = getch();
 	}
 	return;
 }
@@ -505,9 +567,51 @@ int YesNoPrompt()
 		{
 			return 1;
 		}
-		else if (tolower(chr) == 'n' && chr != 0 && chr != 0xE0)
+		else if (chr != 0 && chr != 0xE0 && (tolower(chr) == 'n' || chr == 27))
 		{
 			return 0;
 		}
 	}
+}
+
+char *rot13(char *s)
+{
+	for (int i = 0; i < strlen(s); i++)
+	{
+		if (isalpha(s[i]))
+		{
+			if (tolower(s[i]) >= 110)
+			{
+				s[i] -= 13;
+			}
+			else
+			{
+				s[i] += 13;
+			}
+		}
+	}
+	return s;
+}
+
+int BufferLimit()
+{
+	if (ypos >= BUFFER_Y)
+	{
+		PrintBottomString(NEWTRODIT_ERROR_OUT_OF_MEMORY);
+		MakePause();
+		return 1;
+	}
+	return 0;
+}
+
+void *realloc_n(void *old, size_t old_sz, size_t new_sz)
+{
+	void *new = malloc(new_sz);
+	if (new == NULL)
+	{
+		return NULL;
+	}
+	memcpy(new, old, old_sz);
+	free(old);
+	return new;
 }

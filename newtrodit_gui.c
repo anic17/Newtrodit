@@ -1,19 +1,19 @@
 /*
 	Newtrodit: A console text editor
-    Copyright (C) 2021  anic17 Software
+	Copyright (C) 2021  anic17 Software
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <https://www.gnu.org/licenses/>
 
 */
 
@@ -37,10 +37,10 @@ void BottomHelpBar()
 	return;
 }
 
-void CenterText(char *text, int yline) //Algorithm: XSIZE - ((XSIZE / 2) + len / 2) - 1
+void CenterText(char *text, int yline) // Algorithm: XSIZE - ((XSIZE / 2) + len / 2) - 1
 {
 	SetColor(fg_color);
-	int cols = GetConsoleXDimension();
+	int cols = XSIZE;
 	gotoxy(0, yline);
 	int center_text = (cols / 2) - (strlen(text) / 2);
 	gotoxy(center_text, yline);
@@ -53,7 +53,7 @@ void RightAlignNewline()
 {
 	SetColor(fg_color);
 
-	char nl_type[100];
+	char nl_type[200];
 	EmptyString(nl_type);
 	if (!strcmp(newlinestring, "\n"))
 	{
@@ -85,7 +85,7 @@ void RightAlignNewline()
 	}
 
 	gotoxy(XSIZE - strlen(nl_type) - 2, 0); // XSIZE - strlen(nl_type) - 2
-	printf("%s", nl_type);
+	fputs(nl_type, stdout);
 	SetColor(bg_color);
 
 	return;
@@ -95,56 +95,26 @@ void ShowFindMenu()
 {
 	ClearLine(YSIZE - 2);
 	ClearLine(YSIZE - 1);
-	gotoxy(0, GetConsoleYDimension() - 2);
+	gotoxy(0, YSIZE - 2);
 
 	SetColor(fg_color);
-	printf("F3");
+	fputs("F3", stdout);
 	SetColor(bg_color);
-	printf(": Next occurrence\n");
+	fputs(": Next occurrence\n", stdout);
 	SetColor(fg_color);
-	printf("ESC");
+	fputs("ESC", stdout);
 	SetColor(bg_color);
-	printf(": Quit");
+	fputs(": Quit", stdout);
 }
 
 void ShowBottomMenu()
 {
-	ClearLine(YSIZE - 2);
-	ClearLine(YSIZE - 1);
+	gotoxy(0, BOTTOM);
 
-	gotoxy(0, GetConsoleYDimension() - 2);
+	ClearLine(BOTTOM);
+	gotoxy(0, BOTTOM);
+	fputs(NEWTRODIT_DIALOG_BOTTOM_HELP, stdout);
 
-	SetColor(bg_color);
-	printf(NEWTRODIT_DIALOG_BASIC_SHORTCUTS);
-	SetColor(fg_color);
-	printf("^C");
-	SetColor(bg_color);
-	printf(" Copy  ");
-	SetColor(fg_color);
-	printf("^V");
-	SetColor(bg_color);
-	printf(" Paste  ");
-	SetColor(fg_color);
-	printf("^X");
-	SetColor(bg_color);
-	printf(" Quit Newtrodit\n");
-	SetColor(bg_color);
-	for (int i = 0; i < strlen(NEWTRODIT_DIALOG_BASIC_SHORTCUTS); i++)
-	{
-		printf(" ");
-	}
-	SetColor(fg_color);
-	printf("^O");
-	SetColor(bg_color);
-	printf(" Open  ");
-	SetColor(fg_color);
-	printf("^S");
-	SetColor(bg_color);
-	printf(" Save   ");
-	SetColor(fg_color);
-	printf("F1");
-	SetColor(bg_color);
-	printf(" Help");
 	return;
 }
 
@@ -155,31 +125,6 @@ void CursorSettings(int visible, int size)
 	info.dwSize = size;
 	info.bVisible = visible;
 	SetConsoleCursorInfo(Cursor, &info);
-}
-
-int QuitProgram(int color_quit)
-{
-	ClearLine(GetConsoleYDimension() - 1);
-	PrintBottomString(NEWTRODIT_PROMPT_QUIT);
-	int confirmquit = getch();
-	if (tolower(confirmquit) == 'y') // Y was answered
-	{
-		SetColor(color_quit);
-		ClearScreen();
-		CursorSettings(TRUE, CURSIZE);
-		exit(0);
-	}
-	else
-	{
-
-		if (confirmquit == 0 && getch() == 107)
-		{
-			Alert();
-		}
-		ClearLine(GetConsoleYDimension() - 1);
-		SetColor(bg_color);
-	}
-	return 0;
 }
 
 void NewtroditNameLoad()
@@ -208,41 +153,105 @@ int GetConsoleYCursorPos()
 
 void DisplayCursorPos(int xps, int yps)
 {
-	gotoxy(0, GetConsoleYDimension() - 1);
-	for (int i = 0; i < strlen(NEWTRODIT_DIALOG_BASIC_SHORTCUTS); ++i) // Clear first characters of the last line
+	size_t len = strlen(NEWTRODIT_DIALOG_BOTTOM_HELP);
+	gotoxy(len, YSIZE - 1);
+	for (int i = 0; i < 20; ++i) // Clear first characters of the last line
 	{
 		putchar(' ');
 	}
-	gotoxy(0, GetConsoleYDimension() - 1);
+	gotoxy(len, YSIZE - 1);
 	printf("Ln %d, Col %d", yps, xps + 1); // Add one to xpos because it's zero indexed
 }
 
 void LoadAllNewtrodit()
 {
 	CursorSettings(FALSE, CURSIZE); // Hide cursor to reduce flickering
-	int curx = GetConsoleXCursorPos(), cury = GetConsoleYCursorPos();
-	//ShowScrollBar(GetConsoleWindow(), SB_VERT, 0);
+	// ShowScrollBar(GetConsoleWindow(), SB_VERT, 0);
 	SetColor(bg_color);
-	ClearScreen();
+
+	if (clearBufferScreen)
+	{
+		ClearBuffer();
+	}
+	else
+	{
+		ClearScreen();
+	}
 	NewtroditNameLoad();
-	CenterText(filename_text, 0);
+	CenterText(strlasttok(filename_text, '\\'), 0);
 	RightAlignNewline();
 	ShowBottomMenu();
-	CursorSettings(TRUE, CURSIZE);
-	//DisplayCursorPos(curx, cury);
-	// Temporary disabled to avoid more flickering
+	SetConsoleSize(XSIZE, YSIZE);
+	if (LINECOUNT_WIDE != 0)
+	{
+		DisplayLineCount(str_save, YSIZE - 3, 1);
+	}
+		CursorSettings(TRUE, CURSIZE);
+
+
 	gotoxy(0, 1);
 }
 
 void NewtroditCrash(char *crash_reason, int crash_retval)
 {
+	LoadAllNewtrodit();
+	gotoxy(0, 1);
 	int errno_temp = errno;
 	if (errno_temp == 0)
 	{
 		errno_temp = crash_retval;
 	}
 	Alert();
-	printf("Newtrodit ran into a problem and it crashed. We're sorry.\n\nDebug info:\nerrno: 0x%x (%s)\nGetLastError: 0x%x\n\nReason: %s\n\nPress any key to quit...\n", errno_temp, strerror(errno_temp), GetLastError(), crash_reason);
-	MakePause();
+	printf("Newtrodit ran into a problem and it crashed. We're sorry.\n\nDebug info:\nerrno: 0x%x (%s)\nGetLastError: 0x%lx\n\nReason: %s\n\nPress enter to exit...\n", errno_temp, strerror(errno_temp), GetLastError(), crash_reason);
+
+	getchar();
+
 	exit(crash_retval);
+}
+
+int QuitProgram(int color_quit)
+{
+	PrintBottomString(NEWTRODIT_PROMPT_QUIT);
+	if (YesNoPrompt())
+	{
+		if (isModified)
+		{
+			LoadAllNewtrodit();
+			DisplayFileContent(str_save, newlinestring, stdout);
+
+			PrintBottomString(NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
+
+			if (YesNoPrompt())
+			{
+				SaveFile(str_save, strdup(filename_text), YSIZE, &isModified, &isUntitled);
+			}
+		}
+		SetColor(color_quit);
+		ClearScreen();
+		CursorSettings(TRUE, CURSIZE);
+		exit(0);
+	}
+	else
+	{
+		SetColor(bg_color);
+	}
+
+	return 0;
+}
+
+void UpdateTitle(int is_saved)
+{
+	if (is_saved == 1 && fullPathTitle)
+	{
+		char *path = filename_text;
+		GetFullPathName(path, sizeof(filename_text), filename_text, NULL);
+	}
+	if (isModified)
+	{
+		SetConsoleTitle(join(join("Newtrodit - ", filename_text), " (Modified)"));
+	}
+	else
+	{
+		SetConsoleTitle(join("Newtrodit - ", filename_text));
+	}
 }
