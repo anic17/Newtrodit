@@ -1449,7 +1449,6 @@ int main(int argc, char *argv[])
 				if (xpos >= BUFFER_X - BUFFER_INCREMENT)
 				{
 					tmp = realloc_n(str_save[ypos], BUFFER_X, BUFFER_X + BUFFER_INCREMENT);
-					printf("HELLO WORLD SF 14");
 					BUFFER_X += BUFFER_INCREMENT;
 
 					if (tmp == NULL)
