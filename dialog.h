@@ -11,6 +11,8 @@ char NEWTRODIT_ERROR_WINDOW_TOO_SMALL[] = "Console window is too small. Please r
 char NEWTRODIT_WARNING_UNEXPECTED_ERRORS[] = "Warning: Unexpected errors may happen.";
 char NEWTRODIT_ERROR_MANUAL_TOO_BIG[] = "Manual file is too big.";
 char NEWTRODIT_ERROR_MISSING_MANUAL[] = "Manual file is missing: ";
+char NEWTRODIT_ERROR_INVALID_MANUAL[] = "Invalid manual file: ";
+
 char NEWTRODIT_ERROR_INVALID_INBOUND[] = "Invalid inbound key combination: ";
 char NEWTRODIT_ERROR_RELOAD_SETTINGS[] = "Cannot reload settings. Settings file doesn't exist or it's corrupt.";
 char NEWTRODIT_ERROR_OUT_OF_MEMORY[] = "Out of memory.";
@@ -78,3 +80,5 @@ char NEWTRODIT_DIALOG_BOTTOM_HELP[] = "For help, press F1 | ";
 char NEWTRODIT_DIALOG_ENABLED[] = "Enabled";
 char NEWTRODIT_DIALOG_DISABLED[] = "Disabled";
 char NEWTRODIT_FUNCTION_ABORTED[] = "Function aborted.";
+
+char NEWTRODIT_MANUAL_MAGIC_NUMBER[] = "$NEWTRODIT_MANUAL";

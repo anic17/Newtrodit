@@ -45,6 +45,10 @@
 #define bool short
 #endif
 
+#ifndef ENOBUFS
+#define ENOBUFS     105 /* No buffer space available */
+#endif
+
 #ifndef _MAX_PATH
 #warning "_MAX_PATH not defined. Using 260 as a value"
 #define _MAX_PATH 260
@@ -65,7 +69,7 @@
 int BUFFER_X = 640;
 int BUFFER_Y = 5600;
 
-int BUFFER_INCREMENT = 100; // How much to increment the buffer size by when it is full.
+int BUFFER_INCREMENT = 150; // How much to increment the buffer size by when it is full.
 
 typedef struct
 {
@@ -234,6 +238,7 @@ void ClearLine(int line_clear) // Clears the specified line
 	{
 		putchar(' ');
 	}
+	gotoxy(LINECOUNT_WIDE, line_clear);
 
 	return;
 }
@@ -595,7 +600,7 @@ char *rot13(char *s)
 
 int BufferLimit()
 {
-	if (ypos >= BUFFER_Y)
+	if (ypos >= BUFFER_Y || xpos >= BUFFER_X)
 	{
 		PrintBottomString(NEWTRODIT_ERROR_OUT_OF_MEMORY);
 		MakePause();

@@ -71,7 +71,7 @@ int NewtroditHelp()
 	const char reset_color[] = "\e[0m";
 
 	int quit_manual = 0, end_manual = 0, max_manual_lines = 0;
-	int man_line_count = 1, disable_clear = 0;
+	int man_line_count = 0, disable_clear = 0;
 
 	int find_escape = false;
 
@@ -102,6 +102,12 @@ int NewtroditHelp()
 
 	while (fgets(manual_buf[man_line_count], MANUAL_BUFFER_X, manual)) // Load manual into memory
 	{
+		if(man_line_count == 0 && strncmp(NEWTRODIT_MANUAL_MAGIC_NUMBER, manual_buf[man_line_count], strlen(NEWTRODIT_MANUAL_MAGIC_NUMBER)))
+		{
+			PrintBottomString(join(NEWTRODIT_ERROR_INVALID_MANUAL, manual_file));
+			MakePause();
+			return 1;
+		}
 		if (man_line_count + 1 >= MANUAL_BUFFER_X)
 		{
 			PrintBottomString(NEWTRODIT_ERROR_MANUAL_TOO_BIG);

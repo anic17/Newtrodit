@@ -29,7 +29,7 @@ const char newtrodit_commit[] = ""; // Example commit
 char newlinestring[100] = "\n";
 
 const int MANUAL_BUFFER_X = 300;
-const int MANUAL_BUFFER_Y = 400;
+const int MANUAL_BUFFER_Y = 2000;
 
 int TAB_WIDE = TAB_WIDE_;
 int CURSIZE = CURSIZE_;
@@ -53,6 +53,9 @@ int clearBufferScreen = false;
 int isUntitled = true;
 int isModified = false;
 int isSaved = false;
+
+#define BG_DEFAULT 0x07
+#define FG_DEFAULT 0x70
 
 int bg_color = 0x07;
 int fg_color = 0x70;

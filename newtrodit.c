@@ -86,14 +86,14 @@ int LoadSettings(char *newtrodit_config_file, int *sigsegv, int *linecount, int 
 	int cnt = 0;
 	char equalchar[] = "=";
 	char *setting_list[] = {
-		"bgcolor",
+		"fontcolor",
 		"codepage",
 		"convertnull",
 		"converttab",
 		"cursize",
 		"curinsert"
 		"devmode",
-		"fgcolor",
+		"menucolor",
 		"linecount",
 		"linecountwide",
 		"manfile",
@@ -106,6 +106,8 @@ int LoadSettings(char *newtrodit_config_file, int *sigsegv, int *linecount, int 
 		"ysize",
 	}; // List of settings that can be changed
 
+	SetColor(FG_DEFAULT);
+	SetColor(BG_DEFAULT);
 	while (fgets(setting_buf, sizeof(setting_buf), settings))
 	{
 		setting_buf[strcspn(setting_buf, "\n")] = 0; // Remove newline
@@ -126,7 +128,7 @@ int LoadSettings(char *newtrodit_config_file, int *sigsegv, int *linecount, int 
 				if (!strncmp(iniptr, setting_list[i], strlen(setting_list[i])))
 				{
 					token = strtok(NULL, equalchar);
-					if (!strcmp(setting_list[i], "bgcolor"))
+					if (!strcmp(setting_list[i], "fontcolor"))
 					{
 						bg_color = atoi(token) % 255;
 					}
@@ -188,9 +190,9 @@ int LoadSettings(char *newtrodit_config_file, int *sigsegv, int *linecount, int 
 							*devmode = false;
 						}
 					}
-					if (!strcmp(setting_list[i], "fgcolor"))
+					if (!strcmp(setting_list[i], "menucolor"))
 					{
-						fg_color = (atoi(token)*16) % 255;
+						fg_color = (atoi(token) * 16) % 255;
 					}
 					if (!strcmp(setting_list[i], "manfile"))
 					{
@@ -310,6 +312,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Buffer is too small (Current size is %dx%d and required size is %dx%d", BUFFER_X, BUFFER_Y, MIN_BUFSIZE, MIN_BUFSIZE);
 		return 1;
 	}
+	Line *buffer = (Line *)malloc(sizeof(Line) * BUFFER_Y);
 	str_save = (char **)malloc(BUFFER_Y * sizeof(char *));
 
 	for (int i = 0; i < BUFFER_Y; i++)
@@ -417,7 +420,7 @@ int main(int argc, char *argv[])
 			shiftargc--;
 		}
 
-		if (!strcmp(argv[argc_shift], "--fgcolor") || !strcmp(argv[argc_shift], "-fg")) // Foreground color parameter
+		if (!strcmp(argv[argc_shift], "--menucolor") || !strcmp(argv[argc_shift], "-fg")) // Foreground color parameter
 		{
 			if (argv[argc_shift + 1] != NULL)
 			{
@@ -437,7 +440,7 @@ int main(int argc, char *argv[])
 				return 1;
 			}
 		}
-		if (!strcmp(argv[argc_shift], "--bgcolor") || !strcmp(argv[argc_shift], "-bg")) // Foreground color parameter
+		if (!strcmp(argv[argc_shift], "--fontcolor") || !strcmp(argv[argc_shift], "-fc")) // Foreground color parameter
 		{
 			if (argv[argc_shift + 1] != NULL)
 			{
@@ -509,9 +512,12 @@ int main(int argc, char *argv[])
 	{
 		UpdateTitle(isSaved);
 
+		old_y_size = YSIZE;
+		old_x_size = XSIZE;
+
 		if (ypos >= (YSIZE - 2))
 		{
-			display_y = ypos - (YSIZE - 2);
+			display_y = old_y_size - 2;
 		}
 		else
 		{
@@ -526,11 +532,10 @@ int main(int argc, char *argv[])
 		{
 			DisplayCursorPos(xpos, ypos);
 		}
-		old_y_size = YSIZE;
-		old_x_size = XSIZE;
+
 		wrapSize = XSIZE - 2 - LINECOUNT_WIDE;
 
-		if (xpos <= wrapSize) // TODO: Scroll
+		if (xpos <= wrapSize)
 		{
 			if (ypos > YSIZE - 1)
 			{
@@ -1384,11 +1389,8 @@ int main(int argc, char *argv[])
 				NewtroditHelp();
 
 				LoadAllNewtrodit();
-				gotoxy(0, 1);
 
-				// Print again the text already written on the screen
 				DisplayFileContent(str_save, newlinestring, stdout);
-				gotoxy(xpos + relative_xpos[ypos] + LINECOUNT_WIDE, ypos + relative_ypos[xpos]);
 				DisplayCursorPos(xpos, ypos);
 				break;
 			case 60: // F2 key
@@ -1456,7 +1458,7 @@ int main(int argc, char *argv[])
 						PrintBottomString(NEWTRODIT_ERROR_OUT_OF_MEMORY);
 						MakePause();
 						SaveFile(str_save, filename_text, BUFFER_Y, &isModified, &isUntitled);
-						return 2;
+						return ENOBUFS;
 					}
 					free(str_save[ypos]);
 					str_save[ypos] = tmp;
@@ -1656,10 +1658,8 @@ int main(int argc, char *argv[])
 
 				PrintLine(join(join("\"", str_save[ypos]), "\""));
 				MakePause();
-				for (int i = 0; i < strlen(str_save[ypos]) + 2; i++) // Also add double quotes
-				{
-					printf("\b \b");
-				}
+				ClearLine(ypos);
+				PrintLine(str_save[ypos]);
 			}
 		}
 		if (ch == 23) // ^W
@@ -1818,51 +1818,62 @@ int main(int argc, char *argv[])
 
 		if (ch == 8 && !CheckKey(0x08) && CheckKey(VK_CONTROL)) // ^H = Replace string. Not backspace because it's checking for actual backspace character
 		{
-			replace_count = 0;
-			ClearLine(YSIZE - 2);
-			ClearLine(BOTTOM);
-
-			gotoxy(0, YSIZE - 2);
-			PrintLine(NEWTRODIT_PROMPT_FIND_STRING);
-			gotoxy(0, BOTTOM);
-			PrintLine(NEWTRODIT_PROMPT_REPLACE_STRING);
-
-			gotoxy(strlen(NEWTRODIT_PROMPT_FIND_STRING), YSIZE - 2);
-
-			fgets(find_string, sizeof find_string, stdin);
-			gotoxy(strlen(NEWTRODIT_PROMPT_REPLACE_STRING), BOTTOM);
-			fgets(replace_string, sizeof find_string, stdin);
-			find_string[strcspn(find_string, "\n")] = 0;
-			replace_string[strcspn(replace_string, "\n")] = 0;
-			if (!nolflen(find_string))
-			{
-				FunctionAborted(str_save, newlinestring);
-				ch = 0;
-				continue;
-			}
-
-			for (int i = 1; i < BUFFER_Y; i++) // Line 0 is unused
-			{
-
-				replace_str_ptr = ReplaceString(str_save[i], find_string, replace_string, &replace_count);
-				if (replace_str_ptr)
-				{
-					if (strlen(replace_str_ptr) < strlen(str_save[i]))
-					{
-						xpos = strlen(replace_str_ptr);
-					}
-
-					strncpy_n(str_save[i], replace_str_ptr, BUFFER_X);
-				}
-			}
-			LoadAllNewtrodit();
-			DisplayFileContent(str_save, newlinestring, stdout);
-			PrintBottomString(join(join(join("Replaced ", itoa_n(replace_count)), " occurrences of "), find_string));
-			MakePause();
-			ShowBottomMenu();
-			DisplayCursorPos(xpos, ypos);
-
 			ch = 0;
+
+			if (CheckKey(VK_SHIFT))
+			{
+				NewtroditHelp();
+
+				LoadAllNewtrodit();
+
+				DisplayFileContent(str_save, newlinestring, stdout);
+				DisplayCursorPos(xpos, ypos);
+			}
+			else
+			{
+				replace_count = 0;
+				ClearLine(YSIZE - 2);
+				ClearLine(BOTTOM);
+
+				gotoxy(0, YSIZE - 2);
+				PrintLine(NEWTRODIT_PROMPT_FIND_STRING);
+				gotoxy(0, BOTTOM);
+				PrintLine(NEWTRODIT_PROMPT_REPLACE_STRING);
+
+				gotoxy(strlen(NEWTRODIT_PROMPT_FIND_STRING), YSIZE - 2);
+
+				fgets(find_string, sizeof find_string, stdin);
+				gotoxy(strlen(NEWTRODIT_PROMPT_REPLACE_STRING), BOTTOM);
+				if (!nolflen(find_string))
+				{
+					FunctionAborted(str_save, newlinestring);
+					continue;
+				}
+				fgets(replace_string, sizeof find_string, stdin);
+				find_string[strcspn(find_string, "\n")] = 0;
+				replace_string[strcspn(replace_string, "\n")] = 0;
+
+				for (int i = 1; i < BUFFER_Y; i++) // Line 0 is unused
+				{
+
+					replace_str_ptr = ReplaceString(str_save[i], find_string, replace_string, &replace_count);
+					if (replace_str_ptr)
+					{
+						if (strlen(replace_str_ptr) < strlen(str_save[i]))
+						{
+							xpos = strlen(replace_str_ptr);
+						}
+
+						strncpy_n(str_save[i], replace_str_ptr, BUFFER_X);
+					}
+				}
+				LoadAllNewtrodit();
+				DisplayFileContent(str_save, newlinestring, stdout);
+				PrintBottomString(join(join(join("Replaced ", itoa_n(replace_count)), " occurrences of "), find_string));
+				MakePause();
+				ShowBottomMenu();
+				DisplayCursorPos(xpos, ypos);
+			}
 			continue;
 		}
 		if (ch == 1) // ^A
@@ -1876,7 +1887,7 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-		if (ch == 8 && CheckKey(0x08) && !CheckKey(VK_CONTROL)) // BS key
+		if (ch == 8 && CheckKey(0x08) && !CheckKey(VK_CONTROL)) // BS key (Avoiding Control-H)
 		{
 			c = -8; // Negative to avoid conflict
 			if (xpos > 0)
@@ -1928,17 +1939,20 @@ int main(int argc, char *argv[])
 				/* Act as END key */
 				if (ypos > 1)
 				{
-					str_save[ypos][0] = '\0';
-
 					xpos = nolflen(str_save[ypos - 1]);
-					for (int i = 0; i < (strlen(str_save[ypos - 1]) - nolflen(str_save[ypos - 1])); i++)
+
+					if (str_save[ypos][0] == '\0')
 					{
-						str_save[ypos - 1][strlen(str_save[ypos - 1]) - i] = '\0';
+						for (int i = 0; i < (strlen(str_save[ypos - 1]) - nolflen(str_save[ypos - 1])); i++)
+						{
+							str_save[ypos - 1][strlen(str_save[ypos - 1]) - i] = '\0';
+						}
+						if (str_save[ypos - 1][0] == 0x0A)
+						{
+							xpos = 0;
+						}
 					}
-					if (str_save[ypos - 1][0] == 0x0A)
-					{
-						xpos = 0;
-					}
+
 					ypos--;
 					UpdateScrolledScreen(lineCount);
 				}
@@ -1975,19 +1989,6 @@ int main(int argc, char *argv[])
 
 				if (CheckKey(VK_TAB) && ch == 9) // TAB key
 				{
-					if (xpos >= BUFFER_X - BUFFER_INCREMENT)
-					{
-						BUFFER_X += BUFFER_INCREMENT;
-						tmp = realloc(str_save[ypos], BUFFER_X);
-						if (tmp == NULL)
-						{
-							PrintBottomString(NEWTRODIT_ERROR_OUT_OF_MEMORY);
-							MakePause();
-							SaveFile(str_save, filename_text, BUFFER_Y, &isModified, &isUntitled);
-							return 2;
-						}
-						str_save[ypos] = tmp;
-					}
 					if (convertTabtoSpaces == true)
 					{
 						for (int i = 0; i < TAB_WIDE; i++) // i is also character 9 :)
@@ -2050,23 +2051,23 @@ int main(int argc, char *argv[])
 
 		xpos++;
 
-		if ((strlen(str_save[ypos]) > BUFFER_X || ypos > BUFFER_Y || xpos >= BUFFER_X) && (ch != 8))
+		if (strlen(str_save[ypos]) > BUFFER_X - (TAB_WIDE * 2) || ypos > BUFFER_Y || xpos >= BUFFER_X - (TAB_WIDE * 2))
 		{
+			tmp = realloc_n(str_save[ypos], BUFFER_X, BUFFER_X + BUFFER_INCREMENT);
 			BUFFER_X += BUFFER_INCREMENT;
-			temp_strsave = realloc((char *)str_save[ypos], BUFFER_X);
-			if (temp_strsave)
-			{
-				str_save[ypos] = temp_strsave;
-			}
-			else
+
+			if (tmp == NULL)
 			{
 				PrintBottomString(NEWTRODIT_ERROR_OUT_OF_MEMORY);
 				MakePause();
 				SaveFile(str_save, filename_text, BUFFER_Y, &isModified, &isUntitled);
-				return 2;
+				return ENOBUFS;
 			}
-
-			free(temp_strsave);
+			if (tmp)
+			{
+				free(str_save[ypos]);
+				str_save[ypos] = tmp;
+			}
 		}
 	}
 
