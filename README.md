@@ -19,11 +19,14 @@ Simple console text editor written in C.
 - Easy to use
 - Fast and light
 - Real time position of cursor
-- String finding
-- String replacing
-- ROT13 encoding
 - Line counting
-- Line scrolling
+- Various string manipulation functions such as:
+  - String finding
+  - String replacing
+  - ROT13 encoding
+  - Uppercase/lowercase conversion
+
+
 
 ## More features to come
 
