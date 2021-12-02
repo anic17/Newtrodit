@@ -25,13 +25,12 @@ Simple console text editor written in C.
   - String replacing
   - ROT13 encoding
   - Uppercase/lowercase conversion
-
+- Experimental version of syntax highligthing
 
 
 ## More features to come
 
-- Syntax highlighting supporting different languages
-- Maybe hex editor?
+- Maybe an hex editor?
 
 ## Small history
 
