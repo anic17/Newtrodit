@@ -137,20 +137,6 @@ void NewtroditNameLoad()
 	SetColor(bg_color);
 }
 
-int GetConsoleXCursorPos()
-{
-	CONSOLE_SCREEN_BUFFER_INFO info;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
-	return info.dwCursorPosition.X;
-}
-
-int GetConsoleYCursorPos()
-{
-	CONSOLE_SCREEN_BUFFER_INFO info;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
-	return info.dwCursorPosition.Y;
-}
-
 void DisplayCursorPos(int xps, int yps)
 {
 	size_t len = strlen(NEWTRODIT_DIALOG_BOTTOM_HELP);
@@ -194,10 +180,10 @@ void LoadAllNewtrodit()
 
 void NewtroditCrash(char *crash_reason, int crash_retval)
 {
+	strncpy_n(filename_text, "Newtrodit crashed", sizeof(filename_text));
 	LoadAllNewtrodit();
-	gotoxy(0, 1);
 	int errno_temp = errno;
-	if (errno_temp == 0)
+	if (!errno_temp)
 	{
 		errno_temp = crash_retval;
 	}
@@ -253,5 +239,24 @@ void UpdateTitle(int is_saved)
 	else
 	{
 		SetConsoleTitle(join("Newtrodit - ", filename_text));
+	}
+}
+
+void PrintLine(char *line)
+{
+	if (syntaxHighlighting)
+	{
+		color_line(line);
+	}
+	else
+	{
+		if (wrapLine)
+		{
+			printf("%s", line);
+		}
+		else
+		{
+			printf("%.*s", wrapSize, line);
+		}
 	}
 }

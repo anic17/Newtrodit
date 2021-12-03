@@ -23,8 +23,10 @@ int SaveFile(char *strsave[], char *filename, int size, int *is_modified, int *i
 int DisplayFileContent(char *strsave[], char newlinestring[], FILE *fstream);
 
 #include "newtrodit_core.h"
+#include "newtrodit_syntax.h"
 #include "newtrodit_gui.c"
 #include "newtrodit_func.c"
+
 
 int DownArrow(int man_line_count)
 {

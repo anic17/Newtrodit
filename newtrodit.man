@@ -11,11 +11,11 @@ $NEWTRODIT_MANUAL
 
  newtrodit [switches] [file]
 
-         --bgcolor, -bg    Changes the background color.
+         --fontcolor, -fc  Changes the font color.
          --converttab, -t  Converts tabs to spaces.
          --convertnull, -n Converts nulls characters to spaces.
          --devmode, -d     Enables developer mode.
-         --fgcolor, -fg    Changes the foreground color.
+         --menucolor, -mc  Changes Newtrodit's menus color.
          --help, -h        Opens this Newtrodit help manual.
          --lfunix, -ln     Changes the line ending to UNIX (LF).
          --lfwin, -lw      Changes the line ending to Windows (CRLF).
@@ -97,10 +97,10 @@ $NEWTRODIT_MANUAL
 
  [37;113;235;37;1mSettings[0m
 
- Newtrodit can be customizable by changing the settings.
+ Newtrodit can be customizable as you like it by changing some settings.
 
  Settings file must be located in the same directory as Newtrodit with the name '[1mnewtrodit.config[0m'.
- It's a simple text file with one line per setting, with INI-like syntax.
+ It's a simple text file with one line per setting, with an INI-like syntax.
 
  Comments are allowed in the settings file with the '[38;2;207;50;68m;[0m' (semicolon) character.
  
@@ -123,13 +123,14 @@ $NEWTRODIT_MANUAL
   -[1m linecount[0m     = Toggle line count. Boolean type.
   -[1m oldkeybinds[0m   = Toggle old keybind usage. Boolean type.
   -[1m sigsegv[0m       = Toggle SIGSEGV handler. Boolean type.
+  -[1m syntax[0m        = Toggle syntax highlighting. Boolean type.
 
   [37;113;235;37;1mInteger settings[0m
 
-  -[1m bgcolor[0m       = Background color. Integer type (0-255).
+  -[1m fontcolor[0m     = Font color. Integer type (0-255).
   -[1m codepage[0m      = Console codepage. Integer type
   -[1m cursize[0m       = Console cursor size. Integer type.
-  -[1m fgcolor[0m       = Foreground color. Integer type (0-255).
+  -[1m menucolor[0m     = Menu color. Integer type (0-255).
   -[1m linecountwide[0m = Line count width. Integer type.
   -[1m tabwide[0m       = Tab width. Integer type.
   -[1m xsize[0m         = X size of the window (columns). Integer type.
@@ -152,6 +153,15 @@ $NEWTRODIT_MANUAL
  [1m tabwide=8[0m
  [1m manfile=newtrodit.man[0m
  [1m linecountwide=3[0m
+
+ [1mSyntax highlighting[0m
+
+ Newtrodit has some syntax highlighting rules to color the code you're writing and to make it
+ easier to read. It's still in an experimental phase, so it's disabled by default.
+
+ At the moment, there only exist some basic rules to highlight the C language, but at the future
+ there will be more, adding you the possibility to customize the syntax highlighting and create your
+ own rules. 
 
  [1mOld keybinds[0m
 

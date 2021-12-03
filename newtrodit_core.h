@@ -1,5 +1,5 @@
 /*
-	 Newtrodit: A console text editor
+  Newtrodit: A console text editor
   Copyright (C) 2021  anic17 Software
 
   This program is free software: you can redistribute it and/or modify
@@ -21,6 +21,8 @@
 #ifndef _NEWTRODIT_CORE_H_
 #define _NEWTRODIT_CORE_H_
 #endif
+
+#define _NEWTRODIT_SYNTAX_H 1 // Toggle syntax highlighting
 
 #include <string.h>
 #include <stdlib.h>
@@ -46,7 +48,7 @@
 #endif
 
 #ifndef ENOBUFS
-#define ENOBUFS     105 /* No buffer space available */
+#define ENOBUFS 105 /* No buffer space available */
 #endif
 
 #ifndef _MAX_PATH
@@ -119,11 +121,24 @@ void gotoxy(int x, int y) // Change cursor position to x,y
 	return;
 }
 
-int SetColor(int color_hex)
+int GetConsoleXCursorPos()
+{
+	CONSOLE_SCREEN_BUFFER_INFO info;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
+	return info.dwCursorPosition.X;
+}
+
+int GetConsoleYCursorPos()
+{
+	CONSOLE_SCREEN_BUFFER_INFO info;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
+	return info.dwCursorPosition.Y;
+}
+
+void SetColor(int color_hex)
 {
 	HANDLE hConsoleColor = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(hConsoleColor, (color_hex / 16) << 4 | (color_hex % 16));
-	return 0;
 }
 
 int GetColor()
@@ -301,26 +316,17 @@ size_t nolflen(char *len_str) // Line length without line feed
 	return n;
 }
 
-void PrintTab(int tab_count)
+char *PrintTab(int tab_count)
 {
+	char *s = malloc(sizeof(char *) * tab_count + 1);
 	for (int i = 0; i < tab_count; i++)
 	{
-		putchar(' ');
+		s[i] = ' ';
 	}
-	return;
+	return s;
 }
 
-void PrintLine(char *line)
-{
-	if (wrapLine)
-	{
-		printf("%s", line);
-	}
-	else
-	{
-		printf("%.*s", wrapSize, line);
-	}
-}
+
 
 int CheckFile(char *filename) // Will return 0 if file exists
 {
@@ -337,9 +343,13 @@ int CheckFile(char *filename) // Will return 0 if file exists
 int FindString(char *str, char *find)
 
 {
-	int n = strlen(find);
-	for (int i = 0; i < strlen(str); i++)
+	int n = strlen(find), k = strlen(str);
+	for (int i = 0; i < k; i++)
 	{
+		if (i > (k - n))
+		{
+			return -1;
+		}
 		if (!strncmp(str + i, find, n))
 		{
 			return i;
@@ -619,4 +629,76 @@ void *realloc_n(void *old, size_t old_sz, size_t new_sz)
 	memcpy(new, old, old_sz);
 	free(old);
 	return new;
+}
+
+void ClearChars(int x, int y, size_t num)
+{
+	int ox = GetConsoleXCursorPos(), oy = GetConsoleYCursorPos();
+	gotoxy(x, y);
+	for (int i = 0; i < num; ++i)
+	{
+		putchar(' ');
+	}
+	gotoxy(ox, oy);
+}
+
+typedef struct LocateFile
+{
+	char *filename;
+} LocateFile;
+
+int LocateFiles(int show_dir, int print_max)
+{
+	const int max_files = 1024;
+	int n = 0;
+	LocateFile buf[max_files];
+	HANDLE hFindFiles;
+	WIN32_FIND_DATA FindFileData;
+
+	if ((hFindFiles = FindFirstFile("*", &FindFileData)) != INVALID_HANDLE_VALUE)
+	{
+		while (FindNextFile(hFindFiles, &FindFileData))
+		{
+			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			{
+
+				if (!show_dir)
+				{
+					continue;
+				}
+			}
+			buf[n].filename = FindFileData.cFileName;
+
+			if (n <= print_max)
+			{
+				printf("%s\n", buf[n].filename);
+			}
+			n++;
+		}
+	}
+	FindClose(hFindFiles);
+}
+
+char *RemoveTab(char *s) // Replace all tabs with 8 spaces and return another string
+{
+	char *new_s = (char *)malloc(strlen(s) + 1);
+	for (int i = 0; i < strlen(s); i++)
+	{
+		if (s[i] == '\t')
+		{
+			for (int j = 0; j < TAB_WIDE; j++)
+			{
+				new_s[i + j] = ' ';
+				i++;
+			}
+		}
+		else
+		{
+			new_s[i] = s[i];
+		}
+	}
+	new_s[strlen(s) + TAB_WIDE] = '\0';
+	printf("%s", new_s);
+
+	return new_s;
 }

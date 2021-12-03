@@ -1,3 +1,22 @@
+/*
+  Newtrodit: A console text editor
+  Copyright (C) 2021  anic17 Software
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>
+
+*/
+
 // Errors and warnings
 
 char NEWTRODIT_ERROR_BUFFER_OVERFLOW[] = "Internal buffer overflow.";
@@ -56,6 +75,7 @@ char NEWTRODIT_PROMPT_RELOAD_SETTINGS[] = "Are you sure you want to reload the s
 char NEWTRODIT_PROMPT_FILE_CREATING[] = " doesn't exist. Do you want to create it? (y/n)"; // Must be added using join() later
 char NEWTRODIT_PROMPT_SAVE_FILE[] = "File to save: ";
 char NEWTRODIT_PROMPT_SAVE_FILE_AS[] = "Save file as: ";
+char NEWTRODIT_PROMPT_CREATE_MACRO[] = "Macro command line: ";
 
 
 
@@ -72,6 +92,7 @@ char NEWTRODIT_DEV_TOOLS[] = "Developer tools: ";
 char NEWTRODIT_TAB_CONVERSION[] = "Tab conversion: ";
 char NEWTRODIT_NULL_CONVERSION[] = "Null character to spaces conversion: ";
 char NEWTRODIT_LINE_COUNT[] = "Line count: ";
+char NEWTRODIT_SYNTAX_HIGHLIGHTING[] = "Syntax highlighting: ";
 
 
 // Other dialogs

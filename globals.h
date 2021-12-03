@@ -18,10 +18,9 @@
 */
 
 const char newtrodit_version[] = "0.5";
-const char newtrodit_build_date[] = "16/11/2021";
+const char newtrodit_build_date[] = "2/12/2021";
 char manual_file[_MAX_PATH] = "newtrodit.man";
 char settings_file[_MAX_PATH] = "newtrodit.config";
-
 
 int start_color;
 const char newtrodit_commit[] = ""; // Example commit
@@ -39,7 +38,7 @@ int goto_len = 4;
 int xpos = 0, ypos = 1, display_y = 1; // Cursor position
 
 // Boolean
-int convertTabtoSpaces = false;
+int convertTabtoSpaces = true;
 int convertNull = true;
 int trimLongLines = true;
 int cursorSizeInsert = true;
@@ -54,12 +53,16 @@ int isUntitled = true;
 int isModified = false;
 int isSaved = false;
 
+int syntaxHighlighting = false;
+
 #define BG_DEFAULT 0x07
 #define FG_DEFAULT 0x70
 
-int bg_color = 0x07;
-int fg_color = 0x70;
+int bg_color = BG_DEFAULT;
+int fg_color = FG_DEFAULT;
 
 char filename_text[_MAX_PATH] = filename_text_;
 
 char **str_save; // Buffer to save the text
+
+char *run_macro;

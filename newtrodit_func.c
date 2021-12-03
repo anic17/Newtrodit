@@ -42,18 +42,11 @@ void DisplayLineCount(char *strsave[], int size, int yps)
 
 	if (strsave[i + 1][0] == '\0')
 	{
-		gotoxy(0, display_y + 1);
-		for (int i = 0; i < LINECOUNT_WIDE - 1; ++i)
-		{
-			putchar(' ');
-		}
-		gotoxy(0, display_y);
+		ClearChars(0, display_y + 1, LINECOUNT_WIDE);
 	}
 	SetColor(0x80);
-	for (int i = 0; i < LINECOUNT_WIDE - 1; ++i)
-	{
-		putchar(' ');
-	}
+	ClearChars(0, display_y + 1, LINECOUNT_WIDE - 1);
+
 	gotoxy(0, display_y);
 	printf("%d", ypos);
 
@@ -130,11 +123,26 @@ int DisplayFileContent(char *strsave[], char newlinestring[], FILE *fstream)
 
 			if (wrapLine)
 			{
-				fputs(strsave[i], fstream);
+				if (fstream == stdout && syntaxHighlighting)
+				{
+					color_line(str_save[i]);
+				}
+				else
+				{
+					fputs(strsave[i], fstream);
+				}
 			}
 			else
 			{
-				printf("%.*s", wrapSize, strsave[i]);
+				if (fstream == stdout && syntaxHighlighting)
+				{
+					color_line(str_save[i]);
+				}
+				else
+				{
+					printf("%.*s", wrapSize, strsave[i]);
+				}
+				
 			}
 		}
 	}
@@ -143,7 +151,19 @@ int DisplayFileContent(char *strsave[], char newlinestring[], FILE *fstream)
 
 int ValidFileName(char *filename)
 {
-	return strpbrk(filename, "*?\"<>|\x1b") != NULL;
+	return strpbrk(filename, "*?\"<>|\x1b") == NULL;
+}
+
+int ValidString(char *str)
+{
+	for (int i = 0; i < strlen(str); i++)
+	{
+		if (!isprint(str[i]))
+		{
+			return 0;
+		}
+	}
+	return 1;
 }
 
 int SaveFile(char *strsave[], char *filename, int size, int *is_modified, int *is_untitled)
@@ -165,7 +185,7 @@ int SaveFile(char *strsave[], char *filename, int size, int *is_modified, int *i
 		}
 		filename[strcspn(filename, "\n")] = 0; // Remove newline character
 
-		if (ValidFileName(filename))
+		if (!ValidFileName(filename))
 		{
 			PrintBottomString(join(NEWTRODIT_FS_FILE_INVALID_NAME, filename));
 			MakePause();
@@ -290,7 +310,7 @@ int LoadFile(char *strsave[], char *filename, int relativexps[], char newlinestr
 	for (int j = 1; j < YSIZE - 1; j++) // Increment read_y by one because it starts at 1
 	{
 		gotoxy(LINECOUNT_WIDE, j);
-		printf("%s", strsave[j]);
+		PrintLine(strsave[j]);
 	}
 
 	fclose(fpread);
@@ -422,7 +442,6 @@ char *TypingFunction(int min_ascii, int max_ascii, int max_len)
 {
 	int chr = 0, index = 0;
 	char *num_str = (char *)malloc(max_len) + 1;
-	PrintBottomString(NEWTRODIT_PROMPT_GOTO_LINE);
 
 	memset(num_str, 0, max_len); // Clear string
 	while (chr != 13)			 // Loop while enter isn't pressed
@@ -454,4 +473,8 @@ char *TypingFunction(int min_ascii, int max_ascii, int max_len)
 		}
 	}
 	return num_str;
+}
+
+void OpenNewtroditFile()
+{
 }

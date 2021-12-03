@@ -42,6 +42,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
+#include <dirent.h>
 #include "manual.c"
 
 typedef struct Undo_stack
@@ -49,6 +50,11 @@ typedef struct Undo_stack
 	char *line;
 	int line_count;
 } Undo_stack;
+
+typedef struct Startup_info
+{
+	char *dir;
+} Startup_info;
 
 void sigint_handler()
 {
@@ -65,10 +71,16 @@ void sigsegv_handler(int signum)
 	exit(errno);
 }
 
-int LoadSettings(char *newtrodit_config_file, int *sigsegv, int *linecount, int *devmode)
+void sigbreak_handler(int signum)
+{
+	signal(SIGBREAK, sigbreak_handler);
+	fflush(stdout);
+}
+
+int LoadSettings(char *newtrodit_config_file, char *macro, int *sigsegv, int *linecount, int *devmode)
 {
 	/*
-		Settings are stored in INI format.
+		Settings are stored in an INI-like format.
 		The format is:
 			key=value
 			;comment
@@ -96,18 +108,23 @@ int LoadSettings(char *newtrodit_config_file, int *sigsegv, int *linecount, int 
 		"menucolor",
 		"linecount",
 		"linecountwide",
+		"macro",
 		"manfile",
 		"newline",
 		"oldkeybinds",
 		"sigsegv",
+		"syntax",
 		"tabwide",
 		"trimlonglines",
 		"xsize",
 		"ysize",
 	}; // List of settings that can be changed
 
+	// Set the non changing settings
 	SetColor(FG_DEFAULT);
 	SetColor(BG_DEFAULT);
+	run_macro[0] = 0;
+
 	while (fgets(setting_buf, sizeof(setting_buf), settings))
 	{
 		setting_buf[strcspn(setting_buf, "\n")] = 0; // Remove newline
@@ -130,7 +147,7 @@ int LoadSettings(char *newtrodit_config_file, int *sigsegv, int *linecount, int 
 					token = strtok(NULL, equalchar);
 					if (!strcmp(setting_list[i], "fontcolor"))
 					{
-						bg_color = atoi(token) % 255;
+						bg_color = strtol(token, NULL, 16) % 255;
 					}
 					if (!strcmp(setting_list[i], "codepage"))
 					{
@@ -190,18 +207,34 @@ int LoadSettings(char *newtrodit_config_file, int *sigsegv, int *linecount, int 
 							*devmode = false;
 						}
 					}
-					if (!strcmp(setting_list[i], "menucolor"))
+					if (!strcmp(setting_list[i], "macro"))
 					{
-						fg_color = (atoi(token) * 16) % 255;
+
+						if (ValidString(token))
+						{
+							strncpy_n(run_macro, token, sizeof(setting_list));
+							// printf("%s", run_macro);
+						}
 					}
 					if (!strcmp(setting_list[i], "manfile"))
 					{
-						strncpy_n(manual_file, token, sizeof(manual_file));
-						manual_file[strcspn(manual_file, "\n")] = 0;
+						if (ValidFileName(token))
+						{
+							strncpy_n(manual_file, token, sizeof(manual_file));
+							manual_file[strcspn(manual_file, "\n")] = 0;
+						}
 					}
+					if (!strcmp(setting_list[i], "menucolor"))
+					{
+						fg_color = (strtol(token, NULL, 16) * 16) % 255;
+					}
+
 					if (!strcmp(setting_list[i], "newline"))
 					{
-						strncpy_n(newlinestring, token, sizeof(newlinestring));
+						if (ValidString(token))
+						{
+							strncpy_n(newlinestring, token, sizeof(newlinestring));
+						}
 					}
 
 					if (!strcmp(setting_list[i], "linecount"))
@@ -241,6 +274,17 @@ int LoadSettings(char *newtrodit_config_file, int *sigsegv, int *linecount, int 
 						else
 						{
 							*sigsegv = false;
+						}
+					}
+					if (!strcmp(setting_list[i], "syntax"))
+					{
+						if (atoi(token))
+						{
+							syntaxHighlighting = true;
+						}
+						else
+						{
+							syntaxHighlighting = false;
 						}
 					}
 
@@ -291,11 +335,24 @@ int main(int argc, char *argv[])
 	int dev_tools = true;	// Bool to enable or disable the dev tools
 	int insertChar = false; // Bool to check if replace instead of insert
 	int findInsensitive = false;
-	int sigsegvScreen = false;
+	int sigsegvScreen = true;
+	int openArgument = false;
+	int listDir = false;
+	/* 	char *run_macro = (char *)malloc(sizeof(char) * _MAX_PATH + 1);
+	 */
+	str_save = (char **)malloc(BUFFER_Y * sizeof(char *));
 
-	LoadSettings(settings_file, &sigsegvScreen, &lineCount, &dev_tools); // Load settings from settings file
+	for (int i = 0; i < BUFFER_Y; i++)
+	{
+		str_save[i] = (char *)calloc(BUFFER_X, sizeof(char));
+	}
 
-	signal(SIGINT, sigint_handler); // Ctrl-C handler
+	run_macro = (char *)malloc(sizeof(char) * _MAX_PATH + 1);
+	memset(run_macro, 0, sizeof(char) * _MAX_PATH + 1);
+	LoadSettings(settings_file, run_macro, &sigsegvScreen, &lineCount, &dev_tools); // Load settings from settings file
+
+	signal(SIGINT, sigint_handler);		// Ctrl-C handler
+	signal(SIGBREAK, sigbreak_handler); // Ctrl-Break handler
 	if (sigsegvScreen)
 	{
 		signal(SIGSEGV, sigsegv_handler); // Segmentation fault handler
@@ -313,12 +370,6 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	Line *buffer = (Line *)malloc(sizeof(Line) * BUFFER_Y);
-	str_save = (char **)malloc(BUFFER_Y * sizeof(char *));
-
-	for (int i = 0; i < BUFFER_Y; i++)
-	{
-		str_save[i] = (char *)calloc(BUFFER_X, sizeof(char));
-	}
 
 	char *temp_strsave = (char *)malloc(BUFFER_X) + 1;
 	char *tmp = (char *)malloc(BUFFER_X) + 1;
@@ -352,13 +403,12 @@ int main(int argc, char *argv[])
 
 	char inbound_ctrl_key[100];
 	char newname[FILENAME_MAX];
-
+	convertTabtoSpaces = true;
 	int n;
+	char *ptr;
 
 	// File variables
-	FILE *fileread;
-	FILE *fp_savefile;
-	FILE *newtrodit_open_argv;
+	FILE *fileread, *fp_savefile, *newtrodit_open_argv, *macro_temp;
 
 	// Position variables
 	int *relative_xpos = calloc(sizeof(int) * BUFFER_Y, BUFFER_X);
@@ -420,7 +470,7 @@ int main(int argc, char *argv[])
 			shiftargc--;
 		}
 
-		if (!strcmp(argv[argc_shift], "--menucolor") || !strcmp(argv[argc_shift], "-fg")) // Foreground color parameter
+		if (!strcmp(argv[argc_shift], "--menucolor") || !strcmp(argv[argc_shift], "-mc")) // Foreground color parameter
 		{
 			if (argv[argc_shift + 1] != NULL)
 			{
@@ -431,8 +481,7 @@ int main(int argc, char *argv[])
 					return 1;
 				}
 				fg_color *= 16;
-				argc_shift++;
-				shiftargc -= 2;
+				shiftargc--;
 			}
 			else
 			{
@@ -466,7 +515,8 @@ int main(int argc, char *argv[])
 	{
 		if (strlen(argv[argc_shift - 1]) > _MAX_PATH)
 		{
-			fprintf(stderr, "%s: %s", NEWTRODIT_FS_FILE_NAME_TOO_LONG, argv[argc_shift - 1]);
+			fprintf(stderr, "%s%s", NEWTRODIT_FS_FILE_NAME_TOO_LONG, argv[argc_shift - 1]);
+			exit(ENAMETOOLONG);
 		}
 		strncpy_n(filename_text, argv[argc_shift - 1], _MAX_PATH);
 		newtrodit_open_argv = fopen(filename_text, "rb");
@@ -476,7 +526,7 @@ int main(int argc, char *argv[])
 			if (!newtrodit_open_argv)
 			{
 
-				fprintf(stderr, "%s\n", NEWTRODIT_FS_FILE_OPEN_ERR);
+				fprintf(stderr, "%s%s\n", NEWTRODIT_FS_FILE_OPEN_ERR, filename_text);
 				exit(errno);
 			}
 		}
@@ -486,22 +536,23 @@ int main(int argc, char *argv[])
 			exit(errno);
 		}
 
-		LoadAllNewtrodit();
-		fseek(newtrodit_open_argv, 0, SEEK_END);					// Go to the end of the file
-		if (ftell(newtrodit_open_argv) > (long)BUFFER_X * BUFFER_Y) // If file is larger than 1 MB
+		fseek(newtrodit_open_argv, 0, SEEK_END); // Go to the end of the file
+		printf("%d", ftell(newtrodit_open_argv));
+		MakePause();
+		if (CountLines(newtrodit_open_argv) > BUFFER_Y) // If file is larger than 1 MB
 		{
-			PrintBottomString(join(NEWTRODIT_FS_FILE_TOO_LARGE, filename_text));
-			MakePause();
-			ClearScreen();
+			fprintf(stderr, "%s%s", NEWTRODIT_FS_FILE_TOO_LARGE, filename_text);
 			return EFBIG; // File too big
 		}
 		fseek(newtrodit_open_argv, 0, SEEK_SET); // Return to the beginning of the file
 
+		LoadAllNewtrodit();
 		LoadFile(str_save, filename_text, relative_xpos, newlinestring, newtrodit_open_argv);
 		CenterText(strlasttok(filename_text, '\\'), 0);
 		isSaved = true;
 		isUntitled = false;
 		isModified = false;
+		openArgument = true;
 	}
 	else
 	{
@@ -510,6 +561,7 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
+
 		UpdateTitle(isSaved);
 
 		old_y_size = YSIZE;
@@ -597,10 +649,12 @@ int main(int argc, char *argv[])
 					CloseClipboard();
 					if (ch == 11 && useOldKeybinds)
 					{
-
-						EmptyString(str_save[ypos]);
-						ClearLine(ypos);
-						xpos = 0;
+						if (str_save[ypos][0] != '\0')
+						{
+							EmptyString(str_save[ypos]);
+							ClearLine(ypos);
+							xpos = 0;
+						}
 					}
 				}
 				ch = 0;
@@ -630,7 +684,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		if (ch == 12) // S-^L
+		if (ch == 12) // ^L = Locate files ; S-^L = Toggle line count
 		{
 
 			if (CheckKey(VK_SHIFT))
@@ -657,9 +711,21 @@ int main(int argc, char *argv[])
 				}
 
 				c = -2;
-				ch = 0;
-				continue;
 			}
+			else
+			{
+				// List all files in the directory
+				LoadAllNewtrodit();
+				CursorSettings(FALSE, CURSIZE);
+				printf("Listing files in directory %s\n\n", _getcwd(NULL, 0));
+
+				LocateFiles(listDir, YSIZE - 5);
+				DisplayCursorPos(xpos, ypos);
+				MakePause();
+				LoadAllNewtrodit();
+				DisplayFileContent(str_save, newlinestring, stdout);
+			}
+			continue;
 		}
 
 		if (ch == 7) // ^G = Go to line
@@ -872,7 +938,7 @@ int main(int argc, char *argv[])
 				PrintBottomString(NEWTRODIT_PROMPT_RELOAD_SETTINGS);
 				if (YesNoPrompt())
 				{
-					if (LoadSettings(settings_file, &sigsegvScreen, &lineCount, &dev_tools) == 0) // Reload settings
+					if (LoadSettings(settings_file, run_macro, &sigsegvScreen, &lineCount, &dev_tools) == 0) // Reload settings
 					{
 						LoadAllNewtrodit();
 						DisplayFileContent(str_save, newlinestring, stdout);
@@ -1099,6 +1165,7 @@ int main(int argc, char *argv[])
 							ClearLine(ypos);
 
 							gotoxy(LINECOUNT_WIDE, display_y);
+
 							PrintLine(str_save[ypos]);
 						}
 					}
@@ -1149,7 +1216,7 @@ int main(int argc, char *argv[])
 
 			if (str_save[ypos + 1][0] != '\0')
 			{
-				if (xpos == nolflen(str_save[ypos]))
+				if (xpos != nolflen(str_save[ypos]))
 				{
 					/* memmove(str_save[ypos + 1], str_save[ypos], sizeof(BUFFER_X) * (BUFFER_Y - ypos)); */
 
@@ -1168,7 +1235,6 @@ int main(int argc, char *argv[])
 					} */
 				}
 
-				DisplayFileContent(str_save, newlinestring, stdout);
 				continue;
 			}
 			else
@@ -1199,7 +1265,24 @@ int main(int argc, char *argv[])
 
 			continue;
 		}
+		if (ch == 5) // ^E = Toggle syntax highlighting
+		{
+			syntaxHighlighting = !syntaxHighlighting;
+						LoadAllNewtrodit();
+						DisplayFileContent(str_save, newlinestring, stdout);
 
+			if (syntaxHighlighting)
+			{
+				PrintBottomString(join(NEWTRODIT_SYNTAX_HIGHLIGHTING, NEWTRODIT_DIALOG_ENABLED));
+			}
+			else
+			{
+				PrintBottomString(join(NEWTRODIT_SYNTAX_HIGHLIGHTING, NEWTRODIT_DIALOG_DISABLED));
+			}
+			
+			c = -2;
+			continue;
+		}
 		if (ch == 6) // ^F = Find string
 		{
 			// Empty values
@@ -1236,23 +1319,24 @@ int main(int argc, char *argv[])
 				if (findInsensitive)
 				{
 					find_string_index = FindString(str_lwr(str_save[i]), str_lwr(strdup(find_string)));
-					if (find_string_index >= 0)
-					{
-						strncpy_n(find_string, str_save[i] + find_string_index, strlen(find_string));
-					}
 				}
 				else
 				{
 					find_string_index = FindString(str_save[i], find_string);
 				}
-				find_string_index_old = find_string_index;
-
 				while (find_string_index >= 0)
 				{
 
 					gotoxy(find_string_index + relative_xpos[i] + LINECOUNT_WIDE, i);
 					SetColor(0x0e);
-					PrintLine(find_string);
+					if (findInsensitive)
+					{
+						printf("%s", str_save[i] + find_string_index);
+					}
+					else
+					{
+						PrintLine(find_string);
+					}
 					gotoxy(find_string_index + relative_xpos[i] + LINECOUNT_WIDE, i);
 
 					SetColor(bg_color);
@@ -1309,11 +1393,18 @@ int main(int argc, char *argv[])
 							c = -6; // -6 means F but in negative
 						}
 						MakePause();
+						break;
 					}
 					ShowBottomMenu();
 
 					xpos = find_string_index + strlen(find_string);
 					ypos = i;
+				}
+				if (c == -6)
+				{
+					ShowBottomMenu();
+					DisplayCursorPos(xpos, ypos);
+					break;
 				}
 			}
 
@@ -1445,7 +1536,24 @@ int main(int argc, char *argv[])
 				DisplayCursorPos(xpos, ypos);
 				ch = 0;
 				break;
-			case 63: // F5 key
+			case 63: // F5 key = Run macro
+				if (run_macro == NULL)
+				{
+					if (!isUntitled && isSaved)
+					{
+
+						GetFullPathName(filename_text, sizeof(filename_text), tmp, NULL);
+						StartProcess(tmp);
+					}
+				}
+				else
+				{
+					StartProcess(run_macro);
+				}
+
+				ch = 0;
+				break;
+			case 64: // F6 key = Insert date and time
 
 				temp_strsave = GetTime();
 				if (xpos >= BUFFER_X - BUFFER_INCREMENT)
@@ -1476,6 +1584,9 @@ int main(int argc, char *argv[])
 				{
 					PrintLine(str_save[ypos]);
 				}
+				break;
+			case 88: // Run code
+				PrintBottomString(NEWTRODIT_PROMPT_CREATE_MACRO);
 				break;
 			case 68: // F10 key
 				StartProcess("explorer.exe .");
@@ -1516,7 +1627,7 @@ int main(int argc, char *argv[])
 					n--;
 				}
 
-				xpos = n;
+				xpos = n + (tokcount(str_save[ypos], "\t") * TAB_WIDE);
 				if (xpos < 0)
 				{
 					xpos = 0;
@@ -1572,7 +1683,7 @@ int main(int argc, char *argv[])
 			}
 
 			fp_savefile = fopen(save_dest, "wb"); // Reopen the file to write
-			if (!fp_savefile || ValidFileName(save_dest))
+			if (!fp_savefile || !ValidFileName(save_dest))
 			{
 				LoadAllNewtrodit();
 				DisplayFileContent(str_save, newlinestring, stdout);
@@ -1611,24 +1722,25 @@ int main(int argc, char *argv[])
 				if (buffer_clipboard != NULL)
 				{
 
-					DisplayLineCount(str_save, YSIZE - 3, display_y);
-					gotoxy(LINECOUNT_WIDE, display_y + relative_ypos[xpos]);
 					final_paste_strrchr = strlasttok(buffer_clipboard, '\n');
-
 					for (int i = 0; i < strlen(final_paste_strrchr); ++i)
 					{
 						temp_strsave = insert_char(str_save[ypos], final_paste_strrchr[i], i + xpos);
-						strncpy_n(str_save[ypos], temp_strsave, BUFFER_X);
+						if (convertTabtoSpaces)
+						{
+							strncpy_n(str_save[ypos], ReplaceString(temp_strsave, "\t", PrintTab(TAB_WIDE), &n), BUFFER_X);
+						}
+						else
+						{
+							strncpy_n(str_save[ypos], temp_strsave, BUFFER_X);
+						}
 					}
-
-					if (xpos + strlen(final_paste_strrchr) > BUFFER_X || ypos > BUFFER_Y)
-
-						ypos += tokcount(str_save[ypos], "\n");
+					PrintLine(str_save[ypos]);
 				}
-				else
-				{
-					PrintBottomString(NEWTRODIT_ERROR_CLIPBOARD_COPY);
-				}
+			}
+			else
+			{
+				PrintBottomString(NEWTRODIT_ERROR_CLIPBOARD_COPY);
 			}
 			CloseClipboard();
 			ch = 0;
@@ -1655,7 +1767,6 @@ int main(int argc, char *argv[])
 			if (dev_tools)
 			{
 				gotoxy(strlen(str_save[ypos]) + LINECOUNT_WIDE, ypos);
-
 				PrintLine(join(join("\"", str_save[ypos]), "\""));
 				MakePause();
 				ClearLine(ypos);
@@ -1802,6 +1913,7 @@ int main(int argc, char *argv[])
 
 		if (ch == 26) // ^Z = Undo
 		{
+
 			strncpy_n(redo_stack, str_save[undo_stack_line], BUFFER_X);
 			if (strlen(undo_stack) < strlen(str_save[undo_stack_line]))
 			{
@@ -1852,6 +1964,11 @@ int main(int argc, char *argv[])
 				fgets(replace_string, sizeof find_string, stdin);
 				find_string[strcspn(find_string, "\n")] = 0;
 				replace_string[strcspn(replace_string, "\n")] = 0;
+				if (!ValidString(find_string) || !ValidString(replace_string))
+				{
+					FunctionAborted(str_save, newlinestring);
+					continue;
+				}
 
 				for (int i = 1; i < BUFFER_Y; i++) // Line 0 is unused
 				{
@@ -1879,6 +1996,7 @@ int main(int argc, char *argv[])
 		if (ch == 1) // ^A
 		{
 			LoadAllNewtrodit();
+			DisplayCursorPos(xpos, ypos);
 			SetColor(fg_color);
 			DisplayFileContent(str_save, newlinestring, stdout);
 			MakePause();
@@ -2008,6 +2126,7 @@ int main(int argc, char *argv[])
 					}
 				}
 				else
+
 				{
 					if (ch != 0)
 					{
@@ -2015,8 +2134,13 @@ int main(int argc, char *argv[])
 						{
 							putchar(ch);
 						}
-						str_save[ypos][xpos] = (int)ch;
+						str_save[ypos][xpos] = (int)ch; // Add character to buffer
 					}
+				}
+				if (syntaxHighlighting)
+				{
+					gotoxy(LINECOUNT_WIDE, display_y);
+					color_line(str_save[ypos]);
 				}
 			}
 			else
