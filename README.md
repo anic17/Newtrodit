@@ -11,7 +11,7 @@ Simple console text editor written in C.
 ![newtrodit-stars](https://img.shields.io/github/license/anic17/Newtrodit)
 ![newtrodit-issues](https://img.shields.io/github/issues/anic17/Newtrodit)
 
-<a href="https://anic17.github.io/Newtrodit/"><img src="https://user-images.githubusercontent.com/58483910/137585130-ca273f69-f83a-4313-a49b-671fb6fe8929.png"></img></a>
+<a href="https://anic17.github.io/Newtrodit/"><img src="https://user-images.githubusercontent.com/58483910/144676737-67ae58a7-d085-4c1c-920e-b61a39cc09a5.png"></img></a>
 
 
 # Features
@@ -26,7 +26,6 @@ Simple console text editor written in C.
   - ROT13 encoding
   - Uppercase/lowercase conversion
 - Experimental version of syntax highligthing
-
 
 ## More features to come
 
