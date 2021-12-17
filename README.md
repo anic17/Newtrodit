@@ -25,7 +25,7 @@ Simple console text editor written in C.
   - String replacing
   - ROT13 encoding
   - Uppercase/lowercase conversion
-- Experimental version of syntax highligthing
+- Fully configurable syntax highlighting including custom rules
 
 ## More features to come
 
