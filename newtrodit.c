@@ -2151,7 +2151,7 @@ int main(int argc, char *argv[])
 					isModified = true;
 				}
 
-				if (!insertChar) // Insert key not pressed
+				if (!insertChar && ch != 9) // Insert key not pressed
 				{
 
 					if (str_save[ypos][xpos] != '\0')
@@ -2179,6 +2179,8 @@ int main(int argc, char *argv[])
 							strncpy_n(str_save[ypos], temp_strsave, BUFFER_X);
 						}
 						xpos += (TAB_WIDE - 1);
+						gotoxy(LINECOUNT_WIDE, display_y);
+						PrintLine(str_save[ypos]);
 					}
 					else
 					{
@@ -2188,6 +2190,7 @@ int main(int argc, char *argv[])
 						relative_xpos[ypos] += TAB_WIDE;
 						gotoxy(xpos + relative_xpos[ypos] + LINECOUNT_WIDE, ypos + relative_ypos[xpos]);
 					}
+					
 				}
 				else
 
