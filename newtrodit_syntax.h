@@ -1,7 +1,7 @@
 /*
 
   Newtrodit: A console text editor
-  Copyright (C) 2021  anic17 Software
+  Copyright (c) 2021  anic17 Software
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -15,63 +15,30 @@
 
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <https://www.gnu.org/licenses/>
-
-
-    This file is from my other project syntax, with some modifications.
-    https://github.com/anic17/syntax
+  This file is from my other project syntax, with some modifications.
+  https://github.com/anic17/syntax
 
 */
 
-#ifdef SYNTAX_H
-#error "syntax.h already included"
-#else
-#define SYNTAX_H
-#endif
-
-#define BLACK 0x0
-#define BLUE 0x1
-#define GREEN 0x2
-#define CYAN 0x3
-#define RED 0x4
-#define MAGENTA 0x5
-#define YELLOW 0x6
-#define WHITE 0x7
-#define GRAY 0x8
-#define LIGHTBLUE 0x9
-#define LIGHTGREEN 0xa
-#define LIGHTCYAN 0xb
-#define LIGHTRED 0xc
-#define LIGHTMAGENTA 0xd
-#define LIGHTYELLOW 0xe
-#define LIGHTWHITE 0xf
-
-#define default_color WHITE
-#define comment_color GRAY
-#define quote_color LIGHTYELLOW
-#define num_color GREEN
-
-#define LINE_MAX 8192
-
-// Boolean type definition
-#ifndef __bool_true_false_are_defined
-#define bool unsigned short
-#define false 0
-#define true 1
-#endif
-
-struct
+typedef struct keywords
 {
     char *keyword;
     int color;
-} keywords[] = {
+} keywords_t;
+
+keywords_t keywords[] = {
     {"break", 5},
     {"continue", 5},
     {"return", 5},
 
+    {"auto", 9},
     {"const", 9},
     {"volatile", 9},
     {"extern", 9},
     {"static", 9},
+
+    {"inline", 9},
+    {"restrict", 9},
 
     {"char", 9},
     {"int", 9},
@@ -83,6 +50,7 @@ struct
     {"void", 9},
 
     {"double_t", 0xa},
+    {"div_t", 0xa},
     {"float_t", 0xa},
     {"fpos_t", 0xa},
     {"max_align_t", 0xa},
@@ -100,11 +68,13 @@ struct
     {"uint16_t", 0xa},
     {"uint32_t", 0xa},
     {"uint64_t", 0xa},
+    {"uint128_t", 0xa},
 
     {"int8_t", 0xa},
     {"int16_t", 0xa},
     {"int32_t", 0xa},
     {"int64_t", 0xa},
+    {"int128_t", 0xa},
 
     {"struct", 6},
     {"enum", 6},
@@ -125,14 +95,18 @@ struct
     {"default", 6},
     {"goto", 6},
 
-    {"include", 0xb},
-    {"pragma", 0xb},
-    {"define", 0xb},
-    {"ifdef", 0xb},
-    {"ifndef", 0xb},
-    {"endif", 0xb},
-    {"undef", 0xb},
-    {"error", 0xb},
+    {"#include", 0xb},
+    {"#pragma", 0xb},
+    {"#define", 0xb},
+    {"#ifdef", 0xb},
+    {"#undef", 0xb},
+
+    {"#ifndef", 0xb},
+    {"#endif", 0xb},
+    {"#else", 0xb},
+
+    {"#elif", 0xb},
+    {"#error", 0xb},
 
     {"main", 6},
 
@@ -151,100 +125,243 @@ struct
     char *keyword;
     int color;
 } comment[] = {
-    {"//", LIGHTCYAN},
-
+    {"//", 0x8},
+    {"/*", 0x8},
+    {"*/", 0x8},
 };
 
-size_t keyword_size = sizeof(keywords) / sizeof(keywords[0]);
+int syntaxKeywordsSize = sizeof(keywords) / sizeof(keywords[0]);
 
 int is_separator(int c) // Taken from https://github.com/antirez/kilo/blob/69c3ce609d1e8df3956cba6db3d296a7cf3af3de/kilo.c#L366
 {
-    return c == '\0' || isspace(c) || strchr("#,.()+-/*=~[];{}", c) != NULL;
+    return c == '\0' || isspace(c) || strchr(syntax_separators, c) != NULL;
 }
 
-char *color_line(char *line)
+int EmptySyntaxScheme()
 {
-    size_t comment_size = sizeof(comment) / sizeof(comment[0]);
+    size_t syntax_size = sizeof(keywords) / sizeof(keywords[0]), first_index_sz = sizeof(keywords[0]);
 
-    // Make syntax highlighting
-    int isComment = false;
-
-    static int multiLineComment = false; // Must be static, otherwise it will be reset to false after the first line
-    int pos, line_num = 0;
-    SetColor(default_color);
-
-    size_t len = strlen(line);
-    for (int i = 0; i < len; i++)
+    for (int i = 0; i < syntax_size; ++i)
     {
-        if (isdigit(line[i]) && !isComment)
-        {
+        memset(keywords[i].keyword, 0, first_index_sz);
+        keywords[i].color = 0;
+    }
+    return syntax_size;
+}
 
-            if (is_separator(line[i - 1]))
-            {
-                SetColor(num_color);
-                while (isdigit(line[i]) || tolower(line[i]) == 'x' || tolower(line[i]) == 'b')
-                {
-                    putchar(line[i++]);
-                }
-                SetColor(default_color);
-            }
+int LoadSyntaxScheme(FILE *syntaxfp, char *syntax_fn)
+{
+    fseek(syntaxfp, 0, SEEK_SET); // Set the file pointer to the beginning of the file
+    char *read_syntax_buf = (char *)malloc(sizeof(char) * LINE_MAX);
+
+    char *syntax_language = malloc(sizeof(char) * _MAX_PATH);
+    char *tokchar = "=";
+    char *iniptr;
+    char comments[_MAX_PATH] = ";\r\n";
+    int c = 0, comment_c = 0, highlight_color;
+    bool isNull = false;
+    memset(syntax_language, 0, sizeof(char) * _MAX_PATH);
+    bool hasComment = false, hasMagicNumber = false, hasLanguage = false;
+
+    while (fgets(read_syntax_buf, LINE_MAX, syntaxfp))
+    {
+        if (strcspn(read_syntax_buf, comments) == 0)
+        {
+            continue;
         }
+        read_syntax_buf[strcspn(read_syntax_buf, "\r\n")] = 0;
 
-        if (!strncmp(line + i, "//", 2) && !isComment)
+        if (c == 0)
         {
-            SetColor(comment_color);
-            printf("%.*s", wrapSize, line + i);
-            SetColor(default_color);
-           break;
-        }
-
-        
-        if (line[i] == '\"' && !isComment)
-        {
-            SetColor(quote_color);
-            putchar(line[i++]);
-            if (i == len)
+            if (!hasMagicNumber)
             {
-                break;
-            }
-            while (line[i] != '\"')
-            {
-                if (i < len || line[i] != '\0')
+                if (strncmp(read_syntax_buf, NEWTRODIT_SYNTAX_MAGIC_NUMBER, strlen(NEWTRODIT_SYNTAX_MAGIC_NUMBER)))
                 {
-                    putchar(line[i++]);
+                    PrintBottomString(join(NEWTRODIT_ERROR_INVALID_SYNTAX, syntax_fn));
+                    return 0;
                 }
                 else
                 {
-                    break;
+                    hasMagicNumber = true;
+                    continue;
                 }
             }
-            putchar('\"'); // Works but it's very bad codded
-
-            SetColor(default_color);
         }
-        else
+        if (!hasComment && !strncmp(read_syntax_buf, NEWTRODIT_SYNTAX_COMMENT, strlen(NEWTRODIT_SYNTAX_COMMENT)))
         {
-            for (int k = 0; k < keyword_size; k++)
-            {
+            hasComment = true;
+            comment[0].keyword = read_syntax_buf + strlen(NEWTRODIT_SYNTAX_COMMENT) + 1;
 
-                if (pos = FindString(line + i, keywords[k].keyword) != -1 && is_separator(line[i + pos + strlen(keywords[k].keyword)]))
+            continue;
+        }
+
+        if (!hasLanguage && !strncmp(read_syntax_buf, NEWTRODIT_SYNTAX_LANGUAGE, strlen(NEWTRODIT_SYNTAX_LANGUAGE)))
+        {
+
+            hasLanguage = true;
+            strncpy_n(syntax_language, read_syntax_buf + strlen(NEWTRODIT_SYNTAX_LANGUAGE) + 1, _MAX_PATH); // Whitespace character
+            continue;
+        }
+        if (!strncmp(read_syntax_buf, NEWTRODIT_SYNTAX_DEFAULT_COLOR, strlen(NEWTRODIT_SYNTAX_DEFAULT_COLOR)))
+        {
+            default_color = hexstrtodec(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_DEFAULT_COLOR) + 1);
+            continue;
+        }
+        if (!strncmp(read_syntax_buf, NEWTRODIT_SYNTAX_QUOTE_COLOR, strlen(NEWTRODIT_SYNTAX_QUOTE_COLOR)))
+        {
+            quote_color = hexstrtodec(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_QUOTE_COLOR) + 1);
+            continue;
+        }
+        if (!strncmp(read_syntax_buf, NEWTRODIT_SYNTAX_COMMENT_COLOR, strlen(NEWTRODIT_SYNTAX_COMMENT_COLOR)))
+        {
+            comment_color = hexstrtodec(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_COMMENT_COLOR) + 1);
+            continue;
+        }
+        if (!strncmp(read_syntax_buf, NEWTRODIT_SYNTAX_NUMBER_COLOR, strlen(NEWTRODIT_SYNTAX_NUMBER_COLOR)))
+        {
+            num_color = hexstrtodec(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_NUMBER_COLOR) + 1);
+            continue;
+        }
+        if (!strncmp(read_syntax_buf, NEWTRODIT_SYNTAX_SEPARATORS, strlen(NEWTRODIT_SYNTAX_SEPARATORS)))
+        {
+            strncpy_n(syntax_separators, read_syntax_buf + strlen(NEWTRODIT_SYNTAX_SEPARATORS) + 1, sizeof syntax_separators);
+            continue;
+        }
+
+        iniptr = strtok(read_syntax_buf, tokchar);
+        keywords[c].keyword = strdup(iniptr); // If strdup is not used, the value will be overwritten by the next strtok call
+        iniptr = strtok(NULL, tokchar);
+
+        highlight_color = hexstrtodec(iniptr);
+        keywords[c].color = highlight_color;
+        c++;
+        isNull = false;
+    }
+
+    if (isNull)
+    {
+        PrintBottomString(NEWTRODIT_ERROR_SYNTAX_RULES);
+        MakePause();
+        return 0;
+    }
+
+    return c;
+}
+
+char *color_line(char *line, int startpos)
+{
+    DisplayCursor(false);
+    size_t comment_size = sizeof(comment) / sizeof(comment[0]);
+    // Make syntax highlighting
+    bool isComment = false, hasHex = false;
+    int tmp_count = 0, pos, line_num = 0, skipChars = 0;
+
+    if (!multiLineComment)
+    {
+        SetColor(default_color);
+    }
+    multiLineComment = false;
+
+    size_t len = strlen(line);
+    for (int i = 0; i < len; ++i)
+    {
+        if (i < wrapSize)
+        {
+            while (line[i] == 32 || line[i] == 9)
+            {
+                putchar(line[i++]);
+            }
+
+            /*  if (!memcmp(line + i, comment[1].keyword, strlen(comment[1].keyword)))
+             {
+                 SetColor(comment[1].color);
+                 multiLineComment = true;
+
+                 printf("%.*s", wrapSize - i, comment[1].keyword);
+
+                 i += strlen(comment[1].keyword);
+             }
+             if (!memcmp(line + i, comment[2].keyword, strlen(comment[2].keyword)))
+             {
+                 printf("%.*s", wrapSize - i, comment[2].keyword);
+                 multiLineComment = false;
+                 SetColor(default_color);
+                 i += strlen(comment[2].keyword);
+             }
+            if (!multiLineComment)
+            { */
+            if (isdigit(line[i]) && !isComment)
+            {
+                SetColor(num_color);
+
+                if (i == 0 || is_separator(line[i - 1]))
                 {
 
-                    if (is_separator(line[i - 1]) || i == 0)
+                    do
                     {
-                        if (!strncmp(keywords[k].keyword, line + pos + i - 1, strlen(keywords[k].keyword)))
+                        putchar(line[i++]);
+                    } while (isdigit(line[i]));
+                }
+                SetColor(default_color);
+            }
+            /* comment[0].keyword = "::";
+            if (!memcmp(line + i, comment[0].keyword, strlen(comment[0].keyword)))
+            {
+                SetColor(comment_color);
+                printf("%.*s", wrapSize - i, line + i);
+                SetColor(default_color);
+                break;
+            } */
+
+            if (line[i] == '\"' && !isComment)
+            {
+
+                if (i < len)
+                {
+                    SetColor(quote_color);
+                    do
+                    {
+                        putchar(line[i++]);
+                    } while (line[i] != '\"' && i < len);
+                    putchar(line[i]);
+                    SetColor(default_color);
+                }
+            }
+            else
+            {
+                if (i == 0 || is_separator(line[i - 1]))
+                {
+                    for (int k = 0; k < syntaxKeywordsSize; k++)
+                    {
+
+                        if (pos = FindString(line + i, keywords[k].keyword) != -1 && is_separator(line[i + pos + strlen(keywords[k].keyword)]))
                         {
-                            SetColor(keywords[k].color);
-                            printf("%.*s", strlen(keywords[k].keyword), line + i);
-                            i += strlen(keywords[k].keyword) + pos - 1;
-                            SetColor(default_color);
-                            break;
+                            if (!memcmp(keywords[k].keyword, line + pos + i - 1, strlen(keywords[k].keyword)))
+                            {
+                                SetColor(keywords[k].color);
+
+                                printf("%.*s", strlen(keywords[k].keyword), line + i);
+                                i += strlen(keywords[k].keyword) + pos - 1;
+
+                                SetColor(default_color);
+                                break;
+                            }
                         }
                     }
                 }
+                putchar(line[i]);
             }
-            putchar(line[i]);
+            /*}
+             else
+            {
+                putchar(line[i]);
+            } */
+        }
+        else
+        {
+            break;
         }
     }
-    SetColor(0x07);
+    DisplayCursor(true);
+    SetColor(bg_color);
 }

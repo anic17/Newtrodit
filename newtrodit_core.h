@@ -32,23 +32,33 @@
 
 #include <ctype.h>
 #include <direct.h> // _access()
-#include <tchar.h>
+#include <wchar.h>
+
 #include "dialog.h"
+
+#define _NEWTRODIT_OLD_SUPPORT 0 // Toggle support for old versions of Windows (Windows 98 and below)
 
 #define TAB_WIDE_ 8 // Standard length of the tab key is 8 characters. This has to be 7 because an index of 1 is always added.
 #define CURSIZE_ 20
 #define LINECOUNT_WIDE_ 4 // To backup original value
 #define MIN_BUFSIZE 100
+#define LINE_MAX 8192
+
 
 #ifndef __bool_true_false_are_defined
-#define __bool_true_false_are_defined
-#define true 1
+#define _bool_true_false_are_defined
+typedef short bool;
+
 #define false 0
-#define bool short
+#define true 1
 #endif
 
 #ifndef ENOBUFS
-#define ENOBUFS 105 /* No buffer space available */
+#define ENOBUFS 105 // No buffer space available
+#endif
+
+#ifndef UNDO_STACK_SIZE
+#define UNDO_STACK_SIZE 256
 #endif
 
 #ifndef _MAX_PATH
@@ -67,6 +77,10 @@
 
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #define DISABLE_NEWLINE_AUTO_RETURN 0x0008
+
+#ifndef isblank
+#define isblank(c) ((c) == ' ' || (c) == '\t')
+#endif
 
 int BUFFER_X = 640;
 int BUFFER_Y = 5600;
@@ -98,12 +112,12 @@ int CheckKey(int keycode)
 	return GetKeyState(keycode) <= -127;
 }
 
-char *strlasttok(const char *path, int chartok)
+char *strlasttok(const char *tok, int char_token)
 {
-	char *bs = strrchr(path, chartok);
+	char *bs = strrchr(tok, char_token);
 	if (!bs)
 	{
-		return strdup(path);
+		return strdup(tok);
 	}
 	else
 	{
@@ -157,74 +171,6 @@ void Alert(void)
 	putchar('\a');
 }
 
-void ClearScreen(void) // Clears the screen
-{
-#ifdef WIN32
-	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	DWORD count;
-	DWORD cellCount;
-	COORD homeCoords = {0, 0};
-
-	if (hStdOut == INVALID_HANDLE_VALUE)
-	{
-		return;
-	}
-
-	if (!GetConsoleScreenBufferInfo(hStdOut, &csbi))
-	{
-		return;
-	}
-	cellCount = csbi.dwSize.X * csbi.dwSize.Y;
-
-	if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
-	{
-		return;
-	}
-
-	if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
-	{
-		return;
-	}
-	SetConsoleCursorPosition(hStdOut, homeCoords);
-	return;
-#else
-	write(STDOUT_FILENO, "\e[2J", 5);
-#endif
-}
-
-void ClearBuffer(void)
-{
-	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	DWORD count;
-	DWORD cellCount;
-	COORD homeCoords = {0, 1};
-
-	if (hStdOut == INVALID_HANDLE_VALUE)
-	{
-		return;
-	}
-
-	if (!GetConsoleScreenBufferInfo(hStdOut, &csbi))
-	{
-		return;
-	}
-	cellCount = csbi.dwSize.X * (csbi.dwSize.Y - 1);
-
-	if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
-	{
-		return;
-	}
-
-	if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
-	{
-		return;
-	}
-	SetConsoleCursorPosition(hStdOut, homeCoords);
-	return;
-}
-
 int GetConsoleXDimension()
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -240,45 +186,60 @@ int GetConsoleYDimension()
 	return csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 }
 
-void ClearLine(int line_clear) // Clears the specified line
+void ClearPartial(int x, int y, int width, int height) // Clears a section of the screen
 {
-	gotoxy(0, line_clear);
-	int console_size_clearline = XSIZE - 1;
+	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	DWORD count;
+	DWORD cellCount;
+	COORD homeCoords = {x, y};
 
-	for (int i = 0; i < console_size_clearline / 2; i++) // Doubled the speed by printing 2 spaces instead of 1
+	if (hStdOut == INVALID_HANDLE_VALUE)
 	{
-		fputs("  ", stdout);
+		return;
 	}
-	if (console_size_clearline % 2 != 0)
-	{
-		putchar(' ');
-	}
-	gotoxy(LINECOUNT_WIDE, line_clear);
 
+	if (!GetConsoleScreenBufferInfo(hStdOut, &csbi))
+	{
+		return;
+	}
+	cellCount = width * height;
+
+	if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
+	{
+		return;
+	}
+
+	if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
+	{
+		return;
+	}
+	SetConsoleCursorPosition(hStdOut, homeCoords);
 	return;
 }
 
 void PrintBottomString(char *bottom_string)
 {
-	ClearLine(BOTTOM);
-	gotoxy(0, BOTTOM);
-	printf("%s", bottom_string);
+	int xs = XSIZE;
+	ClearPartial(0, BOTTOM, xs, 1);
+	printf("%.*s", xs, bottom_string); // Don't get out of the buffer
 	return;
 }
 
 void DisplayCursor(int disp)
 {
-	CONSOLE_CURSOR_INFO info;
+	CONSOLE_CURSOR_INFO cursor;
 	if (disp == 0)
 	{
-		info.bVisible = FALSE;
+		cursor.bVisible = FALSE;
 	}
 	else
 	{
-		info.bVisible = TRUE;
+		cursor.bVisible = TRUE;
 	}
+	cursor.dwSize = CURSIZE;
 
-	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
+	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor);
 	return;
 }
 
@@ -326,8 +287,6 @@ char *PrintTab(int tab_count)
 	return s;
 }
 
-
-
 int CheckFile(char *filename) // Will return 0 if file exists
 {
 	if ((_access(filename, 0)) != -1 && (_access(filename, 6)) != -1)
@@ -340,17 +299,26 @@ int CheckFile(char *filename) // Will return 0 if file exists
 	}
 }
 
-int FindString(char *str, char *find)
-
+int FindString(char *str, char *find) // Not the best algorithm but it works
 {
 	int n = strlen(find), k = strlen(str);
-	for (int i = 0; i < k; i++)
+	if (k < n)
+	{
+		return -1;
+	}
+	for (int i = 0; i < k; ++i)
 	{
 		if (i > (k - n))
 		{
 			return -1;
 		}
-		if (!strncmp(str + i, find, n))
+		if(str[i+1] != find[1])
+		{
+			i+=2;
+			continue;
+		}
+
+		if (!memcmp(str + i, find, n))
 		{
 			return i;
 		}
@@ -453,7 +421,7 @@ char *str_lwr(char *s)
 
 char *GetTime()
 {
-	char *time_buf = (char *)malloc(128);
+	char *time_buf = (char *)malloc(256);
 	SYSTEMTIME lt;
 
 	GetLocalTime(&lt);
@@ -497,6 +465,25 @@ char *delete_char_left(char *str, int pos)
 	memmove(new_str + pos, str + pos + 1, strlen(str) - pos);
 	new_str[strlen(new_str)] = '\0';
 	return new_str;
+}
+
+char *insert_row(char **arr, int startpos, size_t arrsize, char *arrvalue)
+{
+	for (int i = arrsize; i > startpos; i--)
+	{
+		arr[i] = arr[i - 1];
+	}
+	arr[startpos + 1] = arrvalue;
+	return arr[startpos];
+}
+
+char *delete_row(char **arr, int startpos, size_t arrsize)
+{
+	for (int i = startpos; i < arrsize; i++)
+	{
+		arr[i] = arr[i + 1];
+	}
+	return arr[startpos];
 }
 
 char *strncpy_n(char *dest, const char *src, size_t count)
@@ -631,33 +618,16 @@ void *realloc_n(void *old, size_t old_sz, size_t new_sz)
 	return new;
 }
 
-void ClearChars(int x, int y, size_t num)
-{
-	int ox = GetConsoleXCursorPos(), oy = GetConsoleYCursorPos();
-	gotoxy(x, y);
-	for (int i = 0; i < num; ++i)
-	{
-		putchar(' ');
-	}
-	gotoxy(ox, oy);
-}
-
-typedef struct LocateFile
-{
-	char *filename;
-} LocateFile;
-
-int LocateFiles(int show_dir, int print_max)
+int LocateFiles(int show_dir, char *file)
 {
 	const int max_files = 1024;
 	int n = 0;
-	LocateFile buf[max_files];
 	HANDLE hFindFiles;
-	WIN32_FIND_DATA FindFileData;
+	WIN32_FIND_DATAA FindFileData; // Unicode is not supported in Newtrodit
 
-	if ((hFindFiles = FindFirstFile("*", &FindFileData)) != INVALID_HANDLE_VALUE)
+	if ((hFindFiles = FindFirstFileA("*", &FindFileData)) != INVALID_HANDLE_VALUE)
 	{
-		while (FindNextFile(hFindFiles, &FindFileData))
+		while (FindNextFileA(hFindFiles, &FindFileData))
 		{
 			if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
@@ -667,13 +637,20 @@ int LocateFiles(int show_dir, int print_max)
 					continue;
 				}
 			}
-			buf[n].filename = FindFileData.cFileName;
-
-			if (n <= print_max)
+			printf("%s\n", FindFileData.cFileName);
+			if (FindString(FindFileData.cFileName, file) >= 0)
 			{
-				printf("%s\n", buf[n].filename);
+				if (n >= YSIZE - 5)
+				{
+					return n;
+				}
+				n++;
 			}
-			n++;
+		}
+		if (n == 0)
+		{
+			PrintBottomString(join(NEWTRODIT_FS_FILE_NOT_FOUND, file));
+			return 0;
 		}
 	}
 	FindClose(hFindFiles);
@@ -701,4 +678,9 @@ char *RemoveTab(char *s) // Replace all tabs with 8 spaces and return another st
 	printf("%s", new_s);
 
 	return new_s;
+}
+
+int hexstrtodec(char* s) // Just to avoid repetitive calls
+{
+	return strtol(s, NULL, 16);
 }

@@ -19,11 +19,11 @@
 
 void TopHelpBar()
 {
-	gotoxy(0, 0);
+	int xs = XSIZE;
+
 	SetColor(fg_color);
-	ClearLine(0);
-	gotoxy(0, 0);
-	printf(" Newtrodit help");
+	ClearPartial(0, 0, xs, 1);
+	printf("%.*s", xs, NEWTRODIT_DIALOG_MANUAL_TITLE);
 	SetColor(bg_color);
 	return;
 }
@@ -31,20 +31,17 @@ void TopHelpBar()
 void BottomHelpBar()
 {
 	SetColor(fg_color);
-	ClearLine(YSIZE - 1);
-	PrintBottomString("^X  Close help  A-F4 Quit Newtrodit");
+	PrintBottomString(NEWTRODIT_DIALOG_MANUAL);
 	SetColor(bg_color);
 	return;
 }
 
-void CenterText(char *text, int yline) // Algorithm: XSIZE - ((XSIZE / 2) + len / 2) - 1
+void CenterText(char *text, int yline) // Algorithm: (XSIZE / 2) - (len / 2)
 {
 	SetColor(fg_color);
-	int cols = XSIZE;
-	gotoxy(0, yline);
-	int center_text = (cols / 2) - (strlen(text) / 2);
+	int center_text = (XSIZE / 2) - (strlen(text) / 2);
 	gotoxy(center_text, yline);
-	printf("%s", text);
+	printf("%.*s", wrapSize, text);
 	SetColor(bg_color);
 	return;
 }
@@ -53,7 +50,7 @@ void RightAlignNewline()
 {
 	SetColor(fg_color);
 
-	char nl_type[200];
+	char *nl_type = (char *)malloc(sizeof(char) * 256);
 	EmptyString(nl_type);
 	if (!strcmp(newlinestring, "\n"))
 	{
@@ -86,6 +83,7 @@ void RightAlignNewline()
 
 	gotoxy(XSIZE - strlen(nl_type) - 2, 0); // XSIZE - strlen(nl_type) - 2
 	fputs(nl_type, stdout);
+	free(nl_type);
 	SetColor(bg_color);
 
 	return;
@@ -93,9 +91,7 @@ void RightAlignNewline()
 
 void ShowFindMenu()
 {
-	ClearLine(YSIZE - 2);
-	ClearLine(YSIZE - 1);
-	gotoxy(0, YSIZE - 2);
+	ClearPartial(0, YSIZE - 2, XSIZE, 2);
 
 	SetColor(fg_color);
 	fputs("F3", stdout);
@@ -109,12 +105,7 @@ void ShowFindMenu()
 
 void ShowBottomMenu()
 {
-	gotoxy(0, BOTTOM);
-
-	ClearLine(BOTTOM);
-	gotoxy(0, BOTTOM);
-	fputs(NEWTRODIT_DIALOG_BOTTOM_HELP, stdout);
-
+	PrintBottomString(NEWTRODIT_DIALOG_BOTTOM_HELP);
 	return;
 }
 
@@ -129,10 +120,8 @@ void CursorSettings(int visible, int size)
 
 void NewtroditNameLoad()
 {
-	gotoxy(0, 0);
 	SetColor(fg_color);
-	ClearLine(0);
-	gotoxy(0, 0);
+	ClearPartial(0, 0, XSIZE, 1);
 	printf(" Newtrodit %s", newtrodit_version);
 	SetColor(bg_color);
 }
@@ -140,40 +129,39 @@ void NewtroditNameLoad()
 void DisplayCursorPos(int xps, int yps)
 {
 	size_t len = strlen(NEWTRODIT_DIALOG_BOTTOM_HELP);
-	gotoxy(len, YSIZE - 1);
-	for (int i = 0; i < 20; ++i) // Clear first characters of the last line
+	ClearPartial(len, YSIZE - 1, wrapSize-len, 1);
+	if (longPosition) // I don't know why I added this
 	{
-		putchar(' ');
+		printf("Line %d, Column %d", yps, xps + 1); // Add one to xpos because it's zero indexed
 	}
-	gotoxy(len, YSIZE - 1);
-	printf("Ln %d, Col %d", yps, xps + 1); // Add one to xpos because it's zero indexed
+	else
+	{
+		printf("Ln %d, Col %d", yps, xps + 1);
+	}
 }
 
 void LoadAllNewtrodit()
 {
 	CursorSettings(FALSE, CURSIZE); // Hide cursor to reduce flickering
-	// ShowScrollBar(GetConsoleWindow(), SB_VERT, 0);
 	SetColor(bg_color);
 
 	if (clearBufferScreen)
 	{
-		ClearBuffer();
+		ClearPartial(0, 1, XSIZE, YSIZE - 2);
 	}
 	else
 	{
-		ClearScreen();
+		ClearPartial(0, 0, XSIZE, YSIZE);
 	}
 	NewtroditNameLoad();
 	CenterText(strlasttok(filename_text, '\\'), 0);
 	RightAlignNewline();
 	ShowBottomMenu();
-	SetConsoleSize(XSIZE, YSIZE);
 	if (LINECOUNT_WIDE != 0)
 	{
 		DisplayLineCount(str_save, YSIZE - 3, 1);
 	}
-		CursorSettings(TRUE, CURSIZE);
-
+	CursorSettings(TRUE, CURSIZE);
 
 	gotoxy(0, 1);
 }
@@ -189,7 +177,7 @@ void NewtroditCrash(char *crash_reason, int crash_retval)
 	}
 	Alert();
 	printf("Newtrodit ran into a problem and it crashed. We're sorry.\n\nDebug info:\nerrno: 0x%x (%s)\nGetLastError: 0x%lx\n\nReason: %s\n\nPress enter to exit...\n", errno_temp, strerror(errno_temp), GetLastError(), crash_reason);
-
+	DisplayCursor(true);
 	getchar();
 
 	exit(crash_retval);
@@ -203,7 +191,7 @@ int QuitProgram(int color_quit)
 		if (isModified)
 		{
 			LoadAllNewtrodit();
-			DisplayFileContent(str_save, newlinestring, stdout);
+			DisplayFileContent(str_save, stdout);
 
 			PrintBottomString(NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
 
@@ -213,7 +201,7 @@ int QuitProgram(int color_quit)
 			}
 		}
 		SetColor(color_quit);
-		ClearScreen();
+		ClearPartial(0, 0, XSIZE, YSIZE);
 		CursorSettings(TRUE, CURSIZE);
 		exit(0);
 	}
@@ -244,19 +232,46 @@ void UpdateTitle(int is_saved)
 
 void PrintLine(char *line)
 {
+	horizontalScroll = xpos - (XSIZE - 2);
+	if (horizontalScroll < 0)
+	{
+		horizontalScroll = 0;
+	}
 	if (syntaxHighlighting)
 	{
-		color_line(line);
+		color_line(line + horizontalScroll, 0);
 	}
 	else
 	{
+
 		if (wrapLine)
 		{
-			printf("%s", line);
+			printf("%s", line + horizontalScroll);
 		}
 		else
 		{
-			printf("%.*s", wrapSize, line);
+			printf("%.*s", wrapSize, line + horizontalScroll);
 		}
+	}
+}
+
+void ToggleOption(int *option, char *text, int reloadScreen)
+{
+	PrintBottomString(text);
+	*option = !*option;
+
+	if (reloadScreen)
+	{
+		LoadAllNewtrodit();
+		DisplayFileContent(str_save, stdout);
+	}
+
+	if (*option)
+	{
+		PrintBottomString(join(text, NEWTRODIT_DIALOG_ENABLED));
+	}
+	else
+	{
+		PrintBottomString(join(text, NEWTRODIT_DIALOG_DISABLED));
 	}
 }

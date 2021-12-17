@@ -20,13 +20,12 @@
 
 void DisplayLineCount(char *strsave[], int size, int yps);
 int SaveFile(char *strsave[], char *filename, int size, int *is_modified, int *is_untitled);
-int DisplayFileContent(char *strsave[], char newlinestring[], FILE *fstream);
+int DisplayFileContent(char *strsave[], FILE *fstream);
 
 #include "newtrodit_core.h"
 #include "newtrodit_syntax.h"
 #include "newtrodit_gui.c"
 #include "newtrodit_func.c"
-
 
 int DownArrow(int man_line_count)
 {
@@ -56,7 +55,7 @@ int NewtroditHelp()
 
 	CursorSettings(FALSE, CURSIZE);
 	int manual_ch;
-	ClearScreen();
+	ClearPartial(0, 0, XSIZE, YSIZE);
 	TopHelpBar();
 
 	FILE *manual;
@@ -104,7 +103,7 @@ int NewtroditHelp()
 
 	while (fgets(manual_buf[man_line_count], MANUAL_BUFFER_X, manual)) // Load manual into memory
 	{
-		if(man_line_count == 0 && strncmp(NEWTRODIT_MANUAL_MAGIC_NUMBER, manual_buf[man_line_count], strlen(NEWTRODIT_MANUAL_MAGIC_NUMBER)))
+		if (man_line_count == 0 && strncmp(NEWTRODIT_MANUAL_MAGIC_NUMBER, manual_buf[man_line_count], strlen(NEWTRODIT_MANUAL_MAGIC_NUMBER)))
 		{
 			PrintBottomString(join(NEWTRODIT_ERROR_INVALID_MANUAL, manual_file));
 			MakePause();
@@ -197,7 +196,6 @@ int NewtroditHelp()
 					}
 					else
 					{
-
 						printf("%.*s\n", MANUAL_BUFFER_X, manual_buf[man_line_count]);
 					}
 
@@ -277,7 +275,7 @@ int NewtroditHelp()
 				case 71: // HOME key
 					printf("%s", reset_color);
 
-					ClearScreen();
+					ClearPartial(0, 1, XSIZE, YSIZE - 2);
 					man_line_count = 1;
 					disable_clear = true;
 					break;
@@ -291,12 +289,12 @@ int NewtroditHelp()
 				case 79: // END key
 					printf("%s", reset_color);
 
-					ClearScreen();
+					ClearPartial(0, 1, XSIZE, YSIZE - 2);
 					man_line_count = max_manual_lines - (YSIZE - 4);
 					break;
 				case 117: // ^END key
 					printf("%s", reset_color);
-					ClearScreen();
+					ClearPartial(0, 1, XSIZE, YSIZE - 2);
 					man_line_count = max_manual_lines - (YSIZE - 4);
 					break;
 
@@ -340,7 +338,7 @@ int NewtroditHelp()
 						man_line_count = atoi(gotoline_man) - (1 * (YSIZE - 3) + 1);
 					}
 				}
-				ClearScreen();
+				ClearPartial(0, 1, XSIZE, YSIZE - 2);
 				break;
 			default:
 
@@ -356,7 +354,7 @@ int NewtroditHelp()
 			}
 			else
 			{
-				ClearBuffer();
+				ClearPartial(0, 1, XSIZE, YSIZE - 2);
 			}
 		}
 	}
