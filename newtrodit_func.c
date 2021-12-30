@@ -33,12 +33,12 @@ int CountLines(FILE *fp)
 void DisplayLineCount(char *strsave[], int size, int disp)
 {
 
-	if (strlen(itoa_n(disp)) >= LINECOUNT_WIDE - 1)
+	if (strlen(itoa_n(disp)) > LINECOUNT_WIDE)
 	{
 		LINECOUNT_WIDE++;
 	}
 
-	if (str_save[ypos + 1][0] == '\0' && disp < YSIZE - 3)
+	if (str_save[ypos + 1][0] == '\0' && disp <= (YSIZE - 3) && strncmp(str_save[ypos] + nolflen(str_save[ypos]), newlinestring, strlen(newlinestring)) != 0)
 	{
 		ClearPartial(0, disp + 1, LINECOUNT_WIDE - 1, 1);
 	}
@@ -51,10 +51,18 @@ void DisplayLineCount(char *strsave[], int size, int disp)
 	SetColor(bg_color);
 }
 
-void LoadLineCount(char *strsave[], int startpos)
+void LoadLineCount(char *strsave[], int startpos, int starty)
 {
+
 	int n = YSIZE;
-	int print_line = 0;
+
+	// 5 and 7 are the optimal values for the better performance
+	int skipamount = 5;
+
+	if (n > 45)
+	{
+		skipamount = 7;
+	}
 
 	if (ypos >= (n - 2))
 	{
@@ -64,20 +72,44 @@ void LoadLineCount(char *strsave[], int startpos)
 	{
 		startpos = 0;
 	}
+	/* if (strlen(itoa_n(startpos + (n - 1))) < LINECOUNT_WIDE - 1)
+	{
+		LINECOUNT_WIDE--;
+	}
+	else  */
+	if (strlen(itoa_n(startpos + n - 1)) >= LINECOUNT_WIDE - 1)
+	{
+		LINECOUNT_WIDE++;
+	}
+	SetColor(0x80);
+
 	for (int k = startpos + 1; k < startpos + (n - 1); ++k)
 	{
-		if (str_save[k][0] != '\0')
+		if (k < BUFFER_Y)
 		{
-			print_line++;
-			if (strlen(itoa_n(k)) >= LINECOUNT_WIDE - 1)
+			if (str_save[k][0] != '\0')
 			{
-				LINECOUNT_WIDE++;
-			}
-			gotoxy(0, print_line);
-			SetColor(0x80);
-			ClearPartial(0, print_line, LINECOUNT_WIDE - 1, 1);
+				if (k + skipamount < BUFFER_Y && str_save[k + skipamount][0] != '\0' && k + skipamount < startpos + (n - 1)) // Try to skip 'skipamount' lines for optimization
+				{
+					ClearPartial(0, k - startpos, LINECOUNT_WIDE - 1, skipamount + 1); // Because if we don't add +1 it will only clear 'skipamount-1' ines
+					for (int i = 0; i < skipamount + 1; ++i)
+					{
+						printf("%i\n", k + i);
+					}
+					k += skipamount;
+				}
+				else
+				{
+					ClearPartial(0, k - startpos, LINECOUNT_WIDE - 1, 1);
 
-			printf("%i", k);
+					printf("%i\n", k);
+				}
+			}
+			else if (!strncmp(str_save[k - 1] + nolflen(str_save[k - 1]), newlinestring, strlen(newlinestring)))
+			{
+				ClearPartial(0, k - startpos, LINECOUNT_WIDE - 1, 1);
+				printf("%i\n", k);
+			}
 		}
 	}
 	SetColor(bg_color);
@@ -95,13 +127,12 @@ int WriteBuffer(FILE *fstream)
 	return 0;
 }
 
-int DisplayFileContent(char *strsave[], FILE *fstream)
+int DisplayFileContent(char *strsave[], FILE *fstream, int starty)
 {
-	DisplayCursor(FALSE);
 
 	if (LINECOUNT_WIDE != 0)
 	{
-		LoadLineCount(strsave, ypos);
+		LoadLineCount(strsave, ypos, starty);
 	}
 	int startpos = 0;
 
@@ -110,14 +141,27 @@ int DisplayFileContent(char *strsave[], FILE *fstream)
 	{
 		startpos = ypos - (window_size - 2);
 	}
+	/*
+	 Don't confuse 'startpos' with 'starty'
 
-	for (int i = 1 + startpos; i < startpos + (window_size - 1); i++)
+	'starty' is for the optimizations, 'startpos' is for the display
+	*/
+
+	if (starty < 0)
+	{
+		starty = 0;
+	} /* else {
+		printf("\tLines printed: %d", (startpos + (window_size - 1)) - (startpos + starty));
+		MakePause();
+	} */
+
+	for (int i = 1 + startpos + starty; i < startpos + (window_size - 1); i++)
 	{
 		if (strsave[i][0] != '\0')
 		{
 			gotoxy(LINECOUNT_WIDE, i - startpos);
 
-			if (syntaxHighlighting && fstream == stdout)
+			if (syntaxHighlighting)
 			{
 				color_line(str_save[i], 0);
 			}
@@ -134,7 +178,6 @@ int DisplayFileContent(char *strsave[], FILE *fstream)
 			}
 		}
 	}
-	DisplayCursor(TRUE);
 
 	return 0;
 }
@@ -166,13 +209,15 @@ int SaveFile(char *strsave[], char *filename, int size, int *is_modified, int *i
 		if (nolflen(filename) <= 0)
 		{
 			LoadAllNewtrodit();
-			DisplayFileContent(strsave, stdout); // Display file content on screen
+			DisplayFileContent(strsave, stdout, 0); // Display file content on screen
 			PrintBottomString(NEWTRODIT_FUNCTION_ABORTED);
 			MakePause();
 			ShowBottomMenu();
 			return 0;
 		}
 		filename[strcspn(filename, "\n")] = 0; // Remove newline character
+
+		RemoveQuotes(filename, strdup(filename));
 
 		if (!ValidFileName(filename))
 		{
@@ -187,7 +232,7 @@ int SaveFile(char *strsave[], char *filename, int size, int *is_modified, int *i
 	WriteBuffer(fp);
 
 	LoadAllNewtrodit();
-	DisplayFileContent(strsave, stdout); // Display file content on screen
+	DisplayFileContent(strsave, stdout, 0); // Display file content on screen
 
 	if (fp)
 	{
@@ -288,7 +333,7 @@ int LoadFile(char *strsave[], char *filename, int relativexps[], char newlinestr
 
 	if (LINECOUNT_WIDE != 0)
 	{
-		LoadLineCount(strsave, ypos);
+		LoadLineCount(strsave, ypos, 0);
 	}
 
 	for (int j = 1; j < YSIZE - 1; j++) // Increment read_y by one because it starts at 1
@@ -336,9 +381,13 @@ int NewFile(int *is_modified, int *is_untitled, int *is_saved, int line_count, c
 	*is_saved = false;
 	*is_modified = false;
 	DisplayCursorPos(*xps, *yps);
+	while (strlen(itoa_n(ypos + (YSIZE - 1))) < LINECOUNT_WIDE - 1) // Restore linecount
+	{
+		LINECOUNT_WIDE--;
+	}
 
 	gotoxy(*xps + LINECOUNT_WIDE, *yps);
-
+	printf("ok");
 	return 0;
 }
 
@@ -347,14 +396,14 @@ void ReloadFile(int *is_untitled, char *strsave[], int *xps, int *yps, int relat
 	LoadAllNewtrodit();
 	if (*is_untitled == false)
 	{
-		if(!LoadFile(strsave, filename_text, relativexps, newlinestring, fstream))
+		if (!LoadFile(strsave, filename_text, relativexps, newlinestring, fstream))
 		{
 			return;
 		}
 	}
 	else
 	{
-		DisplayFileContent(strsave, stdout);
+		DisplayFileContent(strsave, stdout, 0);
 	}
 	if (strsave[*yps][*xps] == '\0')
 	{
@@ -374,7 +423,7 @@ void ReloadFile(int *is_untitled, char *strsave[], int *xps, int *yps, int relat
 void FunctionAborted(char *strsave[])
 {
 	LoadAllNewtrodit();
-	DisplayFileContent(strsave, stdout); // Display file content on screen
+	DisplayFileContent(strsave, stdout, 0); // Display file content on screen
 	PrintBottomString(NEWTRODIT_FUNCTION_ABORTED);
 	MakePause();
 	ShowBottomMenu();
@@ -386,7 +435,7 @@ void ConBufferLimit(char *strsave[], int chr, int *xps, int *yps)
 
 	MakePause();
 	ShowBottomMenu();
-	DisplayFileContent(str_save, stdout);
+	DisplayFileContent(str_save, stdout, 0);
 	if (chr != 8)
 	{
 		*xps = 0;
@@ -394,36 +443,27 @@ void ConBufferLimit(char *strsave[], int chr, int *xps, int *yps)
 	}
 }
 
-void UpdateScrolledScreen(int linecount)
+int UpdateScrolledScreen(int linecount)
 {
 	if (ypos >= (YSIZE - 3))
 	{
-
-		clearBufferScreen = true;
-		LoadAllNewtrodit();
-		clearBufferScreen = false;
-		if (linecount)
-		{
-			LoadLineCount(str_save, ypos);
-		}
-		DisplayFileContent(str_save, stdout);
+		ClearPartial(LINECOUNT_WIDE, 1, XSIZE - LINECOUNT_WIDE, YSIZE - 2);
+		DisplayFileContent(str_save, stdout, 0);
+		return 1;
 	}
+	return 0;
 }
 
-void UpdateHomeScrolledScreen(int linecount)
+int UpdateHomeScrolledScreen(int linecount)
 {
 	if (ypos >= (YSIZE - 3))
 	{
 		ypos = 1;
-		clearBufferScreen = true;
-		LoadAllNewtrodit();
-		clearBufferScreen = false;
-		if (linecount)
-		{
-			LoadLineCount(str_save, ypos);
-		}
-		DisplayFileContent(str_save, stdout);
+		ClearPartial(0, 1, XSIZE, YSIZE - 2);
+		DisplayFileContent(str_save, stdout, 0);
+		return 1;
 	}
+	return 0;
 }
 
 char *TypingFunction(int min_ascii, int max_ascii, int max_len)
@@ -461,10 +501,6 @@ char *TypingFunction(int min_ascii, int max_ascii, int max_len)
 		}
 	}
 	return num_str;
-}
-
-void OpenNewtroditFile()
-{
 }
 
 int AutoIndent(char **strsave, int yps, int *xps)

@@ -20,7 +20,7 @@
 
 void DisplayLineCount(char *strsave[], int size, int yps);
 int SaveFile(char *strsave[], char *filename, int size, int *is_modified, int *is_untitled);
-int DisplayFileContent(char *strsave[], FILE *fstream);
+int DisplayFileContent(char *strsave[], FILE *fstream, int starty);
 
 #include "newtrodit_core.h"
 #include "newtrodit_syntax.h"
@@ -58,7 +58,21 @@ int NewtroditHelp()
 	ClearPartial(0, 0, XSIZE, YSIZE);
 	TopHelpBar();
 
-	FILE *manual;
+	FILE *manual = fopen(manual_file, "rb");
+	if (!manual)
+	{
+		PrintBottomString(join(NEWTRODIT_ERROR_MISSING_MANUAL, strlasttok(manual_file, PATHTOKENS)));
+		CursorSettings(TRUE, CURSIZE);
+		MakePause();
+		return 1;
+	}
+
+	if (CountLines(manual) >= MANUAL_BUFFER_Y)
+	{
+		PrintBottomString(NEWTRODIT_ERROR_MANUAL_TOO_BIG);
+		MakePause();
+		return 1;
+	}
 
 	DWORD l_mode; // Process ANSI escape sequences
 	HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -69,12 +83,12 @@ int NewtroditHelp()
 								DISABLE_NEWLINE_AUTO_RETURN);
 	SetColor(bg_color);
 
-	const char reset_color[] = "\e[0m";
+#define reset_color "\e[0m"
 
 	int quit_manual = 0, end_manual = 0, max_manual_lines = 0;
 	int man_line_count = 0, disable_clear = 0;
 
-	int find_escape = false;
+	int temp_escape = 0;
 
 	char **manual_buf = calloc(MANUAL_BUFFER_Y, MANUAL_BUFFER_X); // Allocate 300 char pointers
 	for (int i = 0; i < MANUAL_BUFFER_X; ++i)
@@ -83,23 +97,6 @@ int NewtroditHelp()
 	}
 
 	char *gotoline_man = (char *)malloc(MANUAL_BUFFER_X);
-	manual = fopen(manual_file, "r");
-	if (!manual)
-	{
-		PrintBottomString(join(NEWTRODIT_ERROR_MISSING_MANUAL, strlasttok(manual_file, '\\')));
-		CursorSettings(TRUE, CURSIZE);
-		MakePause();
-		DisableVT();
-		return -1;
-	}
-
-	if (CountLines(manual) >= MANUAL_BUFFER_Y)
-	{
-		PrintBottomString(NEWTRODIT_ERROR_MANUAL_TOO_BIG);
-		MakePause();
-		DisableVT();
-		return 1;
-	}
 
 	while (fgets(manual_buf[man_line_count], MANUAL_BUFFER_X, manual)) // Load manual into memory
 	{
@@ -132,67 +129,61 @@ int NewtroditHelp()
 		{
 			TopHelpBar();
 			BottomHelpBar();
-			for (int i = 1; i < YSIZE - 2; i++)
+			for (int i = 1; i < YSIZE - 2; ++i)
 			{
 
 				if (man_line_count <= max_manual_lines)
 				{
 					gotoxy(0, i);
-					if (manual_buf[man_line_count][strlen(manual_buf[man_line_count]) - 1] == '\n')
-					{
-						manual_buf[man_line_count][strlen(manual_buf[man_line_count]) - 1] = '\0';
-					}
+					manual_buf[man_line_count][strcspn(manual_buf[man_line_count], "\n")] = 0;
+
 					if (FindString(manual_buf[man_line_count], "$") != -1)
 					{
-						for (int k = 0; k < (unsigned)strlen(manual_buf[man_line_count]); ++k)
+						for (int k = 0; k < strlen(manual_buf[man_line_count]); ++k)
 						{
-
-							if (manual_buf[man_line_count][k] == '$' && manual_buf[man_line_count][k + 1] != '\0')
+							if (manual_buf[man_line_count][k] == '$')
 							{
-								find_escape = true;
-
-								switch (manual_buf[man_line_count][k + 1])
+								if (manual_buf[man_line_count][k] != '$')
 								{
-
-								case 'X':
-									printf("%d", BUFFER_X);
-									break;
-								case 'Y':
-									printf("%d", BUFFER_Y);
-
-									break;
-								case 'B':
-									printf("%s", newtrodit_build_date);
-
-									break;
-								case 'V':
-									printf("%s", newtrodit_version);
-									break;
-								case 'C':
-									printf("%s", newtrodit_commit);
-									break;
-								case '$':
+									printf("[%c:%c]", manual_buf[man_line_count][k], manual_buf[man_line_count][k + 1]);
+									switch (manual_buf[man_line_count][k + 1])
+									{
+									case 'Y':
+										printf("%d", BUFFER_Y);
+										k++;
+										break;
+									case 'X':
+										printf("%d", BUFFER_X);
+										k++;
+										break;
+									case 'I':
+										printf("%d", BUFFER_INCREMENT);
+										k++;
+										break;
+									case 'C':
+										printf("%s", newtrodit_commit);
+										k++;
+										break;
+									case 'B':
+										printf("%s", newtrodit_build_date);
+										k++;
+										break;
+									case 'V':
+										printf("%s", newtrodit_version);
+										k++;
+										break;
+									}
+								}
+								else
+								{
 									putchar('$');
-									break;
-
-								default:
-
-									break;
 								}
 							}
 							else
 							{
-								if (find_escape)
-								{
-									find_escape = !find_escape;
-								}
-								else
-								{
-									putchar(manual_buf[man_line_count][k]);
-								}
+								putchar(manual_buf[man_line_count][k]);
 							}
 						}
-						putchar('\n');
 					}
 					else
 					{

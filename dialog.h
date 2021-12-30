@@ -50,6 +50,9 @@ char NEWTRODIT_FS_FILE_NOT_FOUND[] = "File not found: ";
 char NEWTRODIT_FS_FILE_RENAME[] = "Cannot rename the file.";
 char NEWTRODIT_FS_FILE_DELETE[] = "Cannot delete the file.";
 
+char NEWTRODIT_FS_DISK_FULL[] = "Disk is full.";
+char NEWTRODIT_FS_ACCESS_DENIED[] = "Access denied.";
+
 
 
 // Prompts

@@ -44,17 +44,12 @@
 #define MIN_BUFSIZE 100
 #define LINE_MAX 8192
 
-
 #ifndef __bool_true_false_are_defined
 #define _bool_true_false_are_defined
 typedef short bool;
 
-#define false 0
-#define true 1
-#endif
-
-#ifndef ENOBUFS
-#define ENOBUFS 105 // No buffer space available
+#define false (bool)0
+#define true (bool)1
 #endif
 
 #ifndef UNDO_STACK_SIZE
@@ -78,6 +73,8 @@ typedef short bool;
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #define DISABLE_NEWLINE_AUTO_RETURN 0x0008
 
+#define PATHTOKENS "\\/"
+
 #ifndef isblank
 #define isblank(c) ((c) == ' ' || (c) == '\t')
 #endif
@@ -93,6 +90,11 @@ typedef struct
 	int len;
 	size_t size;
 } Line;
+
+void ExitRoutine(int retval) // Cleanup routine
+{
+	exit(retval);
+}
 
 void StartProcess(char *command_line)
 {
@@ -112,24 +114,38 @@ int CheckKey(int keycode)
 	return GetKeyState(keycode) <= -127;
 }
 
-char *strlasttok(const char *tok, int char_token)
+int toklastpos(char *s, char *token)
 {
-	char *bs = strrchr(tok, char_token);
-	if (!bs)
+	int lastpos = -1;
+	for (int i = 0; i < strlen(s); i++)
+	{
+		for (int j = 0; j < strlen(token); j++)
+		{
+			if (s[i] == token[j])
+			{
+				lastpos = i;
+			}
+		}
+	}
+	return lastpos;
+}
+
+char *strlasttok(char *tok, char *char_token)
+{
+	int pos;
+	if ((pos = toklastpos(tok, char_token)) == -1)
 	{
 		return strdup(tok);
 	}
 	else
 	{
-		return strdup(bs + 1);
+		return strdup(tok + pos + 1);
 	}
 }
 
 void gotoxy(int x, int y) // Change cursor position to x,y
 {
-	COORD dwPos;
-	dwPos.X = x;
-	dwPos.Y = y;
+	COORD dwPos = {x, y};
 
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), dwPos);
 	return;
@@ -203,17 +219,16 @@ void ClearPartial(int x, int y, int width, int height) // Clears a section of th
 	{
 		return;
 	}
-	cellCount = width * height;
+	cellCount = width;
 
-	if (!FillConsoleOutputCharacter(hStdOut, (TCHAR)' ', cellCount, homeCoords, &count))
+	for (int i = 0; i < height; i++)
 	{
-		return;
-	}
+		FillConsoleOutputCharacter(hStdOut, ' ', cellCount, homeCoords, &count);
+		FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count);
 
-	if (!FillConsoleOutputAttribute(hStdOut, csbi.wAttributes, cellCount, homeCoords, &count))
-	{
-		return;
+		homeCoords.Y++;
 	}
+	homeCoords.Y -= height;
 	SetConsoleCursorPosition(hStdOut, homeCoords);
 	return;
 }
@@ -226,19 +241,11 @@ void PrintBottomString(char *bottom_string)
 	return;
 }
 
-void DisplayCursor(int disp)
+void DisplayCursor(bool disp)
 {
 	CONSOLE_CURSOR_INFO cursor;
-	if (disp == 0)
-	{
-		cursor.bVisible = FALSE;
-	}
-	else
-	{
-		cursor.bVisible = TRUE;
-	}
+	cursor.bVisible = disp;
 	cursor.dwSize = CURSIZE;
-
 	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor);
 	return;
 }
@@ -262,28 +269,47 @@ void SetConsoleSize(int xs, int ys)
 	return;
 }
 
-size_t nolflen(char *len_str) // Line length without line feed
+char *strncpy_n(char *dest, const char *src, size_t count)
 {
-	unsigned int n = 0, i = 0;
-	while (len_str[i] != '\0')
-	{
-		if (len_str[i] != 0x0A && len_str[n] != 0x0D)
-		{
-			n++;
-		}
+	// Better version that strncpy() because it always null terminates strings
 
-		i++;
+	if (count)
+	{
+		memset(dest, 0, count);
+		strncat(dest, src, count);
+		return dest;
 	}
-	return n;
+	return NULL;
+}
+
+size_t nolflen(char *s) // Line length without line feed
+{
+	char *exclude = newlinestring;
+	if (!strchr(exclude, '\n'))
+	{
+		strncat(exclude, "\n", 1);
+	}
+	int len = 0;
+	while (*s)
+	{
+		if (strchr(exclude, *s))
+		{
+			s++;
+		}
+		else
+		{
+			len++;
+			s++;
+		}
+	}
+	return len;
 }
 
 char *PrintTab(int tab_count)
 {
 	char *s = malloc(sizeof(char *) * tab_count + 1);
-	for (int i = 0; i < tab_count; i++)
-	{
-		s[i] = ' ';
-	}
+	memset(s, 32, tab_count);
+
 	return s;
 }
 
@@ -301,29 +327,29 @@ int CheckFile(char *filename) // Will return 0 if file exists
 
 int FindString(char *str, char *find) // Not the best algorithm but it works
 {
-	int n = strlen(find), k = strlen(str);
-	if (k < n)
+	char *ptr = strstr(str, find);
+
+	if (!ptr)
 	{
 		return -1;
 	}
-	for (int i = 0; i < k; ++i)
+	else
 	{
-		if (i > (k - n))
-		{
-			return -1;
-		}
-		if(str[i+1] != find[1])
-		{
-			i+=2;
-			continue;
-		}
-
-		if (!memcmp(str + i, find, n))
-		{
-			return i;
-		}
+		return ptr - str;
 	}
-	return -1;
+}
+
+char* RemoveQuotes(char* dest, char* src)
+{
+	if (src[0] == '\"' && src[strlen(src) - 1] == '\"')
+	{
+		strncpy_n(dest, src + 1, strlen(src) - 2);
+	}
+	else
+	{
+		strncpy_n(dest, src, strlen(src));
+	}
+	return dest;
 }
 
 char *ReplaceString(char *s, char *find, char *replace, int *occurenceCount)
@@ -359,8 +385,8 @@ char *ReplaceString(char *s, char *find, char *replace, int *occurenceCount)
 int tokback_pos(char *s, char *p, char *p2)
 {
 	/*
-			 p is the delimiter on the last position
-			 p2 is the delimiter for an index of + 1
+					 p is the delimiter on the last position
+					 p2 is the delimiter for an index of + 1
 	*/
 	for (int i = strlen(s); i > 0; i--)
 	{
@@ -394,9 +420,10 @@ int tokback_pos(char *s, char *p, char *p2)
 
 char *join(const char *s1, const char *s2)
 {
-	char *s = (char *)malloc(strlen(s1) + strlen(s2) + 1);
-	strcpy(s, s1);
-	strcat(s, s2);
+	size_t arr_size = strlen(s1) + strlen(s2) + 1;
+	char *s = (char *)malloc(arr_size);
+	strncpy_n(s, s1, arr_size);
+	strncat(s, s2, arr_size);
 
 	return s;
 }
@@ -486,27 +513,25 @@ char *delete_row(char **arr, int startpos, size_t arrsize)
 	return arr[startpos];
 }
 
-char *strncpy_n(char *dest, const char *src, size_t count)
+char *insert_deleted_row(char **str, int *xp, int *yp, size_t num)
 {
-	// Better version that strncpy() because it always null terminates strings
+	size_t n = nolflen(str[ypos - 1]);
+	memset(str[*yp - 1] + n, 0, num - n);							// Empty the new line
+	strncat(str[*yp - 1], str[ypos] + *xp, strlen(str[*yp]) - *xp); // Concatenate the next line
+	delete_row(str, *yp, num);										// Delete the old row, shifting other rows down
 
-	if (count)
-	{
-		memset(dest, 0, count);
-		strncat(dest, src, count);
-		return dest;
-	}
-	return NULL;
+	// Decrease the yp pointer by one
+	(*yp)--;
+
+	*xp = n;
+	return str[*yp];
 }
 
 char *EmptyString(char *s)
 {
 	size_t n = strlen(s);
 
-	for (int i = 0; i < n; i++)
-	{
-		s[i] = '\0';
-	}
+	memset(s, 0, n);
 	return s;
 }
 
@@ -525,10 +550,7 @@ int ValidSize()
 		MessageBox(0, NEWTRODIT_ERROR_WINDOW_TOO_SMALL, "Newtrodit", 16);
 		return 0;
 	}
-	else
-	{
-		return 1;
-	}
+	return;
 }
 
 void MakePause()
@@ -540,6 +562,18 @@ void MakePause()
 		mp = getch();
 	}
 	return;
+}
+
+int getch_n()
+{
+	int gc_n;
+	gc_n = getch();
+	if (gc_n == 0 || gc_n == 0xE0)
+	{
+		gc_n += 255;
+		gc_n += getch();
+	}
+	return gc_n;
 }
 
 int tokcount(char *s, char *delim)
@@ -609,7 +643,7 @@ int BufferLimit()
 void *realloc_n(void *old, size_t old_sz, size_t new_sz)
 {
 	void *new = malloc(new_sz);
-	if (new == NULL)
+	if (!new)
 	{
 		return NULL;
 	}
@@ -680,7 +714,7 @@ char *RemoveTab(char *s) // Replace all tabs with 8 spaces and return another st
 	return new_s;
 }
 
-int hexstrtodec(char* s) // Just to avoid repetitive calls
+int hexstrtodec(char *s) // Just to avoid repetitive calls
 {
 	return strtol(s, NULL, 16);
 }

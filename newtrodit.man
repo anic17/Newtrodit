@@ -60,11 +60,12 @@ $NEWTRODIT_MANUAL
  [38;2;207;50;68;4m^F[0m        = Find string
  [38;2;207;50;68;4m^G[0m        = Go to a specific line
  [38;2;207;50;68;4m^H[0m        = Replace string
+ [38;2;207;50;68;4m^L[0m        = Toggle line count
  [38;2;207;50;68;4m^N[0m        = New file
  [38;2;207;50;68;4m^O[0m        = Open file
  [38;2;207;50;68;4m^R[0m        = Reload file (same as '[38;2;207;50;68;4m^N[0m' and '[38;2;207;50;68;4m^O[0m')
  [38;2;207;50;68;4m^S[0m        = Save file
- [38;2;207;50;68;4m^W[0m        = Close file
+ [38;2;207;50;68;4m^W[0m        = Close current file
  [38;2;207;50;68;4m^V[0m        = Paste line from clipboard
  [38;2;207;50;68;4m^X[0m        = Exit Newtrodit
 
@@ -74,9 +75,8 @@ $NEWTRODIT_MANUAL
  [38;2;207;50;68;4mS-^S[0m      = Save file as
 
  [38;2;207;50;68;4mS-^D[0m      = Toggle dev mode
- [38;2;207;50;68;4mS-^L[0m      = Toggle line count
- [38;2;207;50;68;4mS-^T[0m      = Toggle null character to spaces conversion
- [38;2;207;50;68;4mS-^N[0m      = Toggle tab to spaces conversion
+ [38;2;207;50;68;4mS-^N[0m      = Toggle null character to spaces conversion
+ [38;2;207;50;68;4mS-^T[0m      = Toggle tab to spaces conversion
 
  [37;113;235;37;1mAlt keybinds[0m
 
@@ -89,9 +89,13 @@ $NEWTRODIT_MANUAL
  [38;2;207;50;68;4mF1[0m        = Shows help (manual)
  [38;2;207;50;68;4mF2[0m        = Renames current file (can also be used to move)
  [38;2;207;50;68;4mF3[0m        = Next find occurrence (can only be used after '[38;2;207;50;68;4m^F[0m')
- [38;2;207;50;68;4mF5[0m        = Adds current date and time
- [38;2;207;50;68;4m^F1[0m       = About Newtrodit
+ [38;2;207;50;68;4mF5[0m        = Runs a macro, if a macro hasn't been defined yet, it will run the current file
+ [38;2;207;50;68;4mF6[0m        = Adds current date and time
  [38;2;207;50;68;4mF10[0m       = Opens containing directory in Windows Explorer
+
+ [38;2;207;50;68;4m^F1[0m       = About Newtrodit
+ [38;2;207;50;68;4m^F4[0m       = Close current file (same as [38;2;207;50;68;4m^W[0m)
+ 
  [38;2;207;50;68;4mS-F10[0m     = Opens a terminal instance in current directory
  [38;2;207;50;68;4mA-F4[0m      = Same as [38;2;207;50;68;4m^X[0m (exits Newtrodit)
 
@@ -139,7 +143,7 @@ $NEWTRODIT_MANUAL
   [37;113;235;37;1mString settings[0m
 
   -[1m manfile[0m       = Name of the manual file. String type.
-  -[1m newline[0m       = New line string, which will be added to the end of each line. String type.
+  -[1m newline[0m       = New line, which will be added to the end of each line. String type.
 
  [38;2;210;156;12;1mWARNING: Wrongly configuring settings cause unexpected behavior and major issues.[0m
 
@@ -157,11 +161,22 @@ $NEWTRODIT_MANUAL
  [1mSyntax highlighting[0m
 
  Newtrodit has some syntax highlighting rules to color the code you're writing and to make it
- easier to read. It's still in an experimental phase, so it's disabled by default.
+ easier to read. 
 
- At the moment, there only exist some basic rules to highlight the C language, but at the future
- there will be more, adding you the possibility to customize the syntax highlighting and create your
- own rules. 
+ Syntax highlighting format is similar to the settings format (INI-like), but with some special keywords.
+ Each line must start with a keyword followed by an equal sign and the color of the keyword.
+
+ Here's a list of all special keywords:
+ [1m $$NEWTRODIT_SYNTAX[0m = This must be the first line of the file to indicate the syntax
+                      highlighting format used is the one used by Newtrodit.
+                                  
+ [1m $$LANGUAGE[0m           = This keyword indicates the language of the code.
+ [1m $$COMMENT[0m            = This keyword the comment string.
+ [1m $$COMMENT_COLOR[0m      = Comments color.
+ [1m $$QUOTE_COLOR[0m        = String color.
+ [1m $$DEFAULT_COLOR[0m      = Code that isn't highlighting will be colored in this color.
+ [1m $$NUMBER_COLOR[0m       = Every number written will be colored in this color.
+ [1m $$SEPARATORS[0m         = Code separator characters. (e.g. ',.()+-/*=~[];{}<> ')
 
  [1mOld keybinds[0m
 
@@ -183,7 +198,7 @@ $NEWTRODIT_MANUAL
  [37;113;235;37;1mInternal working[0m
 
  At the moment, Newtrodit has a buffer of $X x $Y. The maximum number of lines is
- $Y, and line length depends on the RAM of the computer.
+ $Y, with a buffer increment of $I, while line length depends on the RAM of the computer.
  
  This is due to the fact that the buffer is a 2D array of characters. This is one of the main 
  issues that Newtrodit has to deal with and we're working on it.
@@ -193,18 +208,20 @@ $NEWTRODIT_MANUAL
 
  Some more specific internal working behaviors:
   - New lines while reading a file are added when a '[38;2;207;50;68;4m\n[0m' character is found, 
-  and not when a custom new line string is found.
+    and not when a custom new line string is found.
 
 
  The source code of Newtrodit is composed by:
 
- [1mNewtrodit.c[0m      : Main source file
- [1mnewtrodit_core.h[0m : All core functions
- [1mnewtrodit_func.c[0m : Main functions
- [1mnewtrodit_gui.c[0m  : GUI loading
- [1mmanual.c[0m         : Manual
- [1mdialog.h[0m         : Dialogs
- [1mglobals.h[0m        : Global variables
+ [1mdialog.h[0m           : Dialogs
+ [1mglobals.h[0m          : Global variables
+ [1mmanual.c[0m           : Manual
+ [1mnewtrodit.c[0m        : Main source file
+ [1mnewtrodit_core.h[0m   : All core functions
+ [1mnewtrodit_func.c[0m   : Main functions
+ [1mnewtrodit_gui.c[0m    : GUI loading
+ [1mnewtrodit_syntax.h[0m : Syntax highlighting
+
 
  [37;113;235;37;1mLicense[0m
  

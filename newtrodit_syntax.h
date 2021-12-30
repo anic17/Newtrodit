@@ -107,16 +107,20 @@ keywords_t keywords[] = {
 
     {"#elif", 0xb},
     {"#error", 0xb},
+    {"#warning", 0xb},
 
     {"main", 6},
-
-    {"0x", 0xa},
-    {"0b", 0xa},
 
     // Macro constants
     {"NULL", 0x9},
     {"true", 0x9},
     {"false", 0x9},
+    {"errno", 0x9},
+    {"stdin", 0x9},
+    {"stdout", 0x9},
+    {"stderr", 0x9},
+    {"EOF", 0x9},
+    {"WEOF", 0x9},
 
 };
 
@@ -244,7 +248,7 @@ int LoadSyntaxScheme(FILE *syntaxfp, char *syntax_fn)
         MakePause();
         return 0;
     }
-
+    printf("%d", c);
     return c;
 }
 
@@ -252,77 +256,115 @@ char *color_line(char *line, int startpos)
 {
     DisplayCursor(false);
     size_t comment_size = sizeof(comment) / sizeof(comment[0]);
+    char *strstr_ptr;
     // Make syntax highlighting
-    bool isComment = false, hasHex = false;
+    bool isComment = false, numBase = false; // numBase is used to check the base of the number (decimal or hexadecimal)
     int tmp_count = 0, pos, line_num = 0, skipChars = 0;
 
+    char quotechar;
     if (!multiLineComment)
     {
         SetColor(default_color);
     }
-    multiLineComment = false;
 
     size_t len = strlen(line);
     for (int i = 0; i < len; ++i)
     {
         if (i < wrapSize)
         {
-            while (line[i] == 32 || line[i] == 9)
+            while ((line[i] == 32 || line[i] == 9) && i < wrapSize && i < len)
             {
                 putchar(line[i++]);
             }
+            /*
 
-            /*  if (!memcmp(line + i, comment[1].keyword, strlen(comment[1].keyword)))
-             {
-                 SetColor(comment[1].color);
-                 multiLineComment = true;
+           if (!memcmp(line + i, comment[1].keyword, strlen(comment[1].keyword)))
+           {
+                SetColor(comment[1].color);
+                multiLineComment = true;
+                while(memcmp(line + i, comment[2].keyword, strlen(comment[2].keyword)) && i < len)
+                {
+                   putchar(line[i++]);
+                }
 
-                 printf("%.*s", wrapSize - i, comment[1].keyword);
-
-                 i += strlen(comment[1].keyword);
-             }
-             if (!memcmp(line + i, comment[2].keyword, strlen(comment[2].keyword)))
-             {
-                 printf("%.*s", wrapSize - i, comment[2].keyword);
-                 multiLineComment = false;
-                 SetColor(default_color);
-                 i += strlen(comment[2].keyword);
-             }
-            if (!multiLineComment)
-            { */
+                i += strlen(comment[1].keyword);
+            }
+            if (!memcmp(line + i, comment[2].keyword, strlen(comment[2].keyword)))
+            {
+                printf("%.*s", wrapSize - i, comment[2].keyword);
+                multiLineComment = false;
+                SetColor(default_color);
+                i += strlen(comment[2].keyword);
+            }
+           if (!multiLineComment)
+           { */
             if (isdigit(line[i]) && !isComment)
             {
-                SetColor(num_color);
-
                 if (i == 0 || is_separator(line[i - 1]))
                 {
-
-                    do
+                    if (i < len)
                     {
+                        SetColor(num_color);
                         putchar(line[i++]);
-                    } while (isdigit(line[i]));
+                        switch (tolower(line[i]))
+                        {
+                        case 'b':
+                            do
+                            {
+                                putchar(line[i++]);
+                            } while ((line[i] == '0' || line[i] == '1') && i < len);
+                            break;
+                        case 'o':
+
+                            do
+                            {
+                                putchar(line[i++]);
+                            } while (isdigit(line[i]) && i < len && line[i] < '8');
+
+                            break;
+                        case 'x':
+                            do
+                            {
+                                putchar(line[i++]);
+                            } while (isxdigit(line[i]) && i < len);
+                            break;
+
+                        default:
+                            if (isdigit(line[i]))
+                            {
+                                do
+                                {
+                                    putchar(line[i++]);
+                                } while (isdigit(line[i]) && i < len);
+                            }
+
+                            break;
+                        }
+
+                        SetColor(default_color);
+                    }
                 }
-                SetColor(default_color);
             }
-            /* comment[0].keyword = "::";
             if (!memcmp(line + i, comment[0].keyword, strlen(comment[0].keyword)))
             {
                 SetColor(comment_color);
                 printf("%.*s", wrapSize - i, line + i);
                 SetColor(default_color);
                 break;
-            } */
+            }
 
-            if (line[i] == '\"' && !isComment)
+            if ((line[i] == '\"' || (line[i] == '\'' && singleQuotes)) && !isComment)
             {
-
                 if (i < len)
                 {
+
                     SetColor(quote_color);
+                    quotechar = line[i];
+
                     do
                     {
                         putchar(line[i++]);
-                    } while (line[i] != '\"' && i < len);
+                    } while (line[i] != quotechar && i < len && i < wrapSize);
                     putchar(line[i]);
                     SetColor(default_color);
                 }
@@ -336,7 +378,9 @@ char *color_line(char *line, int startpos)
 
                         if (pos = FindString(line + i, keywords[k].keyword) != -1 && is_separator(line[i + pos + strlen(keywords[k].keyword)]))
                         {
-                            if (!memcmp(keywords[k].keyword, line + pos + i - 1, strlen(keywords[k].keyword)))
+                            /*  printf("[%s]", keywords[k].keyword);
+                             MakePause(); */
+                            if (!memcmp(keywords[k].keyword, line + pos + i - 1, strlen(keywords[k].keyword))) // Faster than strncmp()
                             {
                                 SetColor(keywords[k].color);
 
@@ -359,6 +403,7 @@ char *color_line(char *line, int startpos)
         }
         else
         {
+
             break;
         }
     }

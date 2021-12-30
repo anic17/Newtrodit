@@ -18,7 +18,8 @@
 */
 
 const char newtrodit_version[] = "0.5";
-const char newtrodit_build_date[] = "9/12/2021";
+const char newtrodit_build_date[] = "28/12/2021";
+const char newtrodit_repository[] = "https://github.com/anic17/Newtrodit";
 char manual_file[_MAX_PATH] = "newtrodit.man";
 char settings_file[_MAX_PATH] = "newtrodit.config";
 
@@ -44,7 +45,7 @@ int convertNull = true;
 int trimLongLines = true;
 int cursorSizeInsert = true;
 int wrapLine = false;
-int autoIndent = false;
+int autoIndent = true;
 int fullPathTitle = true;
 int useOldKeybinds = false; // Bool to use old keybinds (^X instead of ^Q, ^K instead of ^X)
 int longPosition = false;
@@ -54,7 +55,7 @@ int clearBufferScreen = false;
 int isUntitled = true;
 int isModified = false;
 int isSaved = false;
-int multiLineComment = false;
+static int multiLineComment = false;
 int syntaxHighlighting = false;
 
 int horizontalScroll = 0;
@@ -90,4 +91,4 @@ int default_color = DEFAULT_SYNTAX_COLOR;
 int comment_color = DEFAULT_COMMENT_COLOR;
 int quote_color = DEFAULT_QUOTE_COLOR;
 int num_color = DEFAULT_NUM_COLOR;
-
+int singleQuotes = false;

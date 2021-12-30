@@ -91,12 +91,13 @@ void RightAlignNewline()
 
 void ShowFindMenu()
 {
-	ClearPartial(0, YSIZE - 2, XSIZE, 2);
+	SetColor(bg_color);
+	ClearPartial(0, YSIZE - 1, XSIZE, 1);
 
 	SetColor(fg_color);
 	fputs("F3", stdout);
 	SetColor(bg_color);
-	fputs(": Next occurrence\n", stdout);
+	fputs(": Next occurrence | ", stdout);
 	SetColor(fg_color);
 	fputs("ESC", stdout);
 	SetColor(bg_color);
@@ -129,7 +130,7 @@ void NewtroditNameLoad()
 void DisplayCursorPos(int xps, int yps)
 {
 	size_t len = strlen(NEWTRODIT_DIALOG_BOTTOM_HELP);
-	ClearPartial(len, YSIZE - 1, wrapSize-len, 1);
+	ClearPartial(len, YSIZE - 1, wrapSize - len, 1);
 	if (longPosition) // I don't know why I added this
 	{
 		printf("Line %d, Column %d", yps, xps + 1); // Add one to xpos because it's zero indexed
@@ -145,16 +146,17 @@ void LoadAllNewtrodit()
 	CursorSettings(FALSE, CURSIZE); // Hide cursor to reduce flickering
 	SetColor(bg_color);
 
-	if (clearBufferScreen)
+	ClearPartial(0, 0, XSIZE, YSIZE);
+
+	/* if (clearBufferScreen)
 	{
 		ClearPartial(0, 1, XSIZE, YSIZE - 2);
 	}
 	else
 	{
-		ClearPartial(0, 0, XSIZE, YSIZE);
-	}
+	} */
 	NewtroditNameLoad();
-	CenterText(strlasttok(filename_text, '\\'), 0);
+	CenterText(strlasttok(filename_text, PATHTOKENS), 0);
 	RightAlignNewline();
 	ShowBottomMenu();
 	if (LINECOUNT_WIDE != 0)
@@ -168,7 +170,6 @@ void LoadAllNewtrodit()
 
 void NewtroditCrash(char *crash_reason, int crash_retval)
 {
-	strncpy_n(filename_text, "Newtrodit crashed", sizeof(filename_text));
 	LoadAllNewtrodit();
 	int errno_temp = errno;
 	if (!errno_temp)
@@ -176,34 +177,31 @@ void NewtroditCrash(char *crash_reason, int crash_retval)
 		errno_temp = crash_retval;
 	}
 	Alert();
-	printf("Newtrodit ran into a problem and it crashed. We're sorry.\n\nDebug info:\nerrno: 0x%x (%s)\nGetLastError: 0x%lx\n\nReason: %s\n\nPress enter to exit...\n", errno_temp, strerror(errno_temp), GetLastError(), crash_reason);
+	printf("Newtrodit ran into a problem and it crashed. We're sorry.\nReport this issue to %s/issues\n\nDebug info:\nerrno: 0x%x (%s)\nGetLastError: 0x%lx\n\nReason: %s\n\nPress enter to exit...\n", newtrodit_repository, errno_temp, strerror(errno_temp), GetLastError(), crash_reason);
 	DisplayCursor(true);
 	getchar();
 
-	exit(crash_retval);
+	ExitRoutine(crash_retval);
 }
 
 int QuitProgram(int color_quit)
 {
+	if (isModified)
+	{
+		PrintBottomString(NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
+
+		if (YesNoPrompt())
+		{
+			SaveFile(str_save, strdup(filename_text), YSIZE, &isModified, &isUntitled);
+		}
+	}
 	PrintBottomString(NEWTRODIT_PROMPT_QUIT);
 	if (YesNoPrompt())
 	{
-		if (isModified)
-		{
-			LoadAllNewtrodit();
-			DisplayFileContent(str_save, stdout);
-
-			PrintBottomString(NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
-
-			if (YesNoPrompt())
-			{
-				SaveFile(str_save, strdup(filename_text), YSIZE, &isModified, &isUntitled);
-			}
-		}
 		SetColor(color_quit);
 		ClearPartial(0, 0, XSIZE, YSIZE);
 		CursorSettings(TRUE, CURSIZE);
-		exit(0);
+		ExitRoutine(0);
 	}
 	else
 	{
@@ -263,15 +261,8 @@ void ToggleOption(int *option, char *text, int reloadScreen)
 	if (reloadScreen)
 	{
 		LoadAllNewtrodit();
-		DisplayFileContent(str_save, stdout);
+		DisplayFileContent(str_save, stdout, 0);
 	}
 
-	if (*option)
-	{
-		PrintBottomString(join(text, NEWTRODIT_DIALOG_ENABLED));
-	}
-	else
-	{
-		PrintBottomString(join(text, NEWTRODIT_DIALOG_DISABLED));
-	}
+	*option ? PrintBottomString(join(text, NEWTRODIT_DIALOG_ENABLED)) : PrintBottomString(join(text, NEWTRODIT_DIALOG_DISABLED));
 }
