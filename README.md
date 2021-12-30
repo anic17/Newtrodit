@@ -48,6 +48,8 @@ Compiling and running Newtrodit doesn't require any external libraries apart fro
 Or if you prefer using GCC:  
 `gcc Newtrodit.c -o Newtrodit.exe -luser32 -O2`
 
+
+
 ## Bug reports
 
 To report a bug, feel free to create an issue explaining the bug and the way to get it. Contribution is highly appreciated as Newtrodit is still on beta, so there's a bunch of bugs needing to be fixed.
@@ -70,7 +72,7 @@ Join the Newtrodit development channel!
 ## Release
 
 Newtrodit will be released in a short time, but you can compile using <a href="https://bellard.org/tcc/" style="text-decoration: none">TCC</a> and running the script `make.bat`
-
+Or you can run the binaries inside the `bin` folder.
 
 #### Copyright (c) 2021 anic17 Software
 </div>
