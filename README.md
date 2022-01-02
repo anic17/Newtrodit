@@ -61,7 +61,7 @@ If you want to contribute to Newtrodit, fork the project and create a pull reque
 
 ## Manual
 To get information about the usage of Newtrodit, press F1 at Newtrodit or run `newtrodit --help`  
-It shows all the information you need to know to use Newtrodit. If you have any doubts, contact me on <a href="https://discord.gg/J628dBqQgb" style="text-decoration: none">Discord</a>.
+It shows all the information you need to know to use Newtrodit. If you have any questions, contact me on <a href="https://discord.gg/J628dBqQgb" style="text-decoration: none">Discord</a>.
 
 ## Contact
 
