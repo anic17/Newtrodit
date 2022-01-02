@@ -362,7 +362,7 @@ int NewFile(int *is_modified, int *is_untitled, int *is_saved, int line_count, c
 
 	strncpy_n(filename, filename_text_, sizeof(filename_text_)); // Restore default filename
 	LoadAllNewtrodit();
-	for (int i = 0; i < line_count; i++)
+	for (int i = 1; i < line_count; i++)
 	{
 		memset(strsave[i], 0, BUFFER_X);
 	}
