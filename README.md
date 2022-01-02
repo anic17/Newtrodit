@@ -74,7 +74,7 @@ Join the Newtrodit development channel!
 Newtrodit will be released in a short time, but you can compile using <a href="https://bellard.org/tcc/" style="text-decoration: none">TCC</a> and running the script `make.bat`
 Or you can run the binaries inside the <a href="https://github.com/anic17/Newtrodit/tree/main/bin">`bin`</a> directory.
 
-#### Copyright (c) 2021-2022 anic17 Software
+#### Copyright &copy; 2021-2022 anic17 Software
 </div>
 
 
