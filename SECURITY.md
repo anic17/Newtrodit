@@ -2,17 +2,16 @@
 
 ## Supported Versions
 
-As Newtrodit is currently in beta, only latest version will be supported. Only report old vulnerabilities if they still exist on the latest supported version.
+As Newtrodit is currently in beta, only newer versions are be supported. Only report old vulnerabilities if they still exist on the latest supported version, and not on outdated versions.
 Known bugs:
 `^Z` and `^Y` can crash Newtrodit if pressed twice.
-`^G` inside manual may crash Newtrodit.
-Dollar escaping in manual overwrites wrong characters.
 
 
 List of supported versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 0.6     | :white_check_mark: |
 | 0.5     | :white_check_mark: |
 | 0.4     | :x:                |
 | 0.3     | :x:                |
@@ -20,7 +19,7 @@ List of supported versions:
 
 ## Reporting a Vulnerability
 
-To report a vulnerability, create an [issue](https://github.com/anic17/Newtrodit/issues) with the tag `vulnerability`
+To report a vulnerability, create an [issue](https://github.com/anic17/Newtrodit/issues) with the `vulnerability` tag
 When reporting a crash, please add the following information:
 
  - What function where you using before the crash
