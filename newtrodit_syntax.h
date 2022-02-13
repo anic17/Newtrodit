@@ -110,17 +110,33 @@ keywords_t keywords[] = {
     {"#warning", 0xb},
 
     {"main", 6},
+    {"WinMain", 0x6},
 
     // Macro constants
     {"NULL", 0x9},
+    {"EOF", 0x9},
+    {"WEOF", 0x9},
+    {"FILENAME_MAX", 0x9},
+    {"WEOF", 0x9},
     {"true", 0x9},
     {"false", 0x9},
     {"errno", 0x9},
     {"stdin", 0x9},
     {"stdout", 0x9},
     {"stderr", 0x9},
-    {"EOF", 0x9},
-    {"WEOF", 0x9},
+  
+  
+    {"WINAPI", 0x6},
+    {"_stdcall", 0x6},
+    {"_CRTIMP", 0x6},
+    {"__CRTIMP_INLINE", 0x6},
+    
+    {"__cdecl", 0x6},
+    {"__asm__", 0x6},
+    {"__volatile__", 0x6},
+    {"__attribute__", 0x6},
+    {"__AW_SUFFIXED__", 0x6},
+    
 
 };
 
