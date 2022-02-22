@@ -9,7 +9,7 @@
 
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	MERCHANTABILITY or FITNESS FOR A PARTICULzAR PURPOSE.  See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
@@ -444,7 +444,7 @@ int main(int argc, char *argv[])
 
 	int c = 0;
 	// getch() variables
-	int ch;
+	int ch = 0;
 
 	SetColor(bg_color);
 	int argc_shift = 1, shiftargc = argc; // Can't be 0, because the first argument is the program name
