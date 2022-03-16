@@ -3,6 +3,7 @@
 ## Supported Versions
 
 As Newtrodit is currently in beta, only newer versions are be supported. Only report old vulnerabilities if they still exist on the latest supported version, and not on outdated versions.  
+
 Known bugs:  
  - `^Z` and `^Y` can crash Newtrodit if pressed twice.
 
