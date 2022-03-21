@@ -6,6 +6,7 @@ As Newtrodit is currently in beta, only newer versions are be supported. Only re
 
 Known bugs:  
  - `^Z` and `^Y` can crash Newtrodit if pressed twice.
+ - `^R`crashes Newtrodit on certain occasions, such as having very long lines.
 
 List of supported versions:
 
