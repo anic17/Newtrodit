@@ -43,10 +43,10 @@ I started to love coding it, and that's why today I'm continuing to develop Newt
 ## Project building
 
 Compiling and running Newtrodit doesn't require any external libraries apart from the WinAPI simple libraries. Build Newtrodit with the following command line:  
-`tcc newtrodit.c -o Newtrodit.exe -luser32`  
+`tcc newtrodit.c -o newtrodit.exe -luser32`  
 
 Or if you prefer using GCC:  
-`gcc Newtrodit.c -o Newtrodit.exe -luser32 -O2`
+`gcc newtrodit.c -o newtrodit.exe -luser32 -O2`
 
 
 
