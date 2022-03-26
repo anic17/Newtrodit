@@ -50,7 +50,7 @@ Or if you prefer using GCC:
 
 # Compatibility
 
-  Newtrodit is compatible with OSes starting from Windows XP, but you can enable a small support for Windows 95/98/ME by changing the `_NEWTRODIT_OLD_SUPPORT` constant to **1** in <a href="https://github.com/anic17/Newtrodit/blob/main/newtrodit_core.h#L39">`newtrodit_core.h`</a>  
+  Newtrodit is compatible with OSes starting from Windows XP, but you can enable a small support for Windows 95/98/ME by changing the `_NEWTRODIT_OLD_SUPPORT` constant to **1** in [`newtrodit_core.h`](../main/newtrodit_core.h).  However, this isn't recommended for regular builds, as the compiled executable will lack some features such as UTF-8 file reading.
 
 ## Bug reports
 
@@ -73,8 +73,8 @@ Join the Newtrodit development channel!
 
 ## Release
 
-Newtrodit will be released in a short time, but you can compile using <a href="https://bellard.org/tcc/" style="text-decoration: none">TCC</a> and running the script `make.bat`
-Or you can run the binaries inside the <a href="https://github.com/anic17/Newtrodit/tree/main/bin">`bin`</a> directory.
+Newtrodit will be released in a short time, but you can compile using <a href="https://bellard.org/tcc/" style="text-decoration: none">TCC</a> and running the script [`make.bat`](../main/make.bat)
+Or you can run the binaries inside the [`bin`](../main/bin/) directory.
 
 #### Copyright &copy; 2021-2022 anic17 Software
 </div>
