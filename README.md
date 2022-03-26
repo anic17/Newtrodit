@@ -48,7 +48,9 @@ Compiling and running Newtrodit doesn't require any external libraries apart fro
 Or if you prefer using GCC:  
 `gcc newtrodit.c -o newtrodit.exe -luser32 -O2`
 
+# Compatibility
 
+  Newtrodit is compatible with OSes starting from Windows XP, but you can enable a small support for Windows 95/98/ME by changing the `_NEWTRODIT_OLD_SUPPORT` constant to **1** in <a href="https://github.com/anic17/Newtrodit/blob/main/newtrodit_core.h#L39">`newtrodit_core.h`</a>  
 
 ## Bug reports
 
