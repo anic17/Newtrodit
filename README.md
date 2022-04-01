@@ -79,7 +79,7 @@ Or you can run the binaries inside the [`bin`](../main/bin/) directory.
 #### Copyright &copy; 2021-2022 anic17 Software
 </div>
 
-
+**PS: Repo rename is a joke. Happy April fools!**
 <!-- 
 View counter 
 -->
