@@ -3,7 +3,7 @@
 
 
 
-# Newtrodit
+# CodEditor
 Simple console text editor written in C. 
 
 ![newtrodit-stars](https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow)
