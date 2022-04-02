@@ -3,7 +3,7 @@
 
 
 
-# CodEditor
+# Newtrodit
 Simple console text editor written in C. 
 
 ![newtrodit-stars](https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow)
@@ -79,7 +79,6 @@ Or you can run the binaries inside the [`bin`](../main/bin/) directory.
 #### Copyright &copy; 2021-2022 anic17 Software
 </div>
 
-**PS: Newtrodit rename to CodEditor is a joke. Happy April fools!**
 <!-- 
 View counter 
 -->
