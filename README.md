@@ -6,10 +6,10 @@
 # Newtrodit
 Simple console text editor written in C. 
 
-![newtrodit-stars](https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow)
-![newtrodit-forks](https://img.shields.io/github/forks/anic17/Newtrodit)
-![newtrodit-stars](https://img.shields.io/github/license/anic17/Newtrodit)
-![newtrodit-issues](https://img.shields.io/github/issues/anic17/Newtrodit)
+<a href="https://github.com/anic17/Newtrodit/stargazers">![newtrodit-stars](https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow)</a>
+<a href="https://github.com/anic17/Newtrodit/network/members">![newtrodit-forks](https://img.shields.io/github/forks/anic17/Newtrodit)</a>
+<a href="https://www.gnu.org/licenses/gpl-3.0">![newtrodit-license](https://img.shields.io/github/license/anic17/Newtrodit)</a>
+<a href="https://github.com/anic17/Newtrodit/issues">![newtrodit-issues](https://img.shields.io/github/issues/anic17/Newtrodit)</a>
 
 <a href="https://anic17.github.io/Newtrodit/"><img src="https://user-images.githubusercontent.com/58483910/144676737-67ae58a7-d085-4c1c-920e-b61a39cc09a5.png"></img></a>
 
