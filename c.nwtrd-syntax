@@ -7,14 +7,18 @@ $COMMENT_COLOR 2
 $QUOTE_COLOR e
 $DEFAULT_COLOR 7
 $NUMBER_COLOR 2
-$SEPARATORS ,.()+-/*=~[];{}<> 
+$CAPITAL 1
+$CAPITAL_COLOR c
+$CAPITAL_MIN 4
+$SEPARATORS ?!:,.()+-/*=~[];{}<> 
 
 break=5
 continue=5
 return=5
 
 ; Variable modifiers
-const=a
+auto=9
+const=9
 volatile=9
 extern=9
 static=9
@@ -31,6 +35,7 @@ void=9
 
 ; Derived types
 double_t=a
+div_t=a
 float_t=a
 fpos_t=a
 max_align_t=a
@@ -49,12 +54,14 @@ uint8_t=a
 uint16_t=a
 uint32_t=a
 uint64_t=a
+uint128_t=a
 
 ; Integer types
 int8_t=a
 int16_t=a
 int32_t=a
 int64_t=a
+int128_t=a
 
 ; Keywords
 struct=6
@@ -88,17 +95,30 @@ goto=6
 #endif=b
 #undef=b
 #error=b
+#elif=b
+#error=b
+#warning=b
 
 ; Main function
 
 main=6
 
-; Hex and binary prefixes
-
-0x=a
-0b=a
-
 ; Macro constants
-NULL=9
-true=9
-false=9
+NULL=c
+EOF=c
+WEOF=c
+true=c
+false=c
+errno=c
+
+
+WINAPI=6
+_stdcall=6
+_CRTIMP=6
+__CRTIMP_INLINE=6
+    
+__cdecl=6
+__asm__=6
+__volatile__=6
+__attribute__=6
+__AW_SUFFIXED__=6
