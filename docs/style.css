@@ -15,20 +15,21 @@ body {
   margin: 0;
   color: #1b3336;
   background-color: #d9ecff;
-  font-family: "Zen Maru Gothic", sans-serif;
+  font-family: "Zen Maru Gothic";
+  font-weight: normal;
 }
 #headers {
   font-family: "Noto Sans";
   color: #458a8d;
   line-height: 100%;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 #sec_headers {
   font-family: "Noto Sans";
   color: #458a8d;
   line-height: 100%;
-  font-weight: normal;
+  font-weight: 400;
 }
 
 
