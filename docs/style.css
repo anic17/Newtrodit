@@ -1,0 +1,198 @@
+code {
+  font-family: Inconsolata;
+  font-weight: 400;
+  font-size: 11pt;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box
+}
+
+body {
+  margin: 0;
+  color: #1b3336;
+  background-color: #d9ecff;
+  font-family: "Zen Maru Gothic", sans-serif;
+}
+#headers {
+  font-family: "Noto Sans";
+  color: #458a8d;
+  line-height: 100%;
+  font-weight: bold;
+}
+
+#sec_headers {
+  font-family: "Noto Sans";
+  color: #458a8d;
+  line-height: 100%;
+  font-weight: normal;
+}
+
+
+#layout {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+  font-size: 12pt;
+  line-height: 140%;
+
+}
+
+#layout_notimportant {
+
+  margin-left: 12%;
+  margin-right: 12%;
+  margin-top: 8vh;
+}
+
+ul#square {
+  list-style-type: square;
+}
+
+a {
+
+  text-decoration: none;
+  color: #1a51b7;
+  transition: all 0.1s ease-in;
+}
+a.increase:hover {
+  color: #2a78c8;
+  font-size:  1.03em;
+  transition: font-size 0.2s;
+}
+
+
+#hoverlink {
+  color: unset;
+  text-decoration: none; !important
+}
+
+#hoverlink:hover {
+  text-decoration-line: underline; !important
+}
+
+
+footer {
+  text-align: center;
+  background-color: #43565e;
+  color: #e9fcff;
+  padding:18px;
+  width: 100%;
+}
+  
+
+hr {
+  width: 60%;
+  height: 1px;
+}
+
+hr#titlehr {
+
+  width: 100%;
+  color: #858585;
+  background-color: #858585;
+  height: 3px;
+  border-radius: 10px;
+  border: none;
+}
+
+#list {
+  margin-left: 30px;
+}
+
+.description {
+  text-justify: auto;
+}
+
+details summary {
+  cursor: pointer;
+  transition: margin 150ms ease-out;
+}
+
+details[open] summary {
+  margin-bottom: 10px;
+}
+
+li {
+    margin-left: 30px;
+}
+
+.copyright {
+  font-size: 0.9em;
+  text-align: center;
+
+}
+
+.icons {
+  padding: 3px;
+}
+
+@keyframes hr_animate {
+  0%   {width: 60%;}
+  100% {width: calc(100% - (100vh)/100);}
+}
+
+@media (max-width: 600px) {
+  hr {
+    width: 100%;
+  }
+  
+  #layout {
+    line-height: 145%;
+  }
+}
+@media (min-width: 601px and max-width: 1535px)
+{
+  hr  {
+    width: 60%;
+    float: left;
+    transition: width 0.35s ease-out;
+  }  
+}
+
+/* Set a fixed size if the viewport is too big */
+@media (min-width: 1536px)
+{
+  #layout_notimportant {
+    margin-right: 185px;
+    margin-left: 185px;
+  }
+  hr {
+    width: 692px;
+    float: left;
+    transition: width 0.35s ease-out;
+  }
+}
+
+@media (prefers-color-scheme: dark)
+{
+  #headers {
+    color: #52a6a9;
+  }
+  footer {
+    background-color: #90a0a0;
+    color: black;
+  }
+  a {
+    color: #5a9fbe;
+  }
+  a:hover {
+    color: #4a68c0;
+  }
+  body {
+    color: #c0c9c9;
+    background-color: #1a2023;
+  }
+  hr {
+    color: #4a4a4a;
+    background-color: #4a4a4a;
+  }
+  hr#titlehr {
+    color: #2e302e;
+    background-color: #2e302e;
+  }
+}
