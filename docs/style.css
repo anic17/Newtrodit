@@ -1,7 +1,7 @@
 code {
   font-family: Inconsolata;
   font-weight: 400;
-  font-size: 11pt;
+  font-size: 12pt;
   margin-top: 2px;
   margin-bottom: 2px;
 }
@@ -16,7 +16,6 @@ body {
   color: #1b3336;
   background-color: #d9ecff;
   font-family: "Zen Maru Gothic";
-  font-weight: normal;
 }
 #headers {
   font-family: "Noto Sans";
@@ -29,7 +28,7 @@ body {
   font-family: "Noto Sans";
   color: #458a8d;
   line-height: 100%;
-  font-weight: 400;
+  font-weight: normal;
 }
 
 
@@ -119,17 +118,81 @@ details[open] summary {
 }
 
 li {
-    margin-left: 30px;
+  margin-left: 30px;
 }
 
 .copyright {
   font-size: 0.9em;
   text-align: center;
-
 }
 
 .icons {
   padding: 3px;
+}
+
+
+.navbar {
+  overflow: hidden;
+  background-color: #207777;
+}
+
+.navbar a {
+  width: 10vw;
+  float: left;
+  font-size: inherit;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+}
+
+.subnav {
+  float: left;
+  overflow: hidden;
+}
+
+.subnav .subnavbtn {
+  width: 10vw;
+  font-size: inherit;  
+  border: none;
+  outline: none;
+  color: white;
+  padding: 14px 16px;
+  background-color: inherit;
+  font-family: inherit;
+}
+.navbar a:hover {
+  color: white;
+}
+
+.navbar a:hover, .subnav:hover .subnavbtn {
+  background-color: #52a6a9;
+}
+
+.subnav-content a:hover {
+  background-color: #52a6a9;
+  color: white;
+  transition: 0.1s ease;
+}
+
+.subnav-content {
+  display: none;
+  position: absolute;
+  left: 0;
+  background-color: #208989;
+  max-width: 100%;
+}
+
+.subnav-content a
+{
+  float: left;
+  color: white;
+
+}
+
+.subnav:hover .subnav-content
+{
+
+  display: block;
 }
 
 @keyframes hr_animate {
@@ -141,7 +204,6 @@ li {
   hr {
     width: 100%;
   }
-  
   #layout {
     line-height: 145%;
   }
@@ -167,6 +229,13 @@ li {
     float: left;
     transition: width 0.35s ease-out;
   }
+  .navbar .subnavbtn {
+    width: 153.6px;
+  }
+  .subnav .subnavbtn {
+    width: 153.6px;
+  }
+  
 }
 
 @media (prefers-color-scheme: dark)
