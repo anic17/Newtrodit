@@ -106,6 +106,7 @@ hr#titlehr {
 
 .description {
   text-justify: auto;
+  text-align: justify;
 }
 
 details summary {
@@ -171,7 +172,7 @@ li {
 .subnav-content a:hover {
   background-color: #52a6a9;
   color: white;
-  transition: 0.1s ease;
+  transition: background-color 0.3s ease-out;
 }
 
 .subnav-content {
