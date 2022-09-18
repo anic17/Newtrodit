@@ -7,16 +7,20 @@ ul.padlist {
 	padding-left: 15px;
 }
 
-img.screenshot {
-	height: 512px;
-	width: 962px;
-}
-
-@media (max-width: 962px) 
+@media (min-width: 1193px)
 {
 	img.screenshot {
-		height: calc(100% * 512)vh;
-		width: calc(100% * 962/512)vw;
+		height: 512px;
+		width: 962px;
+	}	
+}
 
+
+
+@media (max-width: 1192px)  /* 962 * 1.24 (image width * margin )*/
+{
+	img.screenshot {
+		height: calc((962*100vw/1192)*(512/962));
+		width: calc(962*100vw/1192);
 	}
 }

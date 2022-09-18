@@ -178,7 +178,7 @@ li {
   display: none;
   position: absolute;
   left: 0;
-  background-color: #208989;
+  background-color: #309da6;
   max-width: 100%;
 }
 
@@ -207,6 +207,9 @@ li {
   #layout {
     line-height: 145%;
   }
+  .navbar, .subnav {
+    display: none
+  }
 }
 @media (min-width: 601px and max-width: 1535px)
 {
@@ -215,6 +218,16 @@ li {
     float: left;
     transition: width 0.35s ease-out;
   }  
+}
+@media (max-width: 900px)
+{
+  .navbar a {
+    width: 90px;
+  }
+  .subnav .subnavbtn {
+    width: 90px;
+  }
+
 }
 
 /* Set a fixed size if the viewport is too big */
@@ -229,7 +242,7 @@ li {
     float: left;
     transition: width 0.35s ease-out;
   }
-  .navbar .subnavbtn {
+  .navbar a {
     width: 153.6px;
   }
   .subnav .subnavbtn {
