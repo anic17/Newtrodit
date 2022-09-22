@@ -6,12 +6,16 @@
 # Newtrodit
 Simple console text editor written in C. 
 
+  
+  
 <a href="https://github.com/anic17/Newtrodit/stargazers">![newtrodit-stars](https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow)</a>
 <a href="https://github.com/anic17/Newtrodit/network/members">![newtrodit-forks](https://img.shields.io/github/forks/anic17/Newtrodit)</a>
 <a href="https://www.gnu.org/licenses/gpl-3.0">![newtrodit-license](https://img.shields.io/github/license/anic17/Newtrodit)</a>
 <a href="https://github.com/anic17/Newtrodit/issues">![newtrodit-issues](https://img.shields.io/github/issues/anic17/Newtrodit)</a>
 
 <a href="https://anic17.github.io/Newtrodit/"><img src="https://user-images.githubusercontent.com/58483910/144676737-67ae58a7-d085-4c1c-920e-b61a39cc09a5.png"></img></a>
+
+#### See the [Newtrodit website](https://anic17.github.io/Newtrodit) for more information
 
 
 # Features
@@ -80,6 +84,12 @@ Or you can run the binaries inside the [`bin`](../main/bin/) directory.
  ### Buy me a coffee!<br>
  <a href="https://ko-fi.com/anic17"><img src="https://uploads-ssl.webflow.com/5c14e387dab576fe667689cf/61e11d430afb112ea33c3aa5_Button-1-p-800.png" width="65%" height="100%"></a>
 
+
+## Newtrodit-LCL
+
+Newtrodit Linux Compatibility Laker (aka Newtrodit-LCL) is, as the name says, a compatibility layer to run Newtrodit on Linux natively. It is currently being developed by **[@ZackeryRSmith](https://github.com/ZackeryRSmith)** and myself (anic17).  
+
+Newtrodit-LCL will be released when Newtrodit 0.6 will come out, which shouldn't take long (it is planned that 2023 Newtrodit 0.6 will be already released)
 
 #### Copyright &copy; 2021-2022 anic17 Software
 </div>
