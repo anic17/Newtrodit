@@ -82,7 +82,7 @@ Newtrodit Linux Compatibility Laker (aka Newtrodit-LCL) is, as the name says, a 
 
 Newtrodit-LCL will be released when Newtrodit 0.6 will come out, which shouldn't take long (it is planned that 2023 Newtrodit 0.6 will be already released)
 
-#### Copyright &copy; 2021-2022 anic17 Software
+#### Copyright &copy; 2021-2023 anic17 Software
 </div>
 
 <!-- 
