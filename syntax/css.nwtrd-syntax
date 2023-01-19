@@ -1,0 +1,15 @@
+; Newtrodit CSS language syntax highlighting
+
+$NEWTRODIT_SYNTAX
+$LANGUAGE CSS
+$COMMENT /*
+$COMMENT_COLOR 2
+$QUOTE_COLOR e
+$DEFAULT_COLOR 7
+$NUMBER_COLOR 2
+$CAPITAL 1
+$CAPITAL_COLOR c
+$CAPITAL_MIN 4
+$SEPARATORS ?!:,.()+-/*=~[];{}<> 
+
+width=9

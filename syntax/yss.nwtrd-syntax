@@ -1,0 +1,70 @@
+; Yeshi script syntax highlighting (https://github.com/Yeshi0/NewEngine)
+; Author: anic17 (https://github.com/anic17)
+
+$NEWTRODIT_SYNTAX
+$LANGUAGE Yeshi Script
+$COMMENT ::
+$COMMENT_COLOR 8
+$QUOTE_COLOR e
+$DEFAULT_COLOR 7
+$NUMBER_COLOR 2
+$CAPITAL 1
+$CAPITAL_COLOR c
+$CAPITAL_MIN 4
+$SEPARATORS ()[]"'@%$<>!
+
+; Game keywords
+
+checkCollision=6
+clearScreen=6
+endFrame=6
+engineProperties=6
+exitGame=6
+exitengineProperties=6
+exitgetObjectProperty=6
+exitif=6
+exitkillObject=6
+exitloadScene=6
+exitobjectManager=6
+exitscreenEffect=6
+exitset=6
+exitstartScript=6
+getObjectProperty=6
+gotoReturn=6
+gotoReturnexit=6
+gotoReturnkillObject=6
+gotoReturnscreenEffect=6
+killAll=6
+killObject=6
+killScript=6
+loadGlobalObject=6
+loadLevel=6
+loadOBject=6
+loadObject=6
+loadScene=6
+modifyObjectProperty=6
+modifyTile=6
+objectManager=6
+raiseHardError=6
+renderLevel=6
+saveData=6
+screenEffect=6
+startScript=6
+switchScene=6
+unloadLevel=6
+waitForEffects=6
+
+; Internal keywords
+
+set=9
+wait=9
+goto=9
+if=9
+random=9
+math=9
+exit=9
+
+; Constants
+
+true=c
+false=c
