@@ -80,7 +80,7 @@ Or you can run the binaries inside the [`bin`](../main/bin/) directory.
 
 Newtrodit Linux Compatibility Laker (aka Newtrodit-LCL) is, as the name says, a compatibility layer to run Newtrodit on Linux natively. It is currently being developed by **[@ZackeryRSmith](https://github.com/ZackeryRSmith)** and myself (anic17).  
 
-Newtrodit-LCL will be released when Newtrodit 0.6 will come out, which shouldn't take long (it is planned that 2023 Newtrodit 0.6 will be already released)
+Newtrodit-LCL will be released when Newtrodit 0.6 will come out, which shouldn't take long (Newtrodit 0.6 will be released at the beginning of 2023)
 
 #### Copyright &copy; 2021-2023 anic17 Software
 </div>
