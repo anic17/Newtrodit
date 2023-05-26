@@ -1,0 +1,172 @@
+; Newtrodit batch language syntax highlighting
+; Author: anic17 (https://github.com/anic17)
+
+$NEWTRODIT_SYNTAX
+$LANGUAGE Batch
+$COMMENT ::
+$COMMENT rem 
+$COMMENT_COLOR 8
+$QUOTE_COLOR e
+$DEFAULT_COLOR 7
+$NUMBER_COLOR 2
+$CAPITAL 1
+$CAPITAL_COLOR c
+$CAPITAL_MIN 4
+$SEPARATORS .,()[]@<>%^\/*+-~&|!=:'`"
+
+exit=5
+errorlevel=5
+
+goto=5
+call=5
+
+cmdcmdline=9
+cmdextversion=9
+random=9
+highestnumanodenumber=9
+
+; If command
+
+if=6
+not=9
+defined=9
+exist=9
+geq=9
+neq=9
+leq=9
+equ=9
+gtr=9
+lss=9
+else=6
+off=9
+
+; For loop
+
+for=6
+usebackq=c
+tokens=c
+eol=c
+skip=c
+delims=c
+do=c
+in=c
+
+
+set=6
+shift=6
+setlocal=6
+enabledelayedexpansion=6
+disabledelayedexpansion=6
+enableextensions=6
+disableextensions=6
+endlocal=6
+
+; Internal commands
+
+assoc=6
+cd=6
+chdir=6
+cls=6
+color=6
+copy=6
+date=6
+del=6
+dir=6
+echo=6
+erase=6
+label=6
+md=6
+mkdir=6
+move=6
+net=6
+netsh=6
+path=6
+pause=6
+popd=6
+prompt=6
+pushd=6
+rd=6
+ren=6
+rename=6
+rmdir=6
+start=6
+time=6
+title=6
+type=6
+ver=6
+verify=6
+vol=6
+
+; External commands
+
+attrib=6
+bcdedit=6
+break=6
+cacls=6
+chcp=6
+chkdsk=6
+chkntfs=6
+cmd=6
+comp=6
+compact=6
+convert=6
+diskpart=6
+doskey=6
+driverquery=6
+expand=6
+fc=6
+find=6
+findstr=6
+forfiles=6
+format=6
+fsutil=6
+ftype=6
+gpresult=6
+graftabl=6
+help=6
+icacls=6
+ipconfig=6
+makecab=6
+mklink=6
+mode=6
+more=6
+openfiles=6
+print=6
+recover=6
+replace=6
+reg=6
+robocopy=6
+sc=6
+schtasks=6
+setx=6
+shutdown=6
+sort=6
+subst=6
+systeminfo=6
+taskkill=6
+tasklist=6
+tree=6
+timeout=6
+tree=6
+wmic=6
+xcopy=6
+
+; Mode.com stuff
+cols=6
+lines=6
+
+; True and false
+false=c
+true=c
+nul=c
+con=c
+aux=c
+com1=c
+lpt=c
+prn=c
+CONIN$=c
+CONOUT$=c
+
+; Other important things
+
+%*=c

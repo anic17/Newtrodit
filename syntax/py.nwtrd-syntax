@@ -3,16 +3,20 @@
 $NEWTRODIT_SYNTAX
 $LANGUAGE Python
 $COMMENT #
-$COMMENT_COLOR 2
-$QUOTE_COLOR e
+$COMMENT_COLOR 8
+$QUOTE_COLOR 3
 $DEFAULT_COLOR b
 $NUMBER_COLOR a
+$SINGLE_QUOTES 1
+$CAPITAL 1
+$CAPITAL_MIN 4
 $SEPARATORS []()=:;,.+-*/%&|
 
 ; Functions
 def=a
 
 ; Python keywords
+__import__=6
 and=6
 as=6
 assert=6
