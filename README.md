@@ -6,9 +6,11 @@
 # Newtrodit
 **Efficient and simple yet powerful console text editor written in C.**
   
+After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is out! Feel free to try it, and remember, all feedback is appreciated.
+
 <a href="https://github.com/anic17/Newtrodit/stargazers">![newtrodit-stars](https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow&style=flat-square)</a> <a href="https://github.com/anic17/Newtrodit/network/members">![newtrodit-forks](https://img.shields.io/github/forks/anic17/Newtrodit?style=flat-square)</a> <a href="https://www.gnu.org/licenses/gpl-3.0">![newtrodit-license](https://img.shields.io/github/license/anic17/Newtrodit?style=flat-square)</a> <a href="https://github.com/anic17/Newtrodit/issues">![newtrodit-issues](https://img.shields.io/github/issues/anic17/Newtrodit?style=flat-square)</a>
 
-<a href="https://anic17.github.io/Newtrodit/"><img src="https://user-images.githubusercontent.com/58483910/144676737-67ae58a7-d085-4c1c-920e-b61a39cc09a5.png"></img></a>
+<a href="https://anic17.github.io/Newtrodit/"><img src="../main/res/screenshot_main.png"></img></a>
 
 #### See the [Newtrodit website](https://anic17.github.io/Newtrodit) for more information
 
@@ -75,12 +77,14 @@ Join the Newtrodit development channel!
 Newtrodit will be released in a short time, but you can compile using <a href="https://bellard.org/tcc/" style="text-decoration: none">TCC</a> and running the script [`make.bat`](../main/make.bat)
 Or you can run the binaries inside the [`bin`](../main/bin/) directory.
 
+Meanwhile, you can enjoy the 0.6 release candidate 1 version! Keep in mind that is has some known issues which have to be fixed. See more in the [security readme file](../main/SECURITY.md).
+
 
 ## Newtrodit-LCL
 
 Newtrodit Linux Compatibility Laker (aka Newtrodit-LCL) is, as the name says, a compatibility layer to run Newtrodit on Linux natively. It is currently being developed by **[@ZackeryRSmith](https://github.com/ZackeryRSmith)** and myself (anic17).  
 
-Newtrodit-LCL will be released when Newtrodit 0.6 will come out, which shouldn't take long (Newtrodit 0.6 will be released at the beginning of 2023)
+Newtrodit-LCL will be released when Newtrodit 0.6 will come out, which shouldn't take long.
 
 #### Copyright &copy; 2021-2023 anic17 Software
 </div>
