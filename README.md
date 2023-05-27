@@ -19,16 +19,26 @@ After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is ou
 
 # Features
 
-- Easy to use
+# Features
 - Fast and light
 - Real time position of cursor
 - Line counting
+- Highly configurable
 - Various string manipulation functions such as:
-  - String finding
-  - String replacing
-  - ROT13 encoding
-  - Uppercase/lowercase conversion
+   - String finding (case sensitive and insensitive)
+   - String replacing
+   - ROT13 encoding
+   - Uppercase/lowercase conversion
 - Fully configurable syntax highlighting including custom rules
+- Built-in manual
+- Mouse support (Windows exclusive)
+- Can edit files up to 6400 lines
+- Some file utilities:
+   - File compare
+   - File locating
+   - File type checking
+- Up to 64 files open at once
+
 
 ## More features to come
 
