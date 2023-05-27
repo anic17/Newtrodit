@@ -5,9 +5,9 @@ After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is ou
 
 #### [💡 Features](https://github.com/anic17/Newtrodit#features) - [📖 Compatibility](https://github.com/anic17/Newtrodit#compatibility) - [⚙️ Configuration](https://github.com/anic17/Newtrodit#configuration) - [🔨 Build](https://github.com/anic17/Newtrodit#building) - [❔ Contributors](https://github.com/anic17/Newtrodit#contributors)
 
-# Newtrodit <br><a href="https://github.com/anic17/Newtrodit/stargazers">![newtrodit-stars](https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow&style=flat-square)</a> <a href="https://github.com/anic17/Newtrodit/network/members">![newtrodit-forks](https://img.shields.io/github/forks/anic17/Newtrodit?style=flat-square)</a> <a href="https://www.gnu.org/licenses/gpl-3.0">![newtrodit-license](https://img.shields.io/github/license/anic17/Newtrodit?style=flat-square)</a> <a href="https://github.com/anic17/Newtrodit/issues">![newtrodit-issues](https://img.shields.io/github/issues/anic17/Newtrodit?style=flat-square)</a>
+# Newtrodit <br><a href="https://github.com/anic17/Newtrodit/stargazers">![newtrodit-stars](https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow&style=flat-square)</a> <a href="https://github.com/anic17/Newtrodit/network/members">![newtrodit-forks](https://img.shields.io/github/forks/anic17/Newtrodit?style=flat-square)</a> <a href="https://www.gnu.org/licenses/gpl-3.0">![newtrodit-license](https://img.shields.io/github/license/anic17/Newtrodit?style=flat-square)</a> <a href="https://github.com/anic17/Newtrodit/issues">![newtrodit-issues](https://img.shields.io/github/issues/anic17/Newtrodit?style=flat-square)</a> <a href="https://github.com/anic17/Newtrodit/pulls">![newtrodit-issues](https://img.shields.io/github/issues-pr/anic17/Newtrodit?style=flat-square)</a>
 
-**Efficient and simple** *yet powerful* console text editor written in C
+**Efficient and simple** yet powerful console text editor written in C
 
 ###### Editing a C header file with Newtrodit
 <a href="https://anic17.github.io/Newtrodit/"><img src="../main/res/screenshot_main.png"></img></a>
@@ -39,7 +39,7 @@ After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is ou
 ## Small history
 ### Why I started to code Newtrodit?
 
-It was at a day when I tried to make a clone of the old MS-DOS EDIT.COM in batch, but in the making I realized it would be really complicated to make in batch and performance issues were starting to appear.  
+It was at a day when I tried to make a clone of the old MS-DOS EDIT.COM in batch, but in the making I realized it would be really complicated to make it in batch and performance issues were starting to appear.  
 As I was very new to C, it was a challenge to see how good I could recode it, but with more features. The UI slowly changed, having a blue background before and lateral bars. I realized I wanted to make my own editor and not just a clone, and that's why today I'm continuing to develop Newtrodit.
 The name "Newtrodit" comes from 3 words: _neutron_ (hence the atom logo), _edit_, and _new_.
 
@@ -65,7 +65,8 @@ The documentation shows contains everything you need to know to use Newtrodit. I
 
 ## Configuration
 
-Newtrodit offers some configuration capabilities by editing the file `newtrodit.config`, with the purpose of customizing the editor as per your preferences. The file format is INI-like.All the information required can be found on the documentation, with an example configuration file. Keep in mind that incorrectly modifying Newtrodit's settings can lead to unexpected issues. 
+Newtrodit offers some configuration capabilities by editing the file `newtrodit.config`, with the purpose of customizing the editor as per your preferences. The file format is INI-like.All the information required can be found on the documentation, with an example configuration file. Keep in mind that incorrectly modifying Newtrodit's settings can lead to unexpected issues.  
+For an example configuration file, you can see an [example](newtrodit.config) of a configuration file.
 
 ## Contact
 Join the Newtrodit development channel on Discord!  
