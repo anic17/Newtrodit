@@ -3,7 +3,7 @@ After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is ou
 
 <a href="https://github.com/anic17/Newtrodit"><img src="https://github.com/anic17/Newtrodit/blob/main/res/logo_transp.png" align="right" width="150" height="150" /></a>
 
-#### [💡 Features](https://github.com/anic17/Newtrodit#features) - [📖 Compatibility](https://github.com/anic17/Newtrodit#compatibility) - [🔨 Build](https://github.com/anic17/Newtrodit#building) - [❔ Contributors](https://github.com/anic17/Newtrodit#contributors)
+#### [💡 Features](https://github.com/anic17/Newtrodit#features) - [📖 Compatibility](https://github.com/anic17/Newtrodit#compatibility) - [⚙️ Configuration](https://github.com/anic17/Newtrodit#configuration) - [🔨 Build](https://github.com/anic17/Newtrodit#building) - [❔ Contributors](https://github.com/anic17/Newtrodit#contributors)
 
 # Newtrodit <br><a href="https://github.com/anic17/Newtrodit/stargazers">![newtrodit-stars](https://img.shields.io/github/stars/anic17/Newtrodit?color=yellow&style=flat-square)</a> <a href="https://github.com/anic17/Newtrodit/network/members">![newtrodit-forks](https://img.shields.io/github/forks/anic17/Newtrodit?style=flat-square)</a> <a href="https://www.gnu.org/licenses/gpl-3.0">![newtrodit-license](https://img.shields.io/github/license/anic17/Newtrodit?style=flat-square)</a> <a href="https://github.com/anic17/Newtrodit/issues">![newtrodit-issues](https://img.shields.io/github/issues/anic17/Newtrodit?style=flat-square)</a>
 
@@ -92,7 +92,7 @@ Newtrodit Linux Compatibility Layer (aka Newtrodit-LCL) is, as the name says, a 
     <td align="center"><a href="https://github.com/ZackeryRSmith"><img src="https://avatars.githubusercontent.com/u/72983221?v=4?s=100" width="100px;" alt=""/><br /><sub><b>ZackeryRSmith</b></sub></a><br /><a href="" title="Code">:computer:</a></td>
     <td align="center"><a href="https://github.com/timlg07"><img src="https://avatars.githubusercontent.com/u/33633786?v=4?s=100" width="100px;" /><br /><sub><b>timlg07</b></sub></a><br /><a href="" title="Bug fixes">:bug:</a></td>
     <td align="center"><a href="https://github.com/CookieGamer733"><img src="https://avatars.githubusercontent.com/u/74946768?v=4?s=100" width="100px;" /><br /><sub><b>CookieGamer733</b></sub></a><br /><a href="" title="Bug fixes">:bug:</a></td>
-    <td align="center"><a href="https://github.com/TheKvc"><img src="https://avatars.githubusercontent.com/u/46124093?v=4?s=100" width="100px;" /><br /><sub><b>TheKvc</b></sub></a><br /><a href="" title="Testing">:bug:</a></td>
+    <td align="center"><a href="https://github.com/TheKvc"><img src="https://avatars.githubusercontent.com/u/46124093?v=4?s=100" width="100px;" /><br /><sub><b>TheKvc</b></sub></a><br /><a href="" title="Testing">:test_tube:</a></td>
   </tr>
 </table>
 
