@@ -404,7 +404,24 @@ int NewtroditHelp()
 					man_line_count = max_manual_lines-YSIZE+3;
 				}
 				break;
+			case LEFT:
+				fputs(reset_color, stdout);
 
+				if (man_line_count > 0)
+				{
+					man_line_count -= (2 * (YSIZE - 3)); // Multiplied by 2
+				}
+				else
+				{
+					man_line_count = 1; // Set manual position to first line
+				}
+			case RIGHT:
+				fputs(reset_color, stdout);
+				if (man_line_count+YSIZE-3 > max_manual_lines)
+				{
+					man_line_count = max_manual_lines-YSIZE+3;
+				}
+				break;
 			case HOME: // HOME key
 				fputs(reset_color, stdout);
 
