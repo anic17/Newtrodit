@@ -7,6 +7,9 @@ As Newtrodit is currently in beta, only newer versions will be supported. Only r
 Known bugs:  
  - `^Z` and `^Y` can crash Newtrodit if pressed twice.
  - `^R` crashes Newtrodit on certain occasions, such as having very long lines.
+ - Syntax highlighting doesn't display correctly if the file is scrolled horizontally
+ - Selection causes many visual bugs
+ - Scrolling a file makes the cursor stick to the last line (not really a bug, just a badly-implemented feature)
 
 List of supported versions:
 
