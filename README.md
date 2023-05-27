@@ -31,6 +31,8 @@ After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is ou
    - File compare
    - File locating
    - File type checking
+- Customizable macros
+- Insertion of current time
 - Up to 64 files open at once
 
 ## Small history
