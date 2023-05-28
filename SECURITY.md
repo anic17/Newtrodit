@@ -4,12 +4,14 @@
 
 As Newtrodit is currently in beta, only newer versions will be supported. Only report old vulnerabilities if they still exist on the latest supported version, and not on outdated versions.  
 
-Known bugs:  
- - `^Z` and `^Y` can crash Newtrodit if pressed twice.
- - `^R` crashes Newtrodit on certain occasions, such as having very long lines.
+These are the known bugs:  
+ - `^R` (file reloading) trims lines longer than 640 bytes and causes display errors
  - Syntax highlighting doesn't display correctly if the file is scrolled horizontally
  - Selection causes many visual bugs
  - Scrolling a file makes the cursor stick to the last line (not really a bug, just a badly-implemented feature)
+ - Find always shows "No more matches"
+
+If you find a bug that isn't on this list, please report it.
 
 List of supported versions:
 
@@ -19,7 +21,9 @@ List of supported versions:
 | 0.5     | :white_check_mark: |
 | 0.4     | :x:                |
 | 0.3     | :x:                |
-| < 0.2   | :x:                |
+| 0.2     | :x:                |
+| 0.1     | :x:                |
+
 
 ## Reporting a Vulnerability
 
