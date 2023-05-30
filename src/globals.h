@@ -59,7 +59,7 @@ int RGB24bit = false;          // Use 24-bit RGB instead of 4-bit colors
 int findInsensitive = false; // Find insensitive string
 int matchWholeWord = false; // Match whole word when finding a string
 int devMode = false;  // Bool to enable or disable the dev mode
-int autoComplete = true; // Keyword autocompleting (if syntax highlighting is there)
+int autoComplete = false; // Keyword autocompleting (if syntax highlighting is there)
 
 int bpsPairHighlight = false; // Use BPS pair highlighting (bugged)
 
