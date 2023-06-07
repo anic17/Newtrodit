@@ -176,7 +176,7 @@ int LocateFiles(bool show_dir, char *file, int startpos)
 				if (key == CTRLD)
 				{
 					PrintBottomString("Directory: ");
-					typeptr = TypingFunction(32, 126, MAX_PATH, typeptr);
+					typeptr = TypingFunction(32, 255, MAX_PATH, typeptr);
 					if (!CheckFile(typeptr))
 					{
 						if (!(GetFileAttributes(typeptr) & FILE_ATTRIBUTE_DIRECTORY))
@@ -210,6 +210,9 @@ int LocateFiles(bool show_dir, char *file, int startpos)
 			case ESC:
 			case CTRLL:
 			case CTRLX:
+			case CTRLQ:
+			case 'q':
+			case 'Q':
 				quitFindFiles = true;
 				break;
 				

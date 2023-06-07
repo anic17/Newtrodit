@@ -18,7 +18,7 @@
 */
 
 const char newtrodit_version[] = "0.6 rc-1";
-const char newtrodit_build_date[] = "28/5/2023";
+const char newtrodit_build_date[] = "8/6/2023";
 const char newtrodit_repository[] = "https://github.com/anic17/Newtrodit";
 const char newtrodit_lcl_repository[] = "https://github.com/anic17/Newtrodit-LCL";
 char manual_file[MAX_PATH] = "newtrodit.man";
@@ -59,7 +59,7 @@ int RGB24bit = false;          // Use 24-bit RGB instead of 4-bit colors
 int findInsensitive = false; // Find insensitive string
 int matchWholeWord = false; // Match whole word when finding a string
 int devMode = false;  // Bool to enable or disable the dev mode
-int autoComplete = false; // Keyword autocompleting (if syntax highlighting is there)
+int autoComplete = true; // Keyword autocompleting (if syntax highlighting is there)
 
 int bpsPairHighlight = false; // Use BPS pair highlighting (bugged)
 

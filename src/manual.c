@@ -34,7 +34,7 @@ enum
 };
 
 void DisplayLineCount(File_info *tstack, int size, int yps);
-int SaveFile(File_info *tstack, char *fname);
+int SaveFile(File_info *tstack, char *fname, bool save_dialog);
 int DisplayFileContent(File_info *tstack, FILE *fstream, int starty);
 int NewtroditHelp();
 

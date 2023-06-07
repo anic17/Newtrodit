@@ -323,7 +323,7 @@ int QuitProgram(int color_quit)
 		PrintBottomString("%s", NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
 		if (YesNoPrompt())
 		{
-			SaveFile(&Tab_stack[file_index], NULL);
+			SaveFile(&Tab_stack[file_index], NULL, false);
 		}
 	}
 

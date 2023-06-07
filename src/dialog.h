@@ -31,7 +31,7 @@ char NEWTRODIT_ERROR_MISSING_MANUAL[] = "Manual file is missing: ";
 char NEWTRODIT_ERROR_INVALID_MANUAL[] = "Invalid manual file: ";
 char NEWTRODIT_ERROR_LOADING_MANUAL[] = "Error loading manual file. This might be caused due to an outdated OS version ";
 
-char NEWTRODIT_ERROR_INVALID_INBOUND[] = "Invalid inbound key combination: ";
+char NEWTRODIT_ERROR_INVALID_INBOUND[] = "Invalid inbound key combination: %s";
 char NEWTRODIT_ERROR_RELOAD_SETTINGS[] = "Cannot reload settings. Settings file doesn't exist or it's corrupt.";
 char NEWTRODIT_ERROR_OUT_OF_MEMORY[] = "Out of memory.";
 char NEWTRODIT_ERROR_ALLOCATION_FAILED[] = "Memory allocation failed.";
@@ -49,6 +49,8 @@ char NEWTRODIT_ERROR_UNKNOWN_COMMAND[] = "Unknown command: '%s'";
 char NEWTRODIT_LICENSE_INVALID_LICENSE[] = "Detected an invalid or outdated license file.";
 char NEWTRODIT_LICENSE_MISSING_LICENSE[] = "License file is missing: ";
 char NEWTRODIT_ERROR_INVALID_FILE_INDEX[] = "Invalid file index. Switching to the first file.";
+char NEWTRODIT_ERROR_NEW_FILE[] = "Failed to open a new file.";
+
 
 // Internal errors
 char NEWTRODIT_INTERNAL_EXPECTED_NULL[] = "Internal error: expected a non-null string";

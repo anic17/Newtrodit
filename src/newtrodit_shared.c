@@ -367,7 +367,7 @@ int ParseCommandPalette(File_info *tstack, char *command_palette)
     {
         if (&command_palette[1])
         {
-            SaveFile(tstack, command_palette + 1);
+            SaveFile(tstack, command_palette + 1, false);
         }
         return 1;
     }
