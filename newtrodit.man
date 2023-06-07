@@ -82,11 +82,12 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
  [38;2;207;50;68;4mS-^D[0m      = Toggle dev mode
  [38;2;207;50;68;4mS-^E[0m      = Load a syntax highlighting scheme
  [38;2;207;50;68;4mS-^F[0m      = Find string (case insensitive)
- [38;2;207;50;68;4mS-^F[0m      = Go to a column
+ [38;2;207;50;68;4mS-^G[0m      = Go to a column
  [38;2;207;50;68;4mS-^H[0m      = Same as [38;2;207;50;68;4mF1[0m (opens help)
  [38;2;207;50;68;4mS-^K[0m      = Toggles old keybindings (see later)
  [38;2;207;50;68;4mS-^L[0m      = Locate files. See the advanced section for more information.
  [38;2;207;50;68;4mS-^N[0m      = Toggle null character to spaces conversion
+ [38;2;207;50;68;4mS-^Q[0m      = Count lines of code and size of all currently open files
  [38;2;207;50;68;4mS-^R[0m      = Reload the settings
  [38;2;207;50;68;4mS-^S[0m      = Save file as
  [38;2;207;50;68;4mS-^T[0m      = Toggle tab to spaces conversion
@@ -161,7 +162,14 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
 
    -[1m ?file[0m = Opens filename '[1mfile[0m' ([38;2;207;50;68;4m^O[0m[37;113;235;37;1m[0m)
    -[1m !file[0m = Saves filename '[1mfile[0m' ([38;2;207;50;68;4m^S[0m[37;113;235;37;1m[0m)
-   
+  
+ [37;113;235;37;1mDialogs[0m
+ 
+ Newtrodit's dialogs (prompts), like Save and Open dialog, are customized which allow them to
+ have the features that Newtrodit has. Insertion, deletion, [38;2;207;50;68;4mHome[0m and [38;2;207;50;68;4mEnd[0m are supported.
+ 
+ To exit a dialog, simply press [38;2;207;50;68;4mEnter[0m when the prompt is empty or [38;2;207;50;68;4mESC[0m at any time.
+
  [37;113;235;37;1mSettings[0m
 
  Newtrodit can be customizable as you like it by changing some settings.
@@ -253,6 +261,20 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
 
  To close a tab, use [38;2;207;50;68;4m^W[0m or either [38;2;207;50;68;4m^F4[0m
 
+ [37;113;235;37;1mCode autocompletion[0m
+
+ Newtrodit includes a simple but functional code autocompletion module to increase your productivity.
+ Autocompletion is limited to the word immediately to the left of the cursor. The algorithm treats only
+ the word preceding the cursor for autocompletion. The rest of the line is not taken into account.
+ 
+ The matching algorithm takes three different factors including length difference, word matching
+ at the beginning and character matching at the middle. The result that gets the highest "score"
+ is the autocompletion proposition, even though the matching should be high, otherwise nothing will happen.
+ Autocompletion can be triggered by pressing the [38;2;207;50;68;4mTab[0m key.
+
+ Keep in mind that only the keywords on the syntax highlighting scheme are filled. No variables,
+ functions, or anything that require context analysis is checked.
+
  [37;113;235;37;1mLog file[0m
 
  Newtrodit keeps track of actions that could help in debugging a problem (loaded settings, exceptions...) into
@@ -260,7 +282,7 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
 
  Note that only debugging information is written and no personal information or file content is ever saved.
 
- [1mSyntax highlighting[0m
+[37;113;235;37;1mSyntax highlighting[0m
 
  Newtrodit has some syntax highlighting rules to color the code you're writing and to make it
  easier to read. 
@@ -283,7 +305,7 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
  [1m $$CAPITAL_COLOR[0m      = Color for the highlighted capital words. Requires [1m$$CAPITAL[0m to be set to '1'.
  [1m $$CAPITAL_MIN[0m        = Minimum length for capital words to be highlighted. Requires [1m$$CAPITAL[0m to be set to '1'.
 
- [1mOld keybindings[0m
+ [37;113;235;37;1mOld keybindings[0m
 
  Some keybindings can be changed using the [1moldkeybindings[0m setting.
  Here's a list of the replaced keybindings:
@@ -316,8 +338,8 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
   - Inside application setting changing
   - Syntax highlighting (for colors scheme)
 
-  Even if a color scheme has been defined in command line arguments, syntax highlighting will override the colored
-  keywords.
+  Even if a color scheme has been defined in command line arguments, syntax highlighting will override
+  the colored keywords.
 
  [37;113;235;37;1mCrashes[0m
 
@@ -345,8 +367,8 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
  This is due to the fact that the buffer is a 2D array of characters. This is one of the main 
  issues that Newtrodit has to deal with and we're working on it.
 
- It has been coded in C to have maximum performance. At the moment it's only compatible with
- Windows because it uses the Windows API to display the GUI.
+ It has been coded in C to have maximum performance. At the moment, the Linux fork is being developped
+ by Zackery Smith, called Newtrodit-LCL (Linux Compatibility Layer).
 
  Some more specific internal working behaviors:
   - New lines while reading a file are added when a '[38;2;207;50;68;4m\n[0m' character is found, 
