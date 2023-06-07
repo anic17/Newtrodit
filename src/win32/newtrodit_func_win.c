@@ -16,6 +16,236 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>
 */
 
+char *GetClipboardNewtrodit(size_t *cliplen, bool remove_nl)
+{
+	char *clipbuf = NULL;
+
+	if (OpenClipboard(0))
+	{
+		clipbuf = (char *)GetClipboardData(CF_TEXT);
+		CloseClipboard();
+
+		if (!clipbuf)
+		{
+			*cliplen = 0;
+		}
+		else
+		{
+			*cliplen = strlen_n(clipbuf);
+			if (remove_nl)
+			{
+				for (int i = 0; i < *cliplen; i++)
+				{
+					if (clipbuf[i] == '\n' || clipbuf[i] == '\r')
+					{
+						clipbuf[i] = 32; // Whitespace
+					}
+				}
+			}
+		}
+	}
+
+	return clipbuf; // All error handling is done
+}
+
+int SetClipboardNewtrodit(char *buf) // Return codes: 0 = Failure; 1 = Success
+{
+	size_t len = strlen_n(buf);
+	HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+	memcpy(GlobalLock(hMem), buf, len + 1); // Copy line to the clipboard
+	GlobalUnlock(hMem);
+	if (!OpenClipboard(0) || !EmptyClipboard())
+	{
+		return 0;
+	}
+
+	if (SetClipboardData(CF_TEXT, hMem))
+	{
+		CloseClipboard();
+	}
+	return 1;
+}
+
+void FunctionAborted(File_info *tstack, char *ptrfree)
+{
+	PrintBottomString("%s", NEWTRODIT_FUNCTION_ABORTED);
+	free(ptrfree);
+	c = -2;
+	return;
+}
+
+char *TypingFunction(int min_ascii, int max_ascii, int max_len, char *oldbuf)
+{
+	int cursor_visible = GetConsoleInfo(CURSOR_VISIBLE);
+	SetCursorSettings(true, GetConsoleInfo(CURSOR_SIZE));
+	int chr = 0, index = 0;
+	char *num_str = calloc(max_len + 1, sizeof(char));
+	int startx = GetConsoleInfo(XCURSOR), starty = GetConsoleInfo(YCURSOR), orig_cursize = GetConsoleInfo(CURSOR_SIZE);
+	bool overwrite_mode = false;
+	size_t cblen = 0, n = -1;
+	char *clipboard = NULL;
+
+	while (chr != ENTER) // Loop while enter isn't pressed
+	{
+		chr = getch_n();
+		if (chr == ESC)
+		{
+			memset(num_str, 0, max_len); // Empty the string
+			break;
+		}
+		if (chr == BS) // Backspace
+		{
+			if (index > 0)
+			{
+				DeleteChar(num_str, --index);
+				ClearPartial(startx + index, starty, (startx + strlen(num_str) - index) >= XSIZE ? (XSIZE - startx - index) : startx + strlen(num_str) - index, 1);
+				printf("%s", num_str + index);
+				gotoxy(startx + index, starty);
+			}
+			continue;
+		}
+
+		if (chr == CTRLC) // ^C (Copy to clipboard)
+		{
+			SetClipboardNewtrodit(num_str);
+			continue;
+		}
+		if (chr == CTRLV) // ^V (Paste from clipboard)
+		{
+			clipboard = GetClipboardNewtrodit(&cblen, true); // Distinguish it from the WinAPI one
+			if (clipboard)
+			{
+				n = 0;
+				while (clipboard[n] >= min_ascii && clipboard[n] <= max_ascii && n < cblen) // Only count until valid characters are found
+				{
+					n++;
+				}
+				if (strlen_n(num_str) + n <= max_len && n > 0)
+				{
+					num_str = InsertStr(num_str, clipboard, n, false, max_len);
+					gotoxy(startx, starty);
+					fputs(num_str, stdout);
+					index += n;
+				}
+			}
+			else
+			{
+				printf("\a");
+			}
+			continue;
+		}
+
+		if (chr & BIT_ESC0)
+		{
+			switch (chr & ~(BIT_ESC0))
+			{
+			case ALTF4:
+
+				QuitProgram(SInf.color);
+				break;
+			default:
+				break;
+			}
+		}
+		if (chr & BIT_ESC224) // Special keys: 224 (0xE0)
+		{
+			switch (chr & (~BIT_ESC224))
+			{
+			case LEFT:
+				if (index > 0)
+				{
+					putchar('\b');
+					index--;
+				}
+				break;
+			case RIGHT:
+				if (index < max_len && num_str[index] != '\0')
+				{
+					putchar(num_str[index++]);
+				}
+				break;
+			case UP:
+				if (oldbuf != NULL)
+				{
+					memset(num_str, 0, max_len + 1);
+					index = strlen_n(oldbuf);
+					memcpy(num_str, oldbuf, index);
+
+					ClearPartial(startx, starty, (startx + strlen(num_str)) >= XSIZE ? (XSIZE - startx) : startx + strlen(num_str), 1);
+					fputs(num_str, stdout);
+					gotoxy(startx + index, starty);
+				}
+			case DEL:
+				if (index < max_len)
+				{
+					DeleteChar(num_str, index);
+					ClearPartial(startx, starty, (startx + strlen(num_str)) >= XSIZE ? (XSIZE - startx) : startx + strlen(num_str), 1);
+					fputs(num_str, stdout);
+					gotoxy(startx + index, starty);
+				}
+				break;
+			case INS:
+				overwrite_mode = !overwrite_mode;
+				SetCursorSettings(true, overwrite_mode ? CURSIZE_INS : CURSIZE);
+				break;
+			case HOME:
+				index = 0;
+				gotoxy(startx, starty);
+				break;
+			case END:
+				index = strlen_n(num_str);
+				if (startx + index < XSIZE)
+				{
+					gotoxy(startx + index, starty);
+				}
+				break;
+			default:
+				break;
+			}
+			continue;
+		}
+		if (chr >= min_ascii && chr <= max_ascii && chr != 0 && ((!overwrite_mode && (strlen(num_str) < max_len && index <= max_len)) || (overwrite_mode && (strlen(num_str) <= max_len && index < max_len)))) // Check if character is a between the range
+		{
+			if (overwrite_mode || index >= strlen(num_str))
+			{
+				num_str[index++] = chr;
+				putchar(chr);
+			}
+			else
+			{
+
+				InsertChar(num_str, chr, index++, false, max_len);
+				gotoxy(startx, starty);
+				fputs(num_str, stdout);
+				gotoxy(startx + index, starty);
+			}
+		}
+		else
+		{
+			if (chr != ENTER)
+			{
+				putchar('\a');
+			}
+		}
+	}
+	SetCursorSettings(cursor_visible, orig_cursize);
+	bool corrupted = false;
+	for (int i = 0; i < strlen_n(num_str); i++)
+	{
+		if (num_str[i] < min_ascii || num_str[i] > max_ascii)
+		{
+			corrupted = true;
+			num_str[i] = min_ascii;
+		}
+	}
+	if (corrupted)
+	{
+		PrintBottomString("Warning: Possible stack corruption detected. Please report this issue.");
+		getch_n();
+	}
+	return num_str;
+}
+
 int CountLines(FILE *fp)
 {
 	int n = 0, c;
@@ -92,56 +322,6 @@ void LineCountHighlight(File_info *tstack)
 		tstack->last_y = tstack->ypos;
 		SetColor(linecount_highlight_color);
 	}
-}
-
-char *GetClipboardNewtrodit(size_t *cliplen, bool remove_nl)
-{
-	char *clipbuf = NULL;
-
-	if (OpenClipboard(0))
-	{
-		clipbuf = (char *)GetClipboardData(CF_TEXT);
-		CloseClipboard();
-
-		if (!clipbuf)
-		{
-			*cliplen = 0;
-		}
-		else
-		{
-			*cliplen = strlen_n(clipbuf);
-			if (remove_nl)
-			{
-				for (int i = 0; i < *cliplen; i++)
-				{
-					if (clipbuf[i] == '\n' || clipbuf[i] == '\r')
-					{
-						clipbuf[i] = 32; // Whitespace
-					}
-				}
-			}
-		}
-	}
-
-	return clipbuf; // All error handling is done
-}
-
-int SetClipboardNewtrodit(char *buf) // Return codes: 0 = Failure; 1 = Success
-{
-	size_t len = strlen_n(buf);
-	HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
-	memcpy(GlobalLock(hMem), buf, len + 1); // Copy line to the clipboard
-	GlobalUnlock(hMem);
-	if (!OpenClipboard(0) || !EmptyClipboard())
-	{
-		return 0;
-	}
-
-	if (SetClipboardData(CF_TEXT, hMem))
-	{
-		CloseClipboard();
-	}
-	return 1;
 }
 
 void DisplayLineCount(File_info *tstack, int size, int disp)
@@ -397,35 +577,29 @@ int ValidString(char *str)
 	return 1;
 }
 
-int SaveFile(File_info *tstack, char *fname)
+int SaveFile(File_info *tstack, char *fname, bool save_dialog)
 {
-	char *tmp_filename = calloc(MAX_PATH, sizeof(char));
+	char *tmp_filename = calloc(MAX_PATH + 1, sizeof(char));
 
-	if (tstack->is_untitled)
+	if (tstack->is_untitled || save_dialog)
 	{
-		if (!fname)
+		if (!fname || save_dialog)
 		{
 			PrintBottomString("%s", NEWTRODIT_PROMPT_SAVE_FILE);
-			fgets(tmp_filename, MAX_PATH, stdin); // Can't use sizeof filename because it's a pointer
+			tmp_filename = TypingFunction(32, 255, MAX_PATH, NULL);
 		}
 
-		if (NoLfLen(tmp_filename) <= 0)
+		if (tmp_filename[0] == '\0')
 		{
-			LoadAllNewtrodit();
-			DisplayFileContent(tstack, stdout, 0); // Display file content on screen
-			PrintBottomString("%s", NEWTRODIT_FUNCTION_ABORTED);
-			getch_n();
-			ShowBottomMenu();
+			FunctionAborted(tstack, tmp_filename);
 			return 0;
 		}
-		tmp_filename[strcspn(tmp_filename, "\n")] = 0; // Remove newline character
 
 		RemoveQuotes(tmp_filename, strdup(tmp_filename));
 
 		if (!ValidFileName(tmp_filename))
 		{
-			LoadAllNewtrodit();
-			DisplayFileContent(tstack, stdout, 0);
+
 			PrintBottomString("%s%s", NEWTRODIT_FS_FILE_INVALID_NAME, tmp_filename);
 			WriteLogFile("%s%s", NEWTRODIT_FS_FILE_INVALID_NAME, tmp_filename);
 			last_known_exception = NEWTRODIT_FS_FILE_INVALID_NAME;
@@ -435,8 +609,6 @@ int SaveFile(File_info *tstack, char *fname)
 		}
 		if (!CheckFile(tmp_filename))
 		{
-			LoadAllNewtrodit();
-			DisplayFileContent(tstack, stdout, 0);
 			PrintBottomString("%s", NEWTRODIT_PROMPT_OVERWRITE);
 
 			if (!YesNoPrompt())
@@ -454,8 +626,6 @@ int SaveFile(File_info *tstack, char *fname)
 	}
 	if (tstack->is_readonly)
 	{
-		LoadAllNewtrodit();
-		DisplayFileContent(&Tab_stack[file_index], stdout, 0);
 		PrintBottomString(NEWTRODIT_FS_READONLY_SAVE);
 		getch_n();
 		ShowBottomMenu();
@@ -469,7 +639,7 @@ int SaveFile(File_info *tstack, char *fname)
 
 	if (WriteBuffer(fp, tstack)) // Write the file content
 	{
-		if(tstack->is_untitled)
+		if (tstack->is_untitled)
 		{
 			AutoLoadSyntaxRules(tstack, NULL); // Load syntax highlighting if supported
 		}
@@ -803,7 +973,6 @@ int LoadFile(File_info *tstack, char *filename)
 
 	AutoLoadSyntaxRules(tstack, NULL);
 
-
 	WriteLogFile("Successfully loaded the file '%s'", filename);
 
 	return 1;
@@ -838,12 +1007,10 @@ int CompareFileWriteTime(File_info *tstack)
 
 int NewFile(File_info *tstack) // ^N = New file
 {
-
 	if (open_files < MAX_TABS)
 	{
 		if (file_index < open_files - 1)
 		{
-
 			for (int k = open_files - 1; k > file_index; k--)
 			{
 				memcpy(&Tab_stack[k + 1], &Tab_stack[k], sizeof(*Tab_stack));
@@ -864,7 +1031,7 @@ int NewFile(File_info *tstack) // ^N = New file
 			if (!AllocateBufferMemory(tstack))
 			{
 				last_known_exception = NEWTRODIT_ERROR_OUT_OF_MEMORY;
-				return -ENOMEM;
+				return 0;
 			}
 		}
 	}
@@ -872,7 +1039,7 @@ int NewFile(File_info *tstack) // ^N = New file
 	{
 		PrintBottomString(NEWTRODIT_ERROR_TOO_MANY_FILES_OPEN);
 		last_known_exception = NEWTRODIT_ERROR_TOO_MANY_FILES_OPEN;
-		return -EMFILE;
+		return 0;
 	}
 
 	old_open_files[oldFilesIndex] = tstack->filename;
@@ -893,7 +1060,7 @@ int CloseFile(File_info *tstack)
 		PrintBottomString("%s", NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
 		if (YesNoPrompt())
 		{
-			SaveFile(tstack, NULL);
+			SaveFile(tstack, NULL, false);
 			tstack->is_modified = false;
 		}
 	}
@@ -907,11 +1074,8 @@ int CloseFile(File_info *tstack)
 	if (open_files > 1)
 	{
 
-		if (1 || FreeBufferMemory(&Tab_stack[file_index]))
+		if (FreeBufferMemory(&Tab_stack[file_index]))
 		{
-			// AllocateBufferMemory(&Tab_stack[file_index]);
-			// FreeBufferMemory(&Tab_stack[open_files]);
-
 			if (file_index < open_files - 1) // TODO: Fix strsave not copying
 			{
 				for (int k = file_index; k < open_files; k++)
@@ -957,7 +1121,6 @@ void ReloadFile(File_info *tstack)
 			PrintBottomString("%s", ErrorMessage(abs(n), tstack->filename)); // Errors are always negative, so abs() is used
 			getch_n();
 			ShowBottomMenu();
-
 			return;
 		}
 		else
@@ -978,16 +1141,6 @@ void ReloadFile(File_info *tstack)
 	getch_n();
 	ShowBottomMenu();
 	DisplayCursorPos(tstack);
-	return;
-}
-
-void FunctionAborted(File_info *tstack)
-{
-	LoadAllNewtrodit();
-	DisplayFileContent(tstack, stdout, 0); // Display file content on screen
-	PrintBottomString("%s", NEWTRODIT_FUNCTION_ABORTED);
-	getch_n();
-	ShowBottomMenu();
 	return;
 }
 
@@ -1048,160 +1201,6 @@ int RedrawScrolledScreen(File_info *tstack, int yps)
 		}
 	}
 	return 1;
-}
-
-char *TypingFunction(int min_ascii, int max_ascii, int max_len, char* oldbuf)
-{
-	int cursor_visible = GetConsoleInfo(CURSOR_VISIBLE);
-	SetCursorSettings(true, GetConsoleInfo(CURSOR_SIZE));
-	int chr = 0, index = 0;
-	char *num_str = calloc(max_len + 1, sizeof(char));
-	int startx = GetConsoleInfo(XCURSOR), starty = GetConsoleInfo(YCURSOR), orig_cursize = GetConsoleInfo(CURSOR_SIZE);
-	bool overwrite_mode = false;
-	size_t cblen = 0, n = -1;
-	char *clipboard = NULL;
-
-	while (chr != ENTER) // Loop while enter isn't pressed
-	{
-		chr = getch_n();
-		if (chr == ESC)
-		{
-			break;
-		}
-		if (chr == BS) // Backspace
-		{
-			if (index > 0)
-			{
-				DeleteChar(num_str, --index);
-				ClearPartial(startx, starty, (startx + strlen(num_str)) >= XSIZE ? (XSIZE - startx) : startx + strlen(num_str), 1);
-				fputs(num_str, stdout);
-				gotoxy(startx + index, starty);
-			}
-			continue;
-		}
-
-		if (chr == CTRLC) // ^C (Copy to clipboard)
-		{
-			SetClipboardNewtrodit(num_str);
-			continue;
-		}
-		if (chr == CTRLV) // ^V (Paste from clipboard)
-		{
-			clipboard = GetClipboardNewtrodit(&cblen, true); // Distinguish it from the WinAPI one
-			if (clipboard)
-			{
-				n = 0;
-				while (clipboard[n] >= min_ascii && clipboard[n] <= max_ascii && n < cblen) // Only count until valid characters are found
-				{
-					n++;
-				}
-				if (strlen_n(num_str) + n <= max_len && n > 0)
-				{
-					num_str = InsertStr(num_str, clipboard, n);
-					gotoxy(startx, starty);
-					fputs(num_str, stdout);
-					index += n;
-				}
-			}
-			else
-			{
-				printf("\a");
-			}
-			continue;
-		}
-
-		if (chr & BIT_ESC0)
-		{
-			switch (chr & ~(BIT_ESC0))
-			{
-			case ALTF4:
-
-				QuitProgram(SInf.color);
-				break;
-			default:
-				break;
-			}
-		}
-		if (chr & BIT_ESC224) // Special keys: 224 (0xE0)
-		{
-			switch (chr & (~BIT_ESC224))
-			{
-			case LEFT:
-				if (index > 0)
-				{
-					putchar('\b');
-					index--;
-				}
-				break;
-			case RIGHT:
-				if (index < max_len && num_str[index] != '\0')
-				{
-					putchar(num_str[index++]);
-				}
-				break;
-			case UP:
-				if(oldbuf != NULL)
-				{
-					memset(num_str, 0, max_len + 1);
-					index = strlen_n(oldbuf);
-					memcpy(num_str, oldbuf, index);
-
-					ClearPartial(startx, starty, (startx + strlen(num_str)) >= XSIZE ? (XSIZE - startx) : startx + strlen(num_str), 1);
-					fputs(num_str, stdout);
-					gotoxy(startx + index, starty);
-				}
-			case DEL:
-				if (index < max_len)
-				{
-					DeleteChar(num_str, index);
-					ClearPartial(startx, starty, (startx + strlen(num_str)) >= XSIZE ? (XSIZE - startx) : startx + strlen(num_str), 1);
-					fputs(num_str, stdout);
-					gotoxy(startx + index, starty);
-				}
-				break;
-			case INS:
-				overwrite_mode = !overwrite_mode;
-				SetCursorSettings(true, overwrite_mode ? CURSIZE_INS : CURSIZE);
-
-				break;
-			default:
-				break;
-			}
-			continue;
-		}
-		if (chr >= min_ascii && chr <= max_ascii && chr != 0 && ((!overwrite_mode && (strlen(num_str) < max_len && index <= max_len)) || (overwrite_mode && (strlen(num_str) <= max_len && index < max_len)))) // Check if character is a between the range
-		{
-			if (overwrite_mode)
-			{
-				num_str[index++] = chr;
-				putchar(chr);
-			}
-			else
-			{
-				num_str = InsertChar(strdup(num_str), chr, index++);
-				gotoxy(startx, starty);
-				fputs(num_str, stdout);
-				gotoxy(startx + index, starty);
-			}
-		}
-		else
-		{
-			if (chr != ENTER)
-			{
-				putchar('\a');
-			}
-		}
-	}
-	SetCursorSettings(cursor_visible, orig_cursize);
-	for (int i = 0; i < strlen_n(num_str); i++)
-	{
-		if (num_str[i] < min_ascii || num_str[i] > max_ascii)
-		{
-			PrintBottomString("Warning: Possible stack corruption detected. Please report this issue");
-			getch_n();
-		}
-	}
-	return num_str;
 }
 
 int AutoIndent(File_info *tstack)
@@ -1372,46 +1371,75 @@ void SetDisplayCursorPos(File_info *tstack)
 	}
 }
 
-char *FindClosestMatch(char *input, File_info *tstack, int *goodMatch, char* separators)
+int SearchLastWord(char *s, int index)
+{
+	size_t n = index;
+	while (is_separator(s[n]) && n > 0) // Loop until the last character of the word is found
+	{
+		n--;
+	}
+	while (!is_separator(s[n]) && n > 0) // Loop until the first character of the word is found, or n == 0
+	{
+		n--;
+	}
+
+	return n;
+}
+
+char *FindClosestMatch(char *input, File_info *tstack, int *goodMatch, char *separators)
 {
 	size_t sz = tstack->Syntaxinfo.keyword_count, len_s = 0, len_f = strlen(input);
 
-	size_t biggest_index = 0;
-	size_t match_until = 0;
-	int *dist = calloc(sizeof(int), sz);
-	const int proximity_constant = 8;
-	/* char *compare = strtok_n(input, separators);
-	if(!compare)
+	size_t biggest_index = 0, match_until = 0;
+	const int proximity_constant = 6;
+
+	char *compare = strdup(input);
+	size_t shiftseparators = strspn(compare, separators);
+	if (shiftseparators)
 	{
-		compare = input;
+		memmove(compare, compare + shiftseparators, len_f - shiftseparators);
+		compare[len_f - shiftseparators] = '\0';
 	}
-	printf("COMPARE: %s\n", compare); */
-	char*compare = input;
+	if (strlen_n(compare) < 2) // Don't try to match single characters
+	{
+		*goodMatch = false;
+		free(compare);
+		return input;
+	}
+
+	/* 	PrintBottomString("Input: '%s' Compare: '%s'", input, compare);
+		getch_n(); */
+
+	int *dist = calloc(sizeof(int), sz);
+	if (!dist)
+	{
+		*goodMatch = false;
+		free(compare);
+		return input;
+	}
 	for (int i = 0; i < sz; i++)
 	{
-		
+
 		if (!strcmp(tstack->Syntaxinfo.keywords[i], compare))
 		{
 			dist[i] = 0x7fffffff;
 			*goodMatch = true;
+			free(dist);
+			free(compare);
 			return tstack->Syntaxinfo.keywords[i];
 		}
 		else
 		{
+
 			match_until = strcmpcount(compare, tstack->Syntaxinfo.keywords[i]);
-			if(match_until)
+			if (match_until)
 			{
-				dist[i] += (match_until*match_until + match_until)/2; // Arithmetic series for the sum of n terms. S_k = k(k+1)/2
-				printf("KW: [%s] {%s} %d mu:%d\n", tstack->Syntaxinfo.keywords[i], compare, (match_until*match_until + match_until)/2, match_until);
+				dist[i] += 2 * (match_until * match_until + match_until); // Arithmetic series: d = 2*k(k+1)
+																		  // printf("KW: [%s] {%s} %d mu:%d\n", tstack->Syntaxinfo.keywords[i], compare, (match_until*match_until + match_until)/2, match_until);
 			}
 			len_s = strlen(tstack->Syntaxinfo.keywords[i]);
 
 			dist[i] -= abs(len_f - len_s);
-
-			if (tstack->Syntaxinfo.keywords[i][0] == compare[0])
-			{
-				dist[i] += 10;
-			}
 
 			for (int k = 0; k < (len_s > len_f ? len_f : len_s); k++)
 			{
@@ -1429,13 +1457,18 @@ char *FindClosestMatch(char *input, File_info *tstack, int *goodMatch, char* sep
 			// printf("\t[New biggest index: %d (%s)]\n", dist[i], tstack->Syntaxinfo.keywords[i]);
 		}
 	}
-	// printf("Closest string from '%s' is '%s' (proximity value %d)\n", input, tstack->Syntaxinfo.keywords[biggest_index], dist[biggest_index]);
+	/* printf("Closest string from '%s' is '%s' (proximity value %d)\n", input, tstack->Syntaxinfo.keywords[biggest_index], dist[biggest_index]);
+	getch_n(); */
 	if (dist[biggest_index] < proximity_constant)
 	{
 		*goodMatch = false;
+		free(dist);
+		free(compare);
 		return input;
 	}
 	*goodMatch = true;
+	free(dist);
+	free(compare);
 	return tstack->Syntaxinfo.keywords[biggest_index];
 }
 
@@ -1445,53 +1478,49 @@ int AutoComplete(File_info *tstack, int xps, int yps)
 	{
 		char *keyword;
 		bool autocompleteGoodMatch = false;
-		size_t last_intv = LastTokInterval(tstack->strsave[yps], xps, tstack->Syntaxinfo.separators);
+		size_t oldlen = strlen_n(tstack->strsave[yps]), newlen = 0;
+		char *strptr = calloc(oldlen + 1, sizeof(char));
+
+		size_t last_intv = SearchLastWord(tstack->strsave[yps], xps);
+		memcpy(strptr, tstack->strsave[yps] + last_intv, xps - last_intv); // Copy the word
+		// strptr[strcspn(strptr, tstack->Syntaxinfo.separators)] = '\0';
+
+		if (last_intv > 0)
+		{
+			last_intv++; // Remove any possible separator
+		}
 		// actual code: strcspn(tstack->strsave[yps] + xps + 1, tstack->Syntaxinfo.separators);
 
-		//size_t oldkeywordlen = xps - last_intv;
-		
-		PrintBottomString("Trying to match '%s'", tstack->strsave[yps] + last_intv);
-		getch_n();
-		keyword = FindClosestMatch(tstack->strsave[yps] + last_intv, &Tab_stack[file_index], &autocompleteGoodMatch, tstack->Syntaxinfo.separators);
+		// size_t oldkeywordlen = xps - last_intv;
+		/*
+				PrintBottomString("Trying to match '%s'", strptr);
+				getch_n(); */
+		keyword = FindClosestMatch(strptr, &Tab_stack[file_index], &autocompleteGoodMatch, tstack->Syntaxinfo.separators);
 		if (!autocompleteGoodMatch) // The current line doesn't match any keyword
 		{
 			return 0;
 		}
+		DeleteStr(tstack->strsave[yps], last_intv, xps - last_intv);
+		/*		PrintBottomString(tstack->strsave[yps]);
+				getch_n();
+		*/
+		InsertStr(tstack->strsave[yps], keyword, last_intv, false, tstack->bufx);
+		newlen = strlen_n(tstack->strsave[yps]);
 
-		char* ptr = DeleteStr(tstack->strsave[yps], last_intv, xps-last_intv);
-		tstack->strsave[yps] = ptr;
-		PrintBottomString(ptr);
-		getch_n();
+		memset(tstack->strsave[yps] + newlen, 0, tstack->bufx - newlen);
 
-		tstack->strsave[yps] = InsertStr(tstack->strsave[yps], keyword, last_intv);
-		PrintBottomString(tstack->strsave[yps]);
-		getch_n();
-
-		WriteLogFile(" [%d] {%d} (%d)", xps, last_intv, xps-last_intv);
-		tstack->xpos = strlen_n(tstack->strsave[yps]);
+		tstack->xpos = xps + newlen - oldlen;
+		if (tstack->xpos < 0 || tstack->xpos > newlen)
+		{
+			tstack->xpos = 0;
+			WriteLogFile("Error: Incorrect X position after autocompletion. This is an internal error and should be reported.");
+		}
 		RefreshLine(tstack, yps, tstack->display_y, true);
-
-
-/*     int index = 11;
-    char *str = "text #inclq<stdio.h>";
-    char autocomp_s[] = "#include";
-    printf("Before delete: '%s'\n", str);
-
-    int last_tok = LastTok(str, 10, ' ');
-    printf("Length: %d Char: '%c'\n", last_tok, str[index]);
-    printf("'%.*s'\n", index-last_tok, str);
-    str = DeleteStr(str, last_tok, index-last_tok);
-    printf("After delete: '%s'\n", str);
-    str = InsertStr(str, autocomp_s, last_tok);
-    printf("After insert: '%s'\n", str); */
-
 
 		return 1;
 	}
-	else
-	{
-		return 0;
-	}
+
+	return 0;
 }
 
 void ErrorExit(char *s)
@@ -1858,7 +1887,7 @@ void KeypressWait(int max_time)
 
 int OpenNewtroditFile(File_info *tstack, char *fname)
 {
-	char fileopenread[MAX_PATH] = {0};
+	char *fileopenread = calloc(MAX_PATH + 1, sizeof(char)), *ptr = NULL;
 	int n = 0;
 	if (tstack->is_modified)
 	{
@@ -1866,7 +1895,7 @@ int OpenNewtroditFile(File_info *tstack, char *fname)
 
 		if (YesNoPrompt())
 		{
-			if (!SaveFile(tstack, NULL))
+			if (!SaveFile(tstack, NULL, false))
 			{
 				LoadAllNewtrodit();
 				DisplayFileContent(tstack, stdout, 0);
@@ -1876,25 +1905,21 @@ int OpenNewtroditFile(File_info *tstack, char *fname)
 	}
 	if (fname)
 	{
-		memcpy(fileopenread, fname, sizeof fileopenread);
+		memcpy(fileopenread, fname, MAX_PATH);
 	}
 	else
 	{
 		PrintBottomString("%s", NEWTRODIT_PROMPT_FOPEN);
-
-		fgets(fileopenread, sizeof fileopenread, stdin);
-		if (NoLfLen(fileopenread) <= 0)
+		fileopenread = TypingFunction(32, 255, MAX_PATH, NULL);
+		if (fileopenread[0] == '\0')
 		{
-			FunctionAborted(tstack);
+			FunctionAborted(tstack, fileopenread);
 			return 0;
 		}
 	}
-
-	// Remove trailing LF
-	fileopenread[strcspn(fileopenread, "\n")] = 0;
-	RemoveQuotes(fileopenread, strdup(fileopenread));
-
-	LoadAllNewtrodit();
+	ptr = strdup(fileopenread);
+	RemoveQuotes(fileopenread, ptr);
+	free(ptr);
 	/* if (GetFileAttributes(tstack->filename) & FILE_ATTRIBUTE_DEVICE)
 	{
 		PrintBottomString("%s%s", NEWTRODIT_ERROR_CANNOT_OPEN_DEVICE, tstack->filename);
@@ -1906,8 +1931,6 @@ int OpenNewtroditFile(File_info *tstack, char *fname)
 	{
 		if (!strcmp(StrLastTok(Tab_stack[i].filename, PATHTOKENS), fileopenread) && i != file_index) // File is already open
 		{
-			DisplayFileContent(tstack, stdout, 0);
-
 			PrintBottomString(NEWTRODIT_PROMPT_ALREADY_OPEN_TAB, tstack->filename);
 			if (YesNoPrompt())
 			{
@@ -1930,8 +1953,6 @@ int OpenNewtroditFile(File_info *tstack, char *fname)
 	{
 		if ((n = LoadFile(tstack, strdup(fileopenread))) != 1) // Failed to open the file
 		{
-			DisplayFileContent(tstack, stdout, 0);
-
 			PrintBottomString("%s", ErrorMessage(abs(n), fileopenread)); // Errors are always negative, so abs() is used
 			getch_n();
 			ShowBottomMenu();
@@ -1942,10 +1963,7 @@ int OpenNewtroditFile(File_info *tstack, char *fname)
 		}
 
 		old_open_files[oldFilesIndex] = tstack->filename;
-		NewtroditNameLoad();
-		CenterText(StrLastTok(tstack->filename, PATHTOKENS), 0);
-		DisplayTabIndex(tstack);
-		RightAlignNewline();
+		LoadAllNewtrodit();
 		DisplayFileContent(tstack, stdout, 0);
 	}
 

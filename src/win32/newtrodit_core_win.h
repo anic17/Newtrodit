@@ -403,7 +403,7 @@ void ClearScreen()
  */
 void ClearPartial(int x, int y, int width, int height) // Clears a section of the screen
 {
-	if(!width || !height)
+	if (!width || !height)
 	{
 		return;
 	}
@@ -434,6 +434,16 @@ void ClearPartial(int x, int y, int width, int height) // Clears a section of th
 }
 
 /* Function for printing a string on the last row of the screen */
+
+size_t strlen_n(const char *s) // Safe strlen() version
+{
+	if (!s)
+	{
+		return 0;
+	}
+	return strlen(s);
+}
+
 void PrintBottomString(char *str, ...)
 {
 	va_list args;
@@ -441,8 +451,8 @@ void PrintBottomString(char *str, ...)
 	int xs = XSIZE;
 	char *printbuf = calloc(xs + 1, sizeof(char));
 	vsnprintf(printbuf, xs + 1, str, args);
-	size_t len = strlen(printbuf);
-	ClearPartial(len, BOTTOM, xs-len, 1);
+	size_t len = strlen_n(printbuf);
+	ClearPartial(len, BOTTOM, xs - len, 1);
 	gotoxy(0, BOTTOM);
 	printf("%.*s", xs, printbuf); // Don't get out of the buffer
 	free(printbuf);
@@ -494,15 +504,6 @@ int SetBoolValue(int *boolv, char *s)
 	int retval = atoi_tf(s);
 	*boolv = !!retval;
 	return retval;
-}
-
-size_t strlen_n(const char *s) // Safe strlen() version
-{
-	if (!s)
-	{
-		return 0;
-	}
-	return strlen(s);
 }
 
 int IsNumberString(char *s)
@@ -637,22 +638,6 @@ char *StrLastTok(char *tok, char *char_token)
 	return tok + pos + 1;
 }
 
-int LastTokInterval(char* s, int index, char* delims)
-{
-	size_t delimlen = strlen_n(delims);
-	for(int i = index; i >= 0; i--)
-	{
-		for(int j = 0; j < delimlen; j++)
-		{
-			if(delims[j] == s[i])
-			{
-				return i;
-			}
-		}
-	}
-	return 0;
-}
-
 /* ? */
 int TokBackPos(char *s, char *p, char *p2)
 {
@@ -715,7 +700,7 @@ int strcmptok(char *s, char *short_s, char *tok)
 	{
 		for (size_t k = 0; k < strlen_n(tok); k++)
 		{
-			if (s[strlen(short_s)] == tok[k])
+			if (s[strlen_n(short_s)] == tok[k])
 			{
 				return 0;
 			}
@@ -727,7 +712,7 @@ int strcmptok(char *s, char *short_s, char *tok)
 /* Print tab of set size? */
 char *PrintTab(int tab_count)
 {
-	char *s = malloc(sizeof(char) * (tab_count + 1));
+	char *s = calloc(sizeof(char),(tab_count + 1));
 	memset(s, 32, tab_count);
 	return s;
 }
@@ -781,21 +766,23 @@ size_t strrpbrk(char *s, char *find) // Reverse strpbrk, just like strrchr but f
 	return 0;
 }
 
-size_t strcmpcount(char* s1, char* s2)
+size_t strcmpcount(char *s1, char *s2)
 {
 	size_t l1 = strlen_n(s1);
 	size_t l2 = strlen_n(s2);
-	if(!l1 || !l2)
+	if (!l1 || !l2)
 	{
 		return 0;
 	}
-	size_t complen = l1 > l2 ? l2 : l1, cnt=0;
-	for(int i = 0; i < complen; i++)
+	size_t complen = l1 > l2 ? l2 : l1, cnt = 0;
+	for (int i = 0; i < complen; i++)
 	{
-		if(s1[i] == s2[i])
+		if (s1[i] == s2[i])
 		{
 			cnt++;
-		} else {
+		}
+		else
+		{
 			return cnt;
 		}
 	}
@@ -895,48 +882,53 @@ char *strlwr(char *s)
 	return s;
 }
 
-char *InsertStr(char *s1, char *s2, int pos)
+char *InsertStr(char *s1, char *s2, size_t pos, bool allocstring, size_t maxsize)
 {
-	char *new_str = calloc(strlen_n(s1) + strlen_n(s2) + 2, sizeof(char));
-	if (!new_str)
+	size_t l1 = strlen_n(s1), l2 = strlen_n(s2);
+
+	char *new_str;
+	if (allocstring)
 	{
-		last_known_exception = NEWTRODIT_ERROR_OUT_OF_MEMORY;
-		return NULL;
+		new_str = calloc(l1 + l2 + 10, sizeof(char));
+		memcpy(new_str, s1, strlen_n(s1));
+
+		if (!new_str)
+		{
+			last_known_exception = NEWTRODIT_ERROR_OUT_OF_MEMORY;
+			return NULL;
+		}
 	}
-	strncat(new_str, s1, pos);
-	strncat(new_str, s2, strlen_n(s2));
-	strncat(new_str, s1 + pos, strlen_n(s1) - pos);
+	else
+	{
+		new_str = s1;
+	}
+	if(l1 + l2 < maxsize && !allocstring)
+	{
+		memmove(new_str + pos + l2, new_str + pos, l1);
+		memcpy(new_str + pos, s2, l2);
+	}
+
 	return new_str;
 }
 
 // Insert a single character at a specific index
-char *InsertChar(char *str, char c, int pos)
+char *InsertChar(char *str, char c, int pos, bool allocstring, size_t maxsz)
 {
 	char s2[2] = {c, '\0'};
-	return InsertStr(str, s2, pos);
+	return InsertStr(str, s2, pos, allocstring, maxsz);
 }
 
 // Delete a string on a specified position
 char *DeleteStr(char *str, int pos, size_t count)
 {
 	size_t len = strlen_n(str);
-	if(pos+count > len)
+	if (pos + count > len)
 	{
-		//printf("Exceed");
-		//getch_n();
-		// DEBUG
 		return str;
 	}
-	char *new_str = malloc(len + 1);
-	if (!new_str)
-	{
-		last_known_exception = NEWTRODIT_ERROR_OUT_OF_MEMORY;
-		return NULL;
-	}
-	memcpy(new_str, str, pos);
-	memmove(new_str + pos, str + pos + count, len - (pos + count));
-	new_str[len - count] = '\0';
-	return new_str;
+	memmove(str + pos, str + pos + count, len - (pos + count));
+	str[len - count] = '\0';
+	return str;
 }
 
 char *DeleteChar(char *str, int pos) // This function is limited to lines with a length of 2^31 - 1 characters
@@ -983,7 +975,7 @@ char *InsertDeletedRow(File_info *tstack)
 		strncat(tstack->strsave[tstack->ypos - 1], tstack->newline, strlen_n(tstack->newline));
 	}
 	// Delete the old row, shifting other rows down
-	DeleteRow(tstack->strsave, tstack->ypos, BUFFER_X);
+	DeleteRow(tstack->strsave, tstack->ypos, tstack->bufy - 1);
 
 	// Decrease the yp pointer by one
 	tstack->xpos = NoLfLen(tstack->strsave[tstack->ypos]);
@@ -1209,12 +1201,13 @@ int YesNoPrompt()
 
 char *rot13(char *s)
 {
-	for (int i = 0; i < strlen_n(s); i++)
+	while(*s)
 	{
-		if (isalpha(s[i]))
+		if (isalpha(*s))
 		{
-			tolower(s[i]) >= 'n' ? (s[i] -= 13) : (s[i] += 13);
+			tolower(*s) >= 'n' ? (*s -= 13) : (*s += 13);
 		}
+		s++;
 	}
 	return s;
 }
@@ -1512,7 +1505,6 @@ int AllocateBufferMemory(File_info *tstack)
 	tstack->Syntaxinfo.override_color = 0; // No override color
 	tstack->Syntaxinfo.single_quotes = singleQuotes;
 	tstack->Syntaxinfo.finish_quotes = finishQuotes;
-	
 
 	tstack->Syntaxinfo.quote_color = DEFAULT_QUOTE_COLOR;
 	tstack->Syntaxinfo.default_color = DEFAULT_SYNTAX_COLOR;
@@ -1574,8 +1566,8 @@ int AllocateBufferMemory(File_info *tstack)
 	tstack->fread_time.dwLowDateTime = 0;
 	tstack->language = calloc(DEFAULT_ALLOC_SIZE, sizeof(char));
 	memcpy(tstack->language, DEFAULT_LANGUAGE, strlen_n(DEFAULT_LANGUAGE));
-	memcpy(tstack->Syntaxinfo.separators, SEPARATORS, strlen(SEPARATORS));
-	memcpy(tstack->Syntaxinfo.syntax_lang, DEFAULT_SYNTAX_LANG, strlen(DEFAULT_SYNTAX_LANG));
+	memcpy(tstack->Syntaxinfo.separators, SEPARATORS, strlen_n(SEPARATORS));
+	memcpy(tstack->Syntaxinfo.syntax_lang, DEFAULT_SYNTAX_LANG, strlen_n(DEFAULT_SYNTAX_LANG));
 
 	tstack->selection.start.x = 0;
 	tstack->selection.start.y = 0;
@@ -1586,6 +1578,8 @@ int AllocateBufferMemory(File_info *tstack)
 	used_tab_indexes[file_index] = true; // TODO: archaic code, should be removed
 
 	WriteLogFile("Buffer memory successfully allocated");
+	WriteLogFile("Allocated initial address of strsave[3]: %p", Tab_stack[file_index].strsave[3]);
+
 	return 1;
 }
 
