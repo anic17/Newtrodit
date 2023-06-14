@@ -1,0 +1,34 @@
+; Newtrodit Markdown syntax highlighting
+
+$NEWTRODIT_SYNTAX
+$LANGUAGE Markdown
+$COMMENT #
+$COMMENT_COLOR 6
+$QUOTE_COLOR 8
+$DEFAULT_COLOR 7
+$NUMBER_COLOR 2
+$CAPITAL 1
+$CAPITAL_COLOR c
+$CAPITAL_MIN 4
+$SEPARATORS <>/=
+$ENCLOSING ```
+$ENCLOSING `
+
+-=9
+
+br=c
+code=c
+em=c
+h1=c
+h2=c
+h3=c
+h4=c
+h5=c
+h6=c
+img=c
+li=c
+ol=c
+p=c
+strong=c
+table=c
+ul=c
