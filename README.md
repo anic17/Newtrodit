@@ -24,6 +24,7 @@ After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is ou
    - ROT13 encoding
    - Uppercase/lowercase conversion
 - Fully configurable syntax highlighting including custom rules
+- Code autocompletion based on syntax highlighting rules
 - Built-in manual
 - Mouse support (Windows exclusive)
 - Can edit files up to 6400 lines
