@@ -18,7 +18,7 @@
 */
 
 const char newtrodit_version[] = "0.6 rc-1";
-const char newtrodit_build_date[] = "8/6/2023";
+const char newtrodit_build_date[] = "27/6/2023";
 const char newtrodit_repository[] = "https://github.com/anic17/Newtrodit";
 const char newtrodit_lcl_repository[] = "https://github.com/anic17/Newtrodit-LCL";
 char manual_file[MAX_PATH] = "newtrodit.man";
@@ -27,6 +27,8 @@ char syntax_dir[MAX_PATH] = "syntax";
 char syntax_ext[MAX_PATH] = ".nwtrd-syntax";
 const char newtrodit_commit[] = ""; // Example commit
 
+const char* autocomplete_double[] = {"{}", "[]", "()", "\"\"", "''"};
+
 #define DEFAULT_NL "\n"
 
 const int MANUAL_BUFFER_X = 300;
@@ -34,9 +36,8 @@ const int MANUAL_BUFFER_Y = 600;
 
 int TAB_WIDE = TAB_WIDE_;
 int CURSIZE = CURSIZE_;
-int LINECOUNT_WIDE = LINECOUNT_WIDE_;
+int LINECOUNT_WIDE = 4;
 int lineCount = true; // Is line count enabled?
-
 
 // Boolean settings
 int convertTabtoSpaces = true;
@@ -54,12 +55,12 @@ int partialMouseSupport = true;     // Partial mouse support, only changes curso
 int showMillisecondsInTime = false; // Show milliseconds in time insert function (F6)
 int useLogFile = true;
 int createNewLogFile = false; // Create new log files when logging is enabled
-int openFileHandle = true; // Open a file handle
-int RGB24bit = false;          // Use 24-bit RGB instead of 4-bit colors
-int findInsensitive = false; // Find insensitive string
-int matchWholeWord = false; // Match whole word when finding a string
-int devMode = false;  // Bool to enable or disable the dev mode
-int autoComplete = true; // Keyword autocompleting (if syntax highlighting is there)
+int openFileHandle = true;    // Open a file handle
+int RGB24bit = false;         // Use 24-bit RGB instead of 4-bit colors
+int findInsensitive = false;  // Find insensitive string
+int matchWholeWord = false;   // Match whole word when finding a string
+int devMode = false;          // Bool to enable or disable the dev mode
+int autoComplete = true;      // Keyword autocompleting (if syntax highlighting is there)
 
 int bpsPairHighlight = false; // Use BPS pair highlighting (bugged)
 
@@ -69,7 +70,7 @@ char bps_chars_close[10][3] = {")", "}", "]"};
 
 // Interal global variables
 int clearAllBuffer = true;
-int allowAutomaticResizing = false; // Changing this value can cause issues with the editor functions
+int allowAutomaticResizing = true;
 
 int c = 0; // Different error/debug codes
 
@@ -77,6 +78,7 @@ int c = 0; // Different error/debug codes
     TODO: Add multiline comment support
     static int multiLineComment = false;
 */
+
 
 int syntaxHighlighting = true;
 int syntaxAfterDisplay = false; // Display syntax after display
@@ -88,8 +90,8 @@ int open_files = 1;
 int wrapSize = 100; // Default wrap size
 int scrollRate = 3; // Default scroll rate (scroll 3 lines per mouse wheel). Needs to have partialMouseSupport enabled
 
-#define BG_DEFAULT 0x07 // Background black, foreground (font) white
-#define FG_DEFAULT 0x70 // Background white, foreground (font) black
+#define BG_DEFAULT 0x07           // Background black, foreground (font) white
+#define FG_DEFAULT 0x70           // Background white, foreground (font) black
 #define FIND_HIGHLIGHT_COLOR 0xE0 // Background yellow, foreground black
 
 int bg_color = BG_DEFAULT; // Background color (menu)
@@ -140,12 +142,14 @@ int finishQuotes = true;
 int linecountHighlightLine = true;
 int autoLoadSyntaxRules = true;
 
-typedef struct position {
+typedef struct position
+{
     int x;
     int y;
 } position_t;
 
-typedef struct select_t {
+typedef struct select_t
+{
     position_t start;
     position_t end;
     bool is_selected;
@@ -157,11 +161,8 @@ typedef struct keywords
     int color;
 } keywords_t;
 
-typedef struct comment
-{
-    char *keyword;
-    int color;
-} comment_t;
+typedef keywords_t comment_t;
+typedef keywords_t enclosing_t;
 
 keywords_t keywords[] = {
     {"break", 5},
@@ -300,6 +301,11 @@ comment_t comments[] = {
     {"*/", 0x8},
 };
 
+enclosing_t enclosing[] = {
+    {"\"", 0xe},
+    {"\'", 0xe},
+};
+
 typedef struct theme
 {
     int bg_color;
@@ -368,6 +374,11 @@ enum CONTROL_CODES
     LEFT = 75,
     RIGHT = 77,
     DOWN = 80,
+
+    ALTUP = 152,
+    ALTLEFT = 155,
+    ALTRIGHT = 157,
+    ALTDOWN = 160,
 
     HOME = 71,
     END = 79,
@@ -736,21 +747,22 @@ typedef struct file_t
     size_t extcount;
 } file_t;
 
-char* DEFAULT_LANGUAGE ="File";
+char *DEFAULT_LANGUAGE = "File";
 
 static file_t FileLang[] = {
     {"adb|ads", "Ada", 2},                                                       // Ada
     {"awk", "AWK script", 1},                                                    // AWK script
     {"bas", "BASIC", 1},                                                         // BASIC
     {"bat|cmd|btm", "Batch", 3},                                                 // Batch file
-    {"bin|exe|dll|sys|ocx|elf|out", "Binary file", 7},                           // Binary file
+    {"bf", "Brainfuck", 1},                                                      // Brainfuck
+    {"bin|exe|dll|sys|ocx|elf|out", "Binary", 7},                                // Binary file
     {"c|h|inl", "C", 3},                                                         // C
     {"clj|cljs|cljc|edn", "Clojure", 4},                                         // Clojure
-    {"config|conf|ini|cfg|cnf|cf", "Configuration file", 6},                     // Configuration files
+    {"config|conf|ini|cfg|cnf|cf", "Configuration", 6},                          // Configuration files
     {"cpp|hpp|cxx|hxx|c++|h++|cc|hh", "C++", 8},                                 // C++ file
     {"cs|csx", "C#", 2},                                                         // C#
-    {"css", "CSS style", 1},                                                     // CSS file
-    {"csv", "CSV file", 1},                                                      // CSV file
+    {"css", "CSS styles", 1},                                                    // CSS file
+    {"csv", "CSV", 1},                                                           // CSV file
     {"dart", "Dart", 1},                                                         // Dart
     {"docx|docm|pptx|pptm|xlsx|xlsm", "Microsoft Office XML", 6},                // Microsoft Office XML
     {"e", "Eiffel", 1},                                                          // Eiffel
@@ -762,11 +774,11 @@ static file_t FileLang[] = {
     {"git", "Git", 1},                                                           // Git (not sure if this is an actual file extension)
     {"go", "Golang", 1},                                                         // Golang
     {"hs|lhs", "Haskell", 1},                                                    // Haskell
-    {"html|htm", "HTML file", 2},                                                // HTML
+    {"html|htm", "HTML", 2},                                                     // HTML
     {"java|class|jar|jmod", "Java", 4},                                          // Java
     {"jl", "Julia", 1},                                                          // Julia
     {"js|cjs|mjs", "JavaScript", 3},                                             // JavaScript
-    {"json", "JSON file", 1},                                                    // JSON file
+    {"json", "JSON", 1},                                                         // JSON file
     {"lua", "Lua", 1},                                                           // Lua
     {"m|p|mex|mat|fig|mlx|mlapp|mltbx|mlappinstall|mlpkginstall", "MATLAB", 10}, // MATLAB
     {"md|markdown", "Markdown", 2},                                              // Markdown
@@ -774,7 +786,7 @@ static file_t FileLang[] = {
     {"nb|wl", "Wolfram Language", 2},                                            // Wolfram Language (Mathematica)
     {"newtrodit|nwtrd", "Newtrodit script", 2},                                  // Newtrodit script
     {"nwtrd-syntax", "Newtrodit syntax rules", 1},                               // Newtrodit syntax highlighting
-    {"odt|fodt|ods|fods|odp|fodp|odg|fodg|odf", "OpenDocument file", 9},         // OpenDocument
+    {"odt|fodt|ods|fods|odp|fodp|odg|fodg|odf", "OpenDocument", 9},              // OpenDocument
     {"pas|pp|inc", "Pascal", 3},                                                 // Pascal
     {"pdf", "Portable Document Format", 1},                                      // Portable Document Format
     {"php|phar|phtml|pht|phps", "PHP", 5},                                       // PHP
@@ -787,6 +799,7 @@ static file_t FileLang[] = {
     {"s|asm|arm", "Assembly", 3},                                                // Assembly
     {"scala|sc", "Scala", 2},                                                    // Scala
     {"scm|ss", "Scheme", 2},                                                     // Scheme
+    {"scss|sass", "SASS styles", 2},                                             // SASS styles
     {"sd7|s7i", "Seed7", 2},                                                     // Seed7
     {"sh|bashrc", "Shell script", 1},                                            // Shell script
     {"sml", "Standard ML", 1},                                                   // Standard ML
@@ -794,8 +807,9 @@ static file_t FileLang[] = {
     {"tcl|tbc", "Tcl", 2},                                                       // Tcl
     {"tex", "LaTeX", 1},                                                         // LaTeX
     {"ts|tsx", "TypeScript", 2},                                                 // TypeScript
-    {"txt|text", "Text file", 2},                                                // Text file
+    {"txt|text|log", "Text", 3},                                                 // Text file
     {"vbs|vbe|wsf|wsc|hta|asp", "VBScript", 6},                                  // VBScript
+    {"v", "V", 1},                                                                // V language
     {"vim|vimrc", "Vim script", 2},                                              // Vim script
     {"vue", "Vue", 1},                                                           // Vue
     {"xhtml|xhtm|xht", "XHTML", 2},                                              // XHTML

@@ -67,6 +67,97 @@ int SelectCurrentPos(File_info *tstack)
     return tstack->selection.is_selected;
 }
 
+int SelectCheckInterval(File_info *tstack) // Check if the selection is within valid interval
+{
+    if (tstack->selection.is_selected)
+    {
+        int temp = 0;
+        // This code hurts to look at, anyone got any ideas on how to improve it?
+        if (tstack->selection.start.x < 0)
+        {
+            tstack->selection.start.x = 0;
+        }
+        if (tstack->selection.start.y < 1)
+        {
+            tstack->selection.start.y = 1;
+        }
+        else if (tstack->selection.start.y > tstack->linecount)
+        {
+            tstack->selection.start.y = tstack->linecount;
+        }
+
+        if (tstack->selection.end.x < 0)
+        {
+            tstack->selection.end.x = 0;
+        }
+        if (tstack->selection.end.y < 1)
+        {
+            tstack->selection.end.y = 1;
+        }
+        else if (tstack->selection.end.y > tstack->linecount)
+        {
+            tstack->selection.end.y = tstack->linecount;
+        }
+
+        if (tstack->selection.start.x > tstack->selection.end.x)
+        {
+            temp = tstack->selection.start.x;
+            tstack->selection.start.x = tstack->selection.end.x;
+            tstack->selection.end.x = temp;
+        }
+        if (tstack->selection.start.y > tstack->selection.end.y)
+        {
+            temp = tstack->selection.start.y;
+            tstack->selection.start.y = tstack->selection.end.y;
+            tstack->selection.end.y = temp;
+        }
+        if (tstack->selection.start.x == tstack->selection.end.x && tstack->selection.start.y == tstack->selection.end.y)
+        {
+            tstack->selection.is_selected = false;
+        }
+    }
+    return tstack->selection.is_selected;
+}
+
+int SelectDelete(File_info *tstack, bool refresh)
+{
+
+    if (SelectCheckInterval(tstack))
+    {
+        // Clear the selection
+        size_t linespan = tstack->selection.end.y - tstack->selection.start.y;
+        if (linespan > 0)
+        {
+            memset(tstack->strsave[tstack->selection.start.y] + tstack->selection.start.x, 0, tstack->bufx - tstack->selection.start.x);
+            for (int i = 0; i < linespan; i++)
+            {
+                DeleteRow(tstack->strsave, tstack->selection.start.y, tstack->bufy - 1);
+                // free(tstack->strsave[i + tstack->selection.end.y - tstack->selection.start.y]);
+            }
+            tstack->linecount -= linespan;
+            DeleteStr(tstack->strsave[tstack->selection.start.x], 0, tstack->selection.end.x);
+        }
+        else
+        {
+            DeleteStr(tstack->strsave[tstack->selection.start.y], tstack->selection.start.x, tstack->selection.end.x - tstack->selection.start.x);
+            memset(tstack->strsave[tstack->selection.start.y] + strlen_n(tstack->strsave[tstack->selection.start.y]), 0, tstack->bufx - strlen_n(tstack->strsave[tstack->selection.start.y]));
+        }
+        _xpos = tstack->selection.start.x;
+        _ypos = tstack->selection.start.y;
+        if (_xpos >= NoLfLen(tstack->strsave[_ypos]))
+        {
+            tstack->xpos = NoLfLen(tstack->strsave[_ypos]);
+        }
+
+        SelectClear(tstack);
+        if (refresh)
+        {
+            ClearPartial(0, 1, XSIZE, YSCROLL);
+            DisplayFileContent(tstack, stdout, 0);
+        }
+    }
+}
+
 int SelectPrint(File_info *tstack, size_t yps)
 {
     // TODO: Horizontal scroll support
@@ -131,7 +222,7 @@ int GotoBufferPosition(File_info *tstack, int numbuf, bool is_column)
     bool xgoto = true;
     size_t n = 0;
     char *ptr, *strnum1, *strnum2;
-    static char *line_number_str=NULL;
+    static char *line_number_str = NULL;
     if (is_column)
     {
         xgoto = true;

@@ -54,9 +54,9 @@ int CenterText(char *text, int yps) // Algorithm: (XSIZE / 2) - (len / 2)
 		return 0;
 	}
 	SetColor(fg_color);
-	int center_text = (XSIZE / 2) - (strlen(text) / 2);
+	int center_text = (XSIZE / 2) - (strlen_n(text) / 2);
 	gotoxy(center_text, yps);
-	int pos = wrapSize - strlen(text);
+	int pos = wrapSize - strlen_n(text);
 	if (pos < 0)
 	{
 		pos = abs(pos);
@@ -72,7 +72,7 @@ int DisplayTabIndex(File_info *tstack)
 
 	if (open_files > 1)
 	{
-		int pos = (XSIZE / 2) + (strlen(StrLastTok(tstack->filename, PATHTOKENS)) / 2) + (strlen(StrLastTok(tstack->filename, PATHTOKENS)) % 2) + 1; // Center text and add a space
+		int pos = (XSIZE / 2) + (strlen_n(StrLastTok(tstack->filename, PATHTOKENS)) / 2) + (strlen_n(StrLastTok(tstack->filename, PATHTOKENS)) % 2) + 1; // Center text and add a space
 		gotoxy(pos, 0);
 
 		SetColor(fg_color);
@@ -83,47 +83,23 @@ int DisplayTabIndex(File_info *tstack)
 	return 1;
 }
 
-char *RightAlignNewline()
+void DisplayFileType()
 {
 	SetColor(fg_color);
-
-	char *nl_type = (char *)malloc(sizeof(char) * DEFAULT_ALLOC_SIZE);
-	memset(nl_type, 0, sizeof(char) * DEFAULT_ALLOC_SIZE);
-	if (!strcmp(Tab_stack[file_index].newline, "\n"))
+	size_t len = strlen_n(Tab_stack[file_index].language);
+	char *disp_ptr = calloc(len + DEFAULT_ALLOC_SIZE, sizeof(char));
+	if (!strcmp(Tab_stack[file_index].language, DEFAULT_LANGUAGE))
 	{
-		strncpy_n(nl_type, "Unix (LF)", DEFAULT_ALLOC_SIZE);
+		strncpy_n(disp_ptr, Tab_stack[file_index].language, len);
 	}
-	else if (!strcmp(Tab_stack[file_index].newline, "\r\n"))
+	else
 	{
-		strncpy_n(nl_type, "Windows (CR LF)", DEFAULT_ALLOC_SIZE);
+		snprintf(disp_ptr, len + DEFAULT_ALLOC_SIZE, "File type: %s", Tab_stack[file_index].language);
 	}
-	else if (!strcmp(Tab_stack[file_index].newline, "\r"))
-	{
-		strncpy_n(nl_type, "Mac (CR)", DEFAULT_ALLOC_SIZE);
-	}
-	else if (!strcmp(Tab_stack[file_index].newline, "\n\r"))
-	{
-		strncpy_n(nl_type, "Risc OS (LF CR)", DEFAULT_ALLOC_SIZE);
-	}
-	else if (!strcmp(Tab_stack[file_index].newline, "\025"))
-	{
-		strncpy_n(nl_type, "IBM Mainframe (NL)", DEFAULT_ALLOC_SIZE);
-	}
-	else if (!strcmp(Tab_stack[file_index].newline, "\x1e"))
-	{
-		strncpy_n(nl_type, "QNX pre-POSIX (RS)", DEFAULT_ALLOC_SIZE);
-	}
-	else if (nl_type[0] == '\0')
-	{
-		strncpy_n(nl_type, "Unknown newline character", DEFAULT_ALLOC_SIZE);
-	}
-
-	gotoxy(XSIZE - strlen(nl_type) - 2, 0); // XSIZE - strlen(nl_type) - 2
-	fputs(nl_type, stdout);
-	free(nl_type);
+	gotoxy(XSIZE - strlen_n(disp_ptr) - 2, 0); // XSIZE - strlen_n(nl_type) - 2
+	fputs(disp_ptr, stdout);
+	free(disp_ptr);
 	SetColor(bg_color);
-
-	return nl_type;
 }
 
 void ShowFindMenu()
@@ -222,7 +198,7 @@ void DisplayCursorPos(File_info *tstack)
 {
 	int cursorvis = GetConsoleInfo(CURSOR_VISIBLE);
 	SetCursorSettings(false, GetConsoleInfo(CURSOR_SIZE));
-	size_t len = strlen(NEWTRODIT_DIALOG_BOTTOM_HELP);
+	size_t len = strlen_n(NEWTRODIT_DIALOG_BOTTOM_HELP);
 	ClearPartial(len, BOTTOM, XSIZE - len, 1);
 	bool linecount_zero = false;
 	if (fullCursorInfoDisplay)
@@ -261,7 +237,7 @@ void LoadAllNewtrodit()
 	NewtroditNameLoad();
 	CenterText(StrLastTok(Tab_stack[file_index].filename, PATHTOKENS), 0);
 	DisplayTabIndex(&Tab_stack[file_index]);
-	RightAlignNewline();
+	DisplayFileType();
 	ShowBottomMenu();
 
 	if (lineCount)

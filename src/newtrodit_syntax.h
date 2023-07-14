@@ -34,15 +34,17 @@ int EmptySyntaxScheme(File_info *tstack)
     {
         if (tstack->Syntaxinfo.keywords[i][0] != '\0')
         {
-            memset(tstack->Syntaxinfo.keywords[i], 0, strlen(tstack->Syntaxinfo.keywords[i]));
+            memset(tstack->Syntaxinfo.keywords[i], 0, strlen_n(tstack->Syntaxinfo.keywords[i]));
             tstack->Syntaxinfo.color[i] = 0;
         }
+    }
+    for (int i = 0; i < tstack->Syntaxinfo.comment_count; i++)
+    {
+        free(tstack->Syntaxinfo.comments[i]);
     }
 
     return tstack->Syntaxinfo.keyword_count;
 }
-
-
 
 int LoadSyntaxScheme(char *syntax_fn, File_info *tstack)
 {
@@ -111,7 +113,7 @@ int LoadSyntaxScheme(char *syntax_fn, File_info *tstack)
 
         if (c == 0) // First line of the syntax highlighting rules file
         {
-            if (strncmp(read_syntax_buf, NEWTRODIT_SYNTAX_MAGIC_NUMBER, strlen(NEWTRODIT_SYNTAX_MAGIC_NUMBER)))
+            if (strncmp(read_syntax_buf, NEWTRODIT_SYNTAX_MAGIC_NUMBER, strlen_n(NEWTRODIT_SYNTAX_MAGIC_NUMBER)))
             {
                 PrintBottomString("%s%s", NEWTRODIT_ERROR_INVALID_SYNTAX, syntax_fn);
                 WriteLogFile("%s%s", NEWTRODIT_ERROR_INVALID_SYNTAX, syntax_fn);
@@ -131,10 +133,15 @@ int LoadSyntaxScheme(char *syntax_fn, File_info *tstack)
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_COMMENT, def_tokenizer)) // No 'hasComment' boolean because multiple comments can be defined
         {
             tstack->Syntaxinfo.comment_count++;
-
             tstack->Syntaxinfo.comments = realloc_n(tstack->Syntaxinfo.comments, sizeof(char *) * tstack->Syntaxinfo.comment_count, sizeof(char *) * (tstack->Syntaxinfo.comment_count + 1));
-
-            tstack->Syntaxinfo.comments[tstack->Syntaxinfo.comment_count - 1] = strdup(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_COMMENT) + 1);
+            tstack->Syntaxinfo.comments[tstack->Syntaxinfo.comment_count - 1] = strdup(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_COMMENT) + 1);
+            continue;
+        }
+        if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_ENCLOSING, def_tokenizer))
+        {
+            tstack->Syntaxinfo.enclosing_count++;
+            tstack->Syntaxinfo.enclosing_char = realloc_n(tstack->Syntaxinfo.enclosing_char, sizeof(char *) * tstack->Syntaxinfo.enclosing_count, sizeof(char *) * (tstack->Syntaxinfo.enclosing_count + 1));
+            tstack->Syntaxinfo.enclosing_char[tstack->Syntaxinfo.enclosing_count - 1] = strdup(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_ENCLOSING) + 1);
             continue;
         }
 
@@ -143,49 +150,39 @@ int LoadSyntaxScheme(char *syntax_fn, File_info *tstack)
 
             hasLanguage = true;
 
-            strncpy_n(syntax_language, read_syntax_buf + strlen(NEWTRODIT_SYNTAX_LANGUAGE) + 1, MAX_PATH); // Whitespace character
-            tstack->Syntaxinfo.syntax_lang = strdup(syntax_language);
-
+            strncpy_n(tstack->Syntaxinfo.syntax_lang, read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_LANGUAGE) + 1, MAX_PATH); // Whitespace character
             continue;
         }
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_DEFAULT_COLOR, def_tokenizer))
         {
-            default_color = HexStrToDec(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_DEFAULT_COLOR) + 1);
-            tstack->Syntaxinfo.default_color = default_color;
-
+            tstack->Syntaxinfo.default_color = strtol(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_DEFAULT_COLOR) + 1, NULL, 16);
             continue;
         }
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_QUOTE_COLOR, def_tokenizer))
         {
-            quote_color = HexStrToDec(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_QUOTE_COLOR) + 1);
-            tstack->Syntaxinfo.quote_color = quote_color;
-
+            tstack->Syntaxinfo.quote_color = strtol(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_QUOTE_COLOR) + 1, NULL, 16);
             continue;
         }
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_COMMENT_COLOR, def_tokenizer))
         {
-
-            tstack->Syntaxinfo.comment_color = strtol(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_COMMENT_COLOR) + 1, NULL, 16);
-
+            tstack->Syntaxinfo.comment_color = strtol(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_COMMENT_COLOR) + 1, NULL, 16);
             continue;
         }
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_NUMBER_COLOR, def_tokenizer))
         {
-            num_color = HexStrToDec(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_NUMBER_COLOR) + 1);
-            tstack->Syntaxinfo.num_color = num_color;
-
+            tstack->Syntaxinfo.num_color = strtol(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_NUMBER_COLOR) + 1, NULL, 16);
             continue;
         }
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_CAPITAL_COLOR, def_tokenizer))
         {
-            capital_color = HexStrToDec(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_CAPITAL_COLOR) + 1);
+            capital_color = HexStrToDec(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_CAPITAL_COLOR) + 1);
             tstack->Syntaxinfo.capital_color = capital_color;
 
             continue;
         }
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_CAPITAL_MIN, def_tokenizer))
         {
-            capital_min_len = HexStrToDec(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_CAPITAL_MIN) + 1);
+            capital_min_len = HexStrToDec(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_CAPITAL_MIN) + 1);
             tstack->Syntaxinfo.capital_min = capital_min_len;
 
             continue;
@@ -193,67 +190,43 @@ int LoadSyntaxScheme(char *syntax_fn, File_info *tstack)
 
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_CAPITAL, def_tokenizer))
         {
-            if (read_syntax_buf[strlen(NEWTRODIT_SYNTAX_CAPITAL)] == '\0')
+            if (read_syntax_buf[strlen_n(NEWTRODIT_SYNTAX_CAPITAL)] == '\0')
             {
                 tstack->Syntaxinfo.capital_enabled = true;
             }
             else
             {
-                if (atoi(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_CAPITAL) + 1))
-                {
-                    tstack->Syntaxinfo.capital_enabled = true;
-                }
-                else
-                {
-                    tstack->Syntaxinfo.capital_enabled = false;
-                }
+                tstack->Syntaxinfo.capital_enabled = atoi_tf(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_CAPITAL) + 1);
             }
             continue;
         }
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_SINGLE_QUOTES, def_tokenizer))
         {
-            if (read_syntax_buf[strlen(NEWTRODIT_SYNTAX_SINGLE_QUOTES)] == '\0')
+            if (read_syntax_buf[strlen_n(NEWTRODIT_SYNTAX_SINGLE_QUOTES)] == '\0')
             {
                 tstack->Syntaxinfo.single_quotes = true;
             }
             else
             {
-                if (atoi(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_SINGLE_QUOTES) + 1))
-                {
-                    tstack->Syntaxinfo.single_quotes = true;
-                }
-                else
-                {
-                    tstack->Syntaxinfo.single_quotes = false;
-                }
+                tstack->Syntaxinfo.single_quotes = atoi_tf(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_SINGLE_QUOTES) + 1);
             }
-
-            printf("SINGLE QUOTES OK");
-            getch_n();
             continue;
         }
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_FINISH_QUOTES, def_tokenizer))
         {
-            if (read_syntax_buf[strlen(NEWTRODIT_SYNTAX_FINISH_QUOTES)] == '\0')
+            if (read_syntax_buf[strlen_n(NEWTRODIT_SYNTAX_FINISH_QUOTES)] == '\0')
             {
                 tstack->Syntaxinfo.finish_quotes = true;
             }
             else
             {
-                if (atoi(read_syntax_buf + strlen(NEWTRODIT_SYNTAX_FINISH_QUOTES) + 1))
-                {
-                    tstack->Syntaxinfo.finish_quotes = true;
-                }
-                else
-                {
-                    tstack->Syntaxinfo.finish_quotes = false;
-                }
+                tstack->Syntaxinfo.finish_quotes = atoi_tf(read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_FINISH_QUOTES) + 1);
             }
             continue;
         }
         if (!strcmptok(read_syntax_buf, NEWTRODIT_SYNTAX_SEPARATORS, def_tokenizer))
         {
-            strncpy_n(tstack->Syntaxinfo.separators, read_syntax_buf + strlen(NEWTRODIT_SYNTAX_SEPARATORS) + 1, sizeof syntax_separators);
+            strncpy_n(tstack->Syntaxinfo.separators, read_syntax_buf + strlen_n(NEWTRODIT_SYNTAX_SEPARATORS) + 1, sizeof syntax_separators);
             continue;
         }
 
@@ -267,7 +240,7 @@ int LoadSyntaxScheme(char *syntax_fn, File_info *tstack)
         {
             tstack->Syntaxinfo.keywords[c] = strdup(iniptr); // If strdup is not used, the value will be overwritten by the next strtok call
 
-            iniptr = read_syntax_buf + strlen(tstack->Syntaxinfo.keywords[c]) + strlen(tokchar);
+            iniptr = read_syntax_buf + strlen_n(tstack->Syntaxinfo.keywords[c]) + strlen_n(tokchar);
             if (iniptr)
             {
                 tstack->Syntaxinfo.color[c] = abs((int)strtol(iniptr, NULL, 16)) % 16; // Range from 0 to 15
@@ -293,6 +266,12 @@ int LoadSyntaxScheme(char *syntax_fn, File_info *tstack)
 
 void color_line(char *line, int startpos, int override_color, int yps)
 {
+
+    /* for (int i = 0; i < Tab_stack[file_index].Syntaxinfo.enclosing_count; i++)
+    {
+        printf("%s;", Tab_stack[file_index].Syntaxinfo.enclosing_char[i]);
+    }
+    getch_n(); */
     int ycur = GetConsoleInfo(YCURSOR);
     if (override_color <= 0)
     {
@@ -301,14 +280,14 @@ void color_line(char *line, int startpos, int override_color, int yps)
     // Color a specific line
     int keyword_len = 0, skipChars = 0, tmpvar = 0; // Always initialize variables to 0 to avoid undefined behavior (= crash)
     int scrollx = 0;
-    char quotechar;
+    char *quotechar;
     if (!Tab_stack[file_index].Syntaxinfo.multi_line_comment)
     {
         SetColor(Tab_stack[file_index].Syntaxinfo.default_color);
     }
 
     // int internal_bps_count = Tab_stack[file_index].Syntaxinfo.bracket_pair_count; // Used to count the number of brackets in a string
-    size_t len = strlen(line);
+    size_t len = strlen_n(line);
     // This causes visual bugs
     // SetCharColor(wrapSize, Tab_stack[file_index].Syntaxinfo.default_color, lineCount ? (Tab_stack[file_index].linecount_wide - 1) : 0, ycur);
 
@@ -416,7 +395,7 @@ void color_line(char *line, int startpos, int override_color, int yps)
 
                     if (Tab_stack[file_index].Syntaxinfo.comments[k][0] != '\0')
                     {
-                        if (!memcmp(line + i, Tab_stack[file_index].Syntaxinfo.comments[k], strlen(Tab_stack[file_index].Syntaxinfo.comments[k])))
+                        if (!memcmp(line + i, Tab_stack[file_index].Syntaxinfo.comments[k], strlen_n(Tab_stack[file_index].Syntaxinfo.comments[k])))
                         {
 
                             SetCharColor((len > wrapSize) ? (wrapSize - i) : (len - i), Tab_stack[file_index].Syntaxinfo.comment_color + (16 * override_color), (lineCount ? Tab_stack[file_index].linecount_wide : 0) + (i - startpos < 0 ? 0 : i - startpos), ycur);
@@ -426,44 +405,52 @@ void color_line(char *line, int startpos, int override_color, int yps)
                     }
                 }
             }
-
-            if ((line[i] == '\"' || (line[i] == '\'' && Tab_stack[file_index].Syntaxinfo.single_quotes)) && !Tab_stack[file_index].Syntaxinfo.multi_line_comment)
+            if (!Tab_stack[file_index].Syntaxinfo.multi_line_comment)
             {
-                if (i < len)
+                for (int k = 0; k < Tab_stack[file_index].Syntaxinfo.enclosing_count; k++)
                 {
-                    quotechar = line[i];
-                    skipChars = 0;
-                    do
+                    if (!strncmp(line + i, Tab_stack[file_index].Syntaxinfo.enclosing_char[k], strlen_n(Tab_stack[file_index].Syntaxinfo.enclosing_char[k])))
                     {
-                        skipChars++;
-                    } while (line[i + skipChars] != quotechar && i + skipChars < len && i + skipChars < wrapSize);
-                    if (line[i + skipChars] == quotechar)
-                    {
-                        int delta_x = i - Tab_stack[file_index].display_x;
-                        if (Tab_stack[file_index].display_x >= i)
+                        quotechar = Tab_stack[file_index].Syntaxinfo.enclosing_char[k];
+                        if (i < len)
                         {
-                            scrollx = (Tab_stack[file_index].display_x - i); // length of the quoted string
-                        }
-                        else
-                        {
-                            scrollx = 0;
-                        }
+                            skipChars = 0;
+                            do
+                            {
+                                skipChars++;
+                            } while (strncmp(line + i + skipChars, quotechar, strlen_n(Tab_stack[file_index].Syntaxinfo.enclosing_char[k])) && i + skipChars < len && i + skipChars < wrapSize);
+                            if (!strncmp(line + i + skipChars, quotechar, strlen_n(Tab_stack[file_index].Syntaxinfo.enclosing_char[k])))
+                            {
 
-                        // WriteLogFile("%d:%d:%d|%d:%d", i - Tab_stack[file_index].display_x, i, Tab_stack[file_index].display_x, wrapSize + Tab_stack[file_index].display_x, scrollx);
-                        SetCharColor(skipChars + 1 - scrollx, Tab_stack[file_index].Syntaxinfo.quote_color + (16 * override_color), delta_x + (lineCount ? Tab_stack[file_index].linecount_wide : 0) + scrollx, ycur); // +1 because we want to also color the quote
-                        i += skipChars;
+                                int delta_x = i - Tab_stack[file_index].display_x;
+
+                                if (Tab_stack[file_index].display_x >= i)
+                                {
+                                    scrollx = (Tab_stack[file_index].display_x - i); // length of the quoted string
+                                }
+                                else
+                                {
+                                    scrollx = 0;
+                                }
+                                // WriteLogFile("%d:%d:%d|%d:%d", i - Tab_stack[file_index].display_x, i, Tab_stack[file_index].display_x, wrapSize + Tab_stack[file_index].display_x, scrollx);
+                                SetCharColor(skipChars + 1 - scrollx, Tab_stack[file_index].Syntaxinfo.quote_color + (16 * override_color), delta_x + (lineCount ? Tab_stack[file_index].linecount_wide : 0) + scrollx, ycur); // +1 because we want to also color the quote
+                                i += skipChars;
+                                break;
+                            }
+                        }
                     }
+                }
+
+                if ((line[i] == '\"' || (line[i] == '\'' && Tab_stack[file_index].Syntaxinfo.single_quotes)))
+                {
 
                     continue;
                 }
-            }
-            else
-            {
                 if (i == 0 || is_separator(line[i - 1]))
                 {
                     for (int k = 0; k < Tab_stack[file_index].Syntaxinfo.keyword_count; k++)
                     {
-                        keyword_len = strlen(Tab_stack[file_index].Syntaxinfo.keywords[k]);
+                        keyword_len = strlen_n(Tab_stack[file_index].Syntaxinfo.keywords[k]);
 
                         if (is_separator(line[i + keyword_len]) && !memcmp(line + i, Tab_stack[file_index].Syntaxinfo.keywords[k], keyword_len))
                         {
@@ -517,26 +504,25 @@ void color_line(char *line, int startpos, int override_color, int yps)
     return;
 }
 
-
-int AutoLoadSyntaxRules(File_info *tstack, char* alt_name)
+int AutoLoadSyntaxRules(File_info *tstack, char *alt_name)
 {
-	char* syntax_frules=NULL, *ext;
-    
-	ext = StrLastTok(alt_name == NULL ? tstack->filename : alt_name, "."); // Get the file extension
+    char *syntax_frules = NULL, *ext;
 
-	if (ext && autoLoadSyntaxRules)
-	{
-		syntax_frules = calloc(strlen_n(ext) + DEFAULT_ALLOC_SIZE, sizeof(char));
-		snprintf(syntax_frules, sizeof(char) * (DEFAULT_ALLOC_SIZE + strlen_n(ext)), "%s\\%s\\%s%s", SInf.location, syntax_dir, ext, syntax_ext);
-		if (!CheckFile(syntax_frules))
-		{
-			if (LoadSyntaxScheme(syntax_frules, tstack))
-			{
-				WriteLogFile(NEWTRODIT_SYNTAX_HIGHLIGHTING_LOADED, Tab_stack[file_index].Syntaxinfo.syntax_lang);
+    ext = StrLastTok(alt_name == NULL ? tstack->filename : alt_name, "."); // Get the file extension
+
+    if (ext && autoLoadSyntaxRules)
+    {
+        syntax_frules = calloc(strlen_n(ext) + DEFAULT_ALLOC_SIZE, sizeof(char));
+        snprintf(syntax_frules, sizeof(char) * (DEFAULT_ALLOC_SIZE + strlen_n(ext)), "%s\\%s\\%s%s", SInf.location, syntax_dir, ext, syntax_ext);
+        if (!CheckFile(syntax_frules))
+        {
+            if (LoadSyntaxScheme(syntax_frules, tstack))
+            {
+                WriteLogFile(NEWTRODIT_SYNTAX_HIGHLIGHTING_LOADED, Tab_stack[file_index].Syntaxinfo.syntax_lang);
                 return 1;
-			}
-		}
-		free(syntax_frules);
-	}
-	return 0;
+            }
+        }
+        free(syntax_frules);
+    }
+    return 0;
 }

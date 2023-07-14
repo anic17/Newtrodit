@@ -42,13 +42,12 @@
 
 /* =============================== SETTINGS ================================== */
 #define _NEWTRODIT_OLD_SUPPORT 0				 // Toggle support for old versions of Windows (Windows XP and below)
-#define _NEWTRODIT_EXPERIMENTAL_RESTORE_BUFFER 0 // Toggle support for restoring buffer on exit (currently experimental)
+#define _NEWTRODIT_EXPERIMENTAL_RESTORE_BUFFER 1 // Toggle support for restoring buffer on exit (currently experimental)
 #define DEBUG_MODE 1
 
 #define TAB_WIDE_ 2
 #define CURSIZE_ 20
 #define CURSIZE_INS 80
-#define LINECOUNT_WIDE_ 4 // To backup original value
 #define MIN_BUFSIZE 256
 #define LINE_MAX 8192
 #define MAX_TABS 48 // Maximum number of files opened at once
@@ -76,7 +75,7 @@ typedef int bool;
 #define UNDO_STACK_SIZE 2048
 #endif
 
-char *filename_text_ = "Untitled"; // Default filename
+const char *filename_text_ = "Untitled"; // Default filename
 #define DEFAULT_BUFFER_X 640
 
 #define MAKE_INT64(hi, lo) ((LONGLONG(DWORD(hi) & 0xffffffff) << 32) | LONGLONG(DWORD(lo) & 0xffffffff)) // https://stackoverflow.com/a/21022647/12613647
@@ -85,7 +84,7 @@ char *filename_text_ = "Untitled"; // Default filename
 
 #if DEBUG_MODE
 #define DEBUG                                           \
-	printf("OK. File:%s Line:%d ", __FILE__, __LINE__); \
+	PrintBottomString("OK. File:%s Line:%d\n", __FILE__, __LINE__); \
 	getch_n();
 #else
 #define DEBUG
@@ -120,7 +119,7 @@ int GetConsoleInfo(int type);
 #define DEFAULT_ALLOC_SIZE 512
 #define MACRO_ALLOC_SIZE 2048
 
-#define _xpos Tab_stack[file_index].xpos
+#define _xpos Tab_stack[file_index].xpos // For simplicity
 #define _ypos Tab_stack[file_index].ypos
 
 int BUFFER_X = DEFAULT_BUFFER_X;
@@ -136,9 +135,9 @@ int BUFFER_INCREMENT_LOADFILE = 50; // When loading a file, how much to incremen
 #endif
 
 #ifdef _WIN32
-char PATHTOKENS[] = "\\/";
+const char PATHTOKENS[] = "\\/";
 #else
-char PATHTOKENS[] = "/";
+const char PATHTOKENS[] = "/";
 #endif
 
 typedef struct Startup_info
@@ -195,6 +194,7 @@ typedef struct Syntax_info
 
 	size_t keyword_count;
 	size_t comment_count;
+	size_t enclosing_count;
 	size_t capital_min; // Minimum length of a word to be highlighted as capital
 
 	bool capital_enabled;
@@ -202,7 +202,7 @@ typedef struct Syntax_info
 	bool single_quotes;
 	bool finish_quotes;
 
-	// Highlight pairs of brackets, parenthesis, and square brackets {}, (), []
+	// Highlight pairs of brackets, parenthesis, and square brackets {}, (), [] (not supported as of 0.6)
 
 	size_t bracket_pair_count;
 	size_t parenthesis_pair_count;
@@ -210,6 +210,7 @@ typedef struct Syntax_info
 	// Keyword info
 	char **comments;
 	char **keywords;
+	char **enclosing_char; // Enclosing quote-like characters
 	int *color;
 } Syntax_info; // Syntax highlighting information
 
@@ -487,16 +488,11 @@ int HexStrToDec(char *s)
 
 int atoi_tf(char *s)
 {
-	int retval = 0;
-	if (!strcmp(s, "true"))
+	if (!_stricmp(s, "true") || atoi(s) == 1)
 	{
-		retval = 1;
+		return 1;
 	}
-	else if (!strcmp(s, "false"))
-	{
-		retval = atoi(s);
-	}
-	return retval;
+	return 0;
 }
 
 int SetBoolValue(int *boolv, char *s)
@@ -518,7 +514,7 @@ int IsNumberString(char *s)
 	return 1;
 }
 
-char *Substring(size_t start, size_t count, char *str)
+char *Substring(size_t start, size_t count, const char *str)
 {
 	char *new_str = calloc(sizeof(char), count + 1);
 	strncat(new_str, str + start, count);
@@ -606,7 +602,7 @@ int TokCount(char *s, char *delim)
 }
 
 /* ? */
-int TokLastPos(char *s, char *token)
+int TokLastPos(char *s, const char *token)
 {
 
 	int lastpos = -1;
@@ -628,7 +624,7 @@ int TokLastPos(char *s, char *token)
 }
 
 /* ? */
-char *StrLastTok(char *tok, char *char_token)
+char *StrLastTok(char *tok, const char *char_token)
 {
 	if (!tok | !char_token)
 	{
@@ -680,7 +676,7 @@ int TokBackPos(char *s, char *p, char *p2)
 char *GetBaseName(char *file)
 {
 	char *ptr = StrLastTok(file, PATHTOKENS), *pchar = strrchr(ptr, '.'); // Remove the path
-	char *basename = calloc(MAX_PATH, sizeof(char));
+	char *basename = calloc(MAX_PATH + 1, sizeof(char));
 	if (!pchar)
 	{
 		return ptr;
@@ -712,7 +708,7 @@ int strcmptok(char *s, char *short_s, char *tok)
 /* Print tab of set size? */
 char *PrintTab(int tab_count)
 {
-	char *s = calloc(sizeof(char),(tab_count + 1));
+	char *s = calloc(sizeof(char), (tab_count + 1));
 	memset(s, 32, tab_count);
 	return s;
 }
@@ -796,22 +792,20 @@ size_t strcmpcount(char *s1, char *s2)
 int FindString(char *str, char *find)
 {
 	char *ptr = strstr(str, find);
-	return (ptr) ? (ptr - str) : -1;
+	return (ptr) ? (ptr - str) : strlen_n(str);
 }
 
 /* ? */
 // Remove the quotes on a string
-char *RemoveQuotes(char *dest, char *src)
+char *RemoveQuotes(char *s)
 {
-	if (src[0] == '\"' && src[strlen_n(src) - 1] == '\"')
+	size_t len = strlen_n(s);
+	if (s[0] == '\"' && s[len - 1] == '\"')
 	{
-		strncpy_n(dest, src + 1, strlen_n(src) - 2);
+		memmove(s, s + 1, len - 2);
+		s[len] = '\0';
 	}
-	else
-	{
-		strncpy_n(dest, src, strlen_n(src));
-	}
-	return dest;
+	return s;
 }
 
 // Replace a string
@@ -882,14 +876,14 @@ char *strlwr(char *s)
 	return s;
 }
 
-char *InsertStr(char *s1, char *s2, size_t pos, bool allocstring, size_t maxsize)
+char *InsertStr(char *s1, const char *s2, size_t pos, bool allocstring, size_t maxsize)
 {
 	size_t l1 = strlen_n(s1), l2 = strlen_n(s2);
 
 	char *new_str;
 	if (allocstring)
 	{
-		new_str = calloc(l1 + l2 + 10, sizeof(char));
+		new_str = calloc(l1 + l2 + 3, sizeof(char));
 		memcpy(new_str, s1, strlen_n(s1));
 
 		if (!new_str)
@@ -902,11 +896,14 @@ char *InsertStr(char *s1, char *s2, size_t pos, bool allocstring, size_t maxsize
 	{
 		new_str = s1;
 	}
-	if(l1 + l2 < maxsize && !allocstring)
+	if (l1 + l2 < maxsize && !allocstring)
 	{
 		memmove(new_str + pos + l2, new_str + pos, l1);
 		memcpy(new_str + pos, s2, l2);
+	} else {
+		return NULL;
 	}
+	new_str[strlen_n(new_str)] = '\0';
 
 	return new_str;
 }
@@ -984,21 +981,6 @@ char *InsertDeletedRow(File_info *tstack)
 	return tstack->strsave[tstack->ypos];
 }
 
-/* Replace all tabs with 8 spaces and return another string */
-char *RemoveTab(char *s)
-{
-	char *new_s = malloc(strlen_n(s) + 1);
-	if (!new_s)
-	{
-		last_known_exception = NEWTRODIT_ERROR_OUT_OF_MEMORY;
-		return NULL;
-	}
-	int tmp;
-
-	new_s = ReplaceString(s, "\t", PrintTab(TAB_WIDE), &tmp);
-	printf("%s", new_s);
-	return new_s;
-}
 /* ========================= END OF STRING MANIPULATION ========================== */
 
 /* =================================== SYSTEM  =================================== */
@@ -1201,7 +1183,7 @@ int YesNoPrompt()
 
 char *rot13(char *s)
 {
-	while(*s)
+	while (*s)
 	{
 		if (isalpha(*s))
 		{
@@ -1296,7 +1278,7 @@ char *ErrorMessage(int err, const char *filename)
 	}
 }
 
-// What is this function?
+// Get error description from dwError, which should be a call to GetLastError()
 LPSTR GetErrorDescription(DWORD dwError)
 {
 	LPSTR lpMsgBuf;
@@ -1497,6 +1479,8 @@ int AllocateBufferMemory(File_info *tstack)
 	tstack->Syntaxinfo.syntax_file = calloc(MAX_PATH, sizeof(char));
 	tstack->Syntaxinfo.separators = calloc(DEFAULT_ALLOC_SIZE, sizeof(char));
 	tstack->Syntaxinfo.comments = calloc(DEFAULT_ALLOC_SIZE, sizeof(char));
+	tstack->Syntaxinfo.enclosing_char = calloc(DEFAULT_ALLOC_SIZE, sizeof(char));
+
 	tstack->Syntaxinfo.syntax_file = "Default syntax highlighting";
 	tstack->Syntaxinfo.num_color = DEFAULT_NUM_COLOR;
 	tstack->Syntaxinfo.capital_color = DEFAULT_CAPITAL_COLOR;
@@ -1511,6 +1495,8 @@ int AllocateBufferMemory(File_info *tstack)
 	tstack->Syntaxinfo.comment_color = DEFAULT_COMMENT_COLOR;
 	tstack->Syntaxinfo.keyword_count = sizeof(keywords) / sizeof(keywords[0]);
 	tstack->Syntaxinfo.comment_count = sizeof(comments) / sizeof(comments[0]);
+	tstack->Syntaxinfo.enclosing_count = sizeof(enclosing) / sizeof(enclosing[0]);
+
 	tstack->Syntaxinfo.keywords = calloc(sizeof(keywords) / sizeof(keywords[0]), sizeof(char *));
 	tstack->Syntaxinfo.comments = calloc(sizeof(comments) / sizeof(comments[0]), sizeof(char *));
 	tstack->Syntaxinfo.color = calloc(sizeof(keywords) / sizeof(keywords[0]), sizeof(int));
@@ -1526,6 +1512,11 @@ int AllocateBufferMemory(File_info *tstack)
 	{
 		tstack->Syntaxinfo.comments[i] = calloc(DEFAULT_ALLOC_SIZE, sizeof(char));
 		tstack->Syntaxinfo.comments[i] = comments[i].keyword;
+	}
+	for (int i = 0; i < sizeof(enclosing) / sizeof(enclosing[0]); i++)
+	{
+		tstack->Syntaxinfo.enclosing_char[i] = calloc(DEFAULT_ALLOC_SIZE, sizeof(char));
+		tstack->Syntaxinfo.enclosing_char[i] = enclosing[i].keyword;
 	}
 
 	tstack->Syntaxinfo.multi_line_comment = false;

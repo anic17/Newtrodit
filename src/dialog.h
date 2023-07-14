@@ -21,8 +21,10 @@
 
 char NEWTRODIT_ERROR_UNKNOWN[] = "Unknown error.";
 char NEWTRODIT_ERROR_CLIPBOARD_COPY[] = "Cannot copy string to clipboard.";
+char NEWTRODIT_ERROR_CLIPBOARD_PASTE[] = "Cannot paste string from clipboard.";
+
 char NEWTRODIT_ERROR_INVALID_XPOS[] = "Invalid X position for cursor.";
-char NEWTRODIT_ERROR_INVALID_YPOS[] = "Invalid Y position for cursor.";
+char NEWTRODIT_ERROR_INVALID_YPOS[] = "Invalid row position.";
 char NEWTRODIT_ERROR_MANUAL_INVALID_LINE[] = "Invalid line (maximum line number is %d)"; // I could use NEWTRODIT_ERROR_INVALID_YPOS but I prefer more specific errors (or messages)
 char NEWTRODIT_ERROR_INVALID_POS_RESET[] = "Invalid position for cursor detected. Resetting coordinates.";
 char NEWTRODIT_ERROR_WINDOW_TOO_SMALL[] = "Console window is too small. Please resize it.";
@@ -50,6 +52,7 @@ char NEWTRODIT_LICENSE_INVALID_LICENSE[] = "Detected an invalid or outdated lice
 char NEWTRODIT_LICENSE_MISSING_LICENSE[] = "License file is missing: ";
 char NEWTRODIT_ERROR_INVALID_FILE_INDEX[] = "Invalid file index. Switching to the first file.";
 char NEWTRODIT_ERROR_NEW_FILE[] = "Failed to open a new file.";
+char NEWTRODIT_ERROR_REDIRECTED_TTY[] = "Newtrodit cannot be redirected to a file.";
 
 
 // Internal errors
@@ -85,6 +88,8 @@ char NEWTRODIT_FS_FOUND_FILES[] = "Showing %d of %d files matching the search pa
 char NEWTRODIT_FS_READONLY_SAVE[] = "Cannot write to a read-only file.";
 char NEWTRODIT_FS_IS_A_DIRECTORY[] = "Is a directory: ";
 char NEWTRODIT_FS_NOT_A_DIRECTORY[] = "Not a directory: %s";
+char NEWTRODIT_FS_NO_FILES_FOUND[] = "No files found matching the specified criteria.";
+
 
 
 char NEWTRODIT_FS_DISK_FULL[] = "Disk is full.";
@@ -96,7 +101,7 @@ char NEWTRODIT_PROMPT_FIND_STRING[] = "String to find: ";
 char NEWTRODIT_PROMPT_FIND_STRING_INSENSITIVE[] = "String to find (case insensitive): ";
 char NEWTRODIT_PROMPT_REPLACE_STRING[] = "String to replace: ";
 char NEWTRODIT_PROMPT_FOPEN[] = "File to open: ";
-char NEWTRODIT_PROMPT_ALREADY_OPEN_TAB[] = "'%s' is already opened in another tab. Do you want to switch to it? (y/n)";
+char NEWTRODIT_PROMPT_ALREADY_OPEN_TAB[] = "'%s' is already open in another tab. Do you want to switch to it? (y/n)";
 
 char NEWTRODIT_PROMPT_GOTO_LINE[] = "Line number: ";
 char NEWTRODIT_PROMPT_GOTO_COLUMN[] = "Column number: ";
@@ -160,14 +165,15 @@ char NEWTRODIT_SHOWING_PREVIOUS_FILE[] = "Showing previous file";
 char NEWTRODIT_SHOWING_NEXT_FILE[] = "Showing next file";
 char NEWTRODIT_SWITCHING_FILE[] = "Switching to file";
 char NEWTRODIT_INFO_NO_FILES_TO_SWITCH[] = "No files to switch to.";
+char NEWTRODIT_CLIPBOARD_COPIED[] = "Path copied to the system's clipboard (%s)";
 
 // Other dialogs
 
 char NEWTRODIT_DIALOG_BOTTOM_HELP[] = "For help, press F1 | ";
-char NEWTRODIT_DIALOG_MANUAL[] = "^X Close help | A-F4 Quit Newtrodit";
+char NEWTRODIT_DIALOG_MANUAL[] = "Ctrl-X Close help | Alt-F4 Quit Newtrodit";
 char NEWTRODIT_DIALOG_MANUAL_TITLE[] = " Newtrodit help";
-char NEWTRODIT_DIALOG_BOTTOM_LOCATE[] = " | Space Next page | ^B Go back | ^D Go to dir | ^X Quit";
-char NEWTRODIT_DIALOG_LOCATE_POS[] = "Showing %d-%d out of %d files ";
+char NEWTRODIT_DIALOG_BOTTOM_LOCATE[] = " | Space Next page | Ctrl-B Go back | Ctrl-D Go to dir | Ctrl-X Quit";
+char NEWTRODIT_DIALOG_LOCATE_POS[] = "Showing %d-%d out of %d files (%llu total bytes)";
 
 
 char NEWTRODIT_DIALOG_ENABLED[] = "Enabled";
@@ -199,3 +205,4 @@ char NEWTRODIT_MACRO_CURRENT_DIR[] = "$DIR";
 char NEWTRODIT_MACRO_CURRENT_EXTENSION[] = "$EXT";
 char NEWTRODIT_MACRO_CURRENT_BASENAME[] = "$BASENAME";
 char NEWTRODIT_MACRO_CURRENT_DRIVE[] = "$DRIVE";
+char NEWTRODIT_SYNTAX_ENCLOSING[] = "$ENCLOSING";
