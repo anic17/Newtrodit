@@ -26,31 +26,24 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
 
  Unlike previous versions, switches can go at any position, before or after file/files.
  If a file is named exactly like a switch, add the prefix './' before the name to avoid Newtrodit interpreting
- it as a switch. Files are loaded in order, but the last file is the one that will be shown.
+ it as a switch. Files are loaded in order, but the last file is the one that will be shown for edition.
  
  [1m[38;2;207;50;68mUsage inside application[0m
 
  [37;113;235;37;1mNavigation[0m
 
- You can use any other raw text editor navigation features. 
- To move between lines and columns, you may use arrow keys. 
- You can see the current cursor position at the bottom left part, 
- where [1mLn[0m means line and [1mCol[0m means column  
 
- [1mEnd[0m and [1mHome[0m, [1mPageUp, [1mPageDown
-
- [37;113;235;37;1mKeybinds[0m
-
- [37;113;235;37;1mKeybinds are written as follows[0m
-
- '[38;2;207;50;68;4m^[0m'     = Control
- '[38;2;207;50;68;4mA-[0m'    = Alt
- '[38;2;207;50;68;4mS-[0m'    = Shift
+ Newtrodit offers navigation features which ease the file editing process.
+ To move between lines and columns, you may use arrow keys. To go to the beginning of a line,
+ use [1mEnd[0m and [1mHome[0m; to jump pages, [1mPageUp[0m and [1mPageDown[0m.
+ The current cursor position is displayed at bottom left part of the screen,
+ where [1mLn[0m means line and [1mCol[0m means column. The percentages indicate the
+ position of the cursor inside the file.
  
  [37;113;235;37;1mNavigation inside the manual[0m
- 
- [38;2;207;50;68;4m^X[0m        = Go back to Newtrodit
- [38;2;207;50;68;4mA-F4[0m      = Exit Newtrodit
+
+ [38;2;207;50;68;4mCtrl-X[0m    = Go back to Newtrodit
+ [38;2;207;50;68;4mAlt-F4[0m    = Exit Newtrodit
  [38;2;207;50;68;4mPageUp[0m    = Go to the previous page
  [38;2;207;50;68;4mPageDown[0m  = Go to the next page
  [38;2;207;50;68;4mUp[0m        = Go to the previous line
@@ -58,71 +51,71 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
 
  [37;113;235;37;1mControl keybindings[0m
 
- [38;2;207;50;68;4m^C[0m        = Copy line to clipboard
- [38;2;207;50;68;4m^D[0m        = Show line content (requires developer mode)
- [38;2;207;50;68;4m^E[0m        = Toggle syntax highlighting
- [38;2;207;50;68;4m^F[0m        = Find string
- [38;2;207;50;68;4m^G[0m        = Go to a line
- [38;2;207;50;68;4m^H[0m        = Replace string
- [38;2;207;50;68;4m^I[0m        = Show information about the currently edited file
- [38;2;207;50;68;4m^L[0m        = Toggle line count
- [38;2;207;50;68;4m^M[0m        = Toggle mouse support
- [38;2;207;50;68;4m^N[0m        = Open a new tab
- [38;2;207;50;68;4m^O[0m        = Open a file
- [38;2;207;50;68;4m^P[0m        = Open command palette
- [38;2;207;50;68;4m^Q[0m        = Exit Newtrodit
- [38;2;207;50;68;4m^R[0m        = Reload the currently edited file from disk
- [38;2;207;50;68;4m^S[0m        = Save file
- [38;2;207;50;68;4m^V[0m        = Paste line
- [38;2;207;50;68;4m^W[0m        = Close current file
- [38;2;207;50;68;4m^X[0m        = Cut line
+ [38;2;207;50;68;4mCtrl-C[0m        = Copy line to clipboard
+ [38;2;207;50;68;4mCtrl-D[0m        = Show line content (requires developer mode)
+ [38;2;207;50;68;4mCtrl-E[0m        = Toggle syntax highlighting
+ [38;2;207;50;68;4mCtrl-F[0m        = Find string
+ [38;2;207;50;68;4mCtrl-G[0m        = Go to a line
+ [38;2;207;50;68;4mCtrl-H[0m        = Replace string
+ [38;2;207;50;68;4mCtrl-I[0m        = Show information about the currently edited file
+ [38;2;207;50;68;4mCtrl-L[0m        = Toggle line count
+ [38;2;207;50;68;4mCtrl-M[0m        = Toggle mouse support
+ [38;2;207;50;68;4mCtrl-N[0m        = Open a new tab
+ [38;2;207;50;68;4mCtrl-O[0m        = Open a file
+ [38;2;207;50;68;4mCtrl-P[0m        = Open command palette
+ [38;2;207;50;68;4mCtrl-Q[0m        = Exit Newtrodit
+ [38;2;207;50;68;4mCtrl-R[0m        = Reload the currently edited file from disk
+ [38;2;207;50;68;4mCtrl-S[0m        = Save file
+ [38;2;207;50;68;4mCtrl-V[0m        = Paste line
+ [38;2;207;50;68;4mCtrl-W[0m        = Close current file
+ [38;2;207;50;68;4mCtrl-X[0m        = Cut line
 
- [38;2;207;50;68;4mS-^A[0m      = Toggle automatic syntax highlighting rules loading
- [38;2;207;50;68;4mS-^C[0m      = Compare files
- [38;2;207;50;68;4mS-^D[0m      = Toggle dev mode
- [38;2;207;50;68;4mS-^E[0m      = Load a syntax highlighting scheme
- [38;2;207;50;68;4mS-^F[0m      = Find string (case insensitive)
- [38;2;207;50;68;4mS-^G[0m      = Go to a column
- [38;2;207;50;68;4mS-^H[0m      = Same as [38;2;207;50;68;4mF1[0m (opens help)
- [38;2;207;50;68;4mS-^K[0m      = Toggles old keybindings (see later)
- [38;2;207;50;68;4mS-^L[0m      = Locate files. See the advanced section for more information.
- [38;2;207;50;68;4mS-^N[0m      = Toggle null character to spaces conversion
- [38;2;207;50;68;4mS-^Q[0m      = Count lines of code and size of all currently open files
- [38;2;207;50;68;4mS-^R[0m      = Reload the settings
- [38;2;207;50;68;4mS-^S[0m      = Save file as
- [38;2;207;50;68;4mS-^T[0m      = Toggle tab to spaces conversion
+ [38;2;207;50;68;4mCtrl-Shift-A[0m      = Toggle automatic syntax highlighting rules loading
+ [38;2;207;50;68;4mCtrl-Shift-C[0m      = Compare files
+ [38;2;207;50;68;4mCtrl-Shift-D[0m      = Toggle dev mode
+ [38;2;207;50;68;4mCtrl-Shift-E[0m      = Load a syntax highlighting scheme
+ [38;2;207;50;68;4mCtrl-Shift-F[0m      = Find string (case insensitive)
+ [38;2;207;50;68;4mCtrl-Shift-G[0m      = Go to a column
+ [38;2;207;50;68;4mCtrl-Shift-H[0m      = Same as [38;2;207;50;68;4mF1[0m (opens help)
+ [38;2;207;50;68;4mCtrl-Shift-K[0m      = Toggles old keybindings (see later)
+ [38;2;207;50;68;4mCtrl-Shift-L[0m      = Locate files. See the advanced section for more information.
+ [38;2;207;50;68;4mCtrl-Shift-N[0m      = Toggle null character to spaces conversion
+ [38;2;207;50;68;4mCtrl-Shift-Q[0m      = Count lines of code and size of all currently open files
+ [38;2;207;50;68;4mCtrl-Shift-R[0m      = Reload the settings
+ [38;2;207;50;68;4mCtrl-Shift-S[0m      = Save file as
+ [38;2;207;50;68;4mCtrl-Shift-T[0m      = Toggle tab to spaces conversion
 
  [37;113;235;37;1mAlt keybindings[0m
 
- [38;2;207;50;68;4mA-End[0m     = Go to the last first non-blank space
- [38;2;207;50;68;4mA-Home[0m    = Go to the beginning of the first non-blank space
+ [38;2;207;50;68;4mAlt-End[0m     = Go to the last first non-blank space
+ [38;2;207;50;68;4mAlt-Home[0m    = Go to the beginning of the first non-blank space
  
- [38;2;207;50;68;4mA-^L[0m      = Convert current line to lowercase
- [38;2;207;50;68;4mA-^N[0m      = Create a new empty file and save it (same as '[38;2;207;50;68;4m^N[0m' and '[38;2;207;50;68;4m^S[0m')
- [38;2;207;50;68;4mA-^R[0m      = Encode/decode line using ROT13 algorithm
- [38;2;207;50;68;4mA-^U[0m      = Convert current line to uppercase
+ [38;2;207;50;68;4mCtrl-Alt-L[0m      = Convert current line to lowercase
+ [38;2;207;50;68;4mCtrl-Alt-N[0m      = Create a new empty file and save it (same as '[38;2;207;50;68;4mCtrl-N[0m' and '[38;2;207;50;68;4mCtrl-S[0m')
+ [38;2;207;50;68;4mCtrl-Alt-R[0m      = Encode/decode line using ROT13 algorithm
+ [38;2;207;50;68;4mCtrl-Alt-U[0m      = Convert current line to uppercase
 
  [37;113;235;37;1mFunction keys keybindings[0m
 
  [38;2;207;50;68;4mF1[0m        = Shows help (manual)
  [38;2;207;50;68;4mF2[0m        = Renames current file (can also be used to move)
- [38;2;207;50;68;4mF3[0m        = Next find occurrence (can only be used after '[38;2;207;50;68;4m^F[0m')
+ [38;2;207;50;68;4mF3[0m        = Next find occurrence (can only be used after '[38;2;207;50;68;4mCtrl-F[0m')
  [38;2;207;50;68;4mF5[0m        = Runs a macro, if a macro hasn't been defined yet, it will run the current file
  [38;2;207;50;68;4mF6[0m        = Adds current date and time
  [38;2;207;50;68;4mF9[0m        = Compiles current file with the specified compiler (default compiler is 'gcc')
  [38;2;207;50;68;4mF10[0m       = Opens containing directory in Windows Explorer
 
- [38;2;207;50;68;4m^F1[0m       = About Newtrodit
- [38;2;207;50;68;4m^F4[0m       = Close current file (same as [38;2;207;50;68;4m^W[0m)
+ [38;2;207;50;68;4mCtrl-F1[0m       = About Newtrodit
+ [38;2;207;50;68;4mCtrl-F4[0m       = Close current file (same as [38;2;207;50;68;4mCtrl-W[0m)
  
- [38;2;207;50;68;4mS-F5[0m      = Defines a macro for the current instance (use 'macro' in settings to set a permanent macro)
- [38;2;207;50;68;4mS-F10[0m     = Opens a terminal instance in current directory
+ [38;2;207;50;68;4mShift-F5[0m      = Defines a macro for the current instance (use 'macro' in settings to set a permanent macro)
+ [38;2;207;50;68;4mShift-F10[0m     = Opens a terminal instance in current directory
 
- [38;2;207;50;68;4mA-F4[0m      = Same as [38;2;207;50;68;4m^X[0m (exits Newtrodit)
+ [38;2;207;50;68;4mAlt-F4[0m      = Same as [38;2;207;50;68;4mCtrl-X[0m (exits Newtrodit)
 
  [37;113;235;37;1mAdvanced keybindings[0m
 
-  [37;113;235;37;1mLocate files [0m([38;2;207;50;68;4mS-^L[0m[37;113;235;37;1m)[0m
+  [37;113;235;37;1mLocate files [0m([38;2;207;50;68;4mCtrl-Shift-L[0m[37;113;235;37;1m)[0m
   
    The function will search for a file only in the current directory.
    Additionally, you can use wildcards to perform an advanced search.
@@ -144,7 +137,7 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
 
      Known issue: Correct file size displaying is limited to 4 GB due to 32-bit integer limitations.
 
-  [37;113;235;37;1mCommand palette ([0m[38;2;207;50;68;4m^P[0m[37;113;235;37;1m)[0m
+  [37;113;235;37;1mCommand palette ([0m[38;2;207;50;68;4mCtrl-P[0m[37;113;235;37;1m)[0m
 
    The command palette allows you to use commands in a Vim-like style instead of keybindings.
    For instance, some functions have multiple ways of being called, either via keybindings or
@@ -152,16 +145,16 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
 
    [37;113;235;37;1mPosition changing commands[0m
 
-   -[1m :n[0m = Go to line number [1mn[0m ([38;2;207;50;68;4m^G[0m[37;113;235;37;1m[0m)
-   -[1m ,n[0m = Go to column number [1mn[0m ([38;2;207;50;68;4mS-^G[0m[37;113;235;37;1m[0m)
+   -[1m :n[0m = Go to line number [1mn[0m ([38;2;207;50;68;4mCtrl-G[0m[37;113;235;37;1m[0m)
+   -[1m ,n[0m = Go to column number [1mn[0m ([38;2;207;50;68;4mCtrl-Shift-G[0m[37;113;235;37;1m[0m)
    -[1m 0[0m  = Go to the first character of the line ([0m[38;2;207;50;68;4mHome[0m[37;113;235;37;1m[0m)
-   -[1m ^[0m  = Go to the first non-whitespace character of the line ([38;2;207;50;68;4mA-Home[0m[37;113;235;37;1m[0m)
+   -[1m Ctrl-[0m  = Go to the first non-whitespace character of the line ([38;2;207;50;68;4mAlt-Home[0m[37;113;235;37;1m[0m)
    -[1m $$[0m  = Go to the last character of the line ([38;2;207;50;68;4mEnd[0m[37;113;235;37;1m[0m)
 
    [37;113;235;37;1mOther commands[0m
 
-   -[1m ?file[0m = Opens filename '[1mfile[0m' ([38;2;207;50;68;4m^O[0m[37;113;235;37;1m[0m)
-   -[1m !file[0m = Saves filename '[1mfile[0m' ([38;2;207;50;68;4m^S[0m[37;113;235;37;1m[0m)
+   -[1m ?file[0m = Opens filename '[1mfile[0m' ([38;2;207;50;68;4mCtrl-O[0m[37;113;235;37;1m[0m)
+   -[1m !file[0m = Saves filename '[1mfile[0m' ([38;2;207;50;68;4mCtrl-S[0m[37;113;235;37;1m[0m)
   
  [37;113;235;37;1mDialogs[0m
  
@@ -251,15 +244,15 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
  [37;113;235;37;1mMultiple tabs[0m
 
  The big new feature introduced in Newtrodit 0.6 are tabs. With this feature, you can open up to
- $T files in the same Newtrodit window, by pressing [38;2;207;50;68;4m^N[0m. Tabs can be inserted or closed in any
+ $T files in the same Newtrodit window, by pressing [38;2;207;50;68;4mCtrl-N[0m. Tabs can be inserted or closed in any
  position, and it will shift the other tabs accordingly.
   
- You can switch between tabs by pressing [38;2;207;50;68;4m^TAB[0m (forward) and [38;2;207;50;68;4mS-^TAB[0m (backward), or
- by using the [1m@n[0m command in the command palette ([38;2;207;50;68;4m^P[0m), where [1mn[0m is the file index.
+ You can switch between tabs by pressing [38;2;207;50;68;4mCtrl-TAB[0m (forward) and [38;2;207;50;68;4mCtrl-Shift-TAB[0m (backward), or
+ by using the [1m@n[0m command in the command palette ([38;2;207;50;68;4mCtrl-P[0m), where [1mn[0m is the file index.
  
  All settings are shared between tabs (e.g: disabling line count will disable it for all open files)
 
- To close a tab, use [38;2;207;50;68;4m^W[0m or either [38;2;207;50;68;4m^F4[0m
+ To close a tab, use [38;2;207;50;68;4mCtrl-W[0m or either [38;2;207;50;68;4mCtrl-F4[0m
 
  [37;113;235;37;1mCode autocompletion[0m
 
@@ -310,19 +303,19 @@ $NEWTRODIT_MANUAL # Newtrodit manual must begin with this line (manual magic num
  Some keybindings can be changed using the [1moldkeybindings[0m setting.
  Here's a list of the replaced keybindings:
 
- [38;2;207;50;68;4m^X[0m --> [38;2;207;50;68;4m^Q[0m (Quit Newtrodit)
- [38;2;207;50;68;4m^K[0m --> [38;2;207;50;68;4m^X[0m (Cut line)
+ [38;2;207;50;68;4mCtrl-X[0m --> [38;2;207;50;68;4mCtrl-Q[0m (Quit Newtrodit)
+ [38;2;207;50;68;4mCtrl-K[0m --> [38;2;207;50;68;4mCtrl-X[0m (Cut line)
 
- If [1moldkeybindings[0m is enabled, both [38;2;207;50;68;4m^X[0m and [38;2;207;50;68;4m^Q[0m map to the same action (Quit Newtrodit)
+ If [1moldkeybindings[0m is enabled, both [38;2;207;50;68;4mCtrl-X[0m and [38;2;207;50;68;4mCtrl-Q[0m map to the same action (Quit Newtrodit)
  
  [37;113;235;37;1mDeveloper mode[0m
 
  Developer mode is a setting made for users who want to use test/debug features on Newtrodit.
  Features of developer mode:
-  - Displaying line content ([38;2;207;50;68;4m^D[0m)
+  - Displaying line content ([38;2;207;50;68;4mCtrl-D[0m)
   - Displaying old and new console size ([38;2;207;50;68;4mF12[0m)
 
- To toggle developer mode, press '[38;2;207;50;68;4mS-^D[0m'
+ To toggle developer mode, press '[38;2;207;50;68;4mCtrl-Shift-D[0m'
 
  [37;113;235;37;1mConfiguration priority[0m
 
