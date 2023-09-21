@@ -11,7 +11,7 @@ After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is ou
 
 ###### Editing a C header file with Newtrodit
 <a href="https://anic17.github.io/Newtrodit/"><img src="../main/res/screenshot_main.png"></img></a>
-#### See the [Newtrodit website](https://anic17.github.io/Newtrodit) for more information
+**See the [Newtrodit website](https://anic17.github.io/Newtrodit) for more information**
 
 ## Features
 - Fast and light
