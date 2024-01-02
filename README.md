@@ -1,4 +1,4 @@
-> **Note**
+> [!NOTE]
 After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is out! Feel free to try it, and remember, all feedback is highly appreciated!
 
 <a href="https://github.com/anic17/Newtrodit"><img src="https://github.com/anic17/Newtrodit/blob/main/res/logo_transp.png" align="right" width="150" height="150" /></a>
@@ -15,7 +15,7 @@ After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is ou
 
 ## Features
 - Fast and light
-- Real time position of cursor
+- Real time cursor position
 - Line numbering (with highlighting of the current line)
 - Highly configurable
 - Various string manipulation functions such as:
@@ -40,8 +40,8 @@ After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is ou
 ## Small history
 ### Why I started to code Newtrodit?
 
-It was at a day when I tried to make a clone of the old MS-DOS EDIT.COM in batch, but in the making I realized it would be really complicated to make it in batch and performance issues were starting to appear.  
-As I was very new to C, it was a challenge to see how good I could recode it, but with more features. The UI slowly changed, having a blue background before and lateral bars. I realized I wanted to make my own editor and not just a clone, and that's why today I'm continuing to develop Newtrodit.
+It was a day when I tried to make a clone of the old MS-DOS EDIT.COM in batch, but in the making, I realized it would be complicated to make it in batch, and performance issues were starting to appear.  
+As I was very new to C, it was a challenge to see how well I could recode it, but with more features. The UI slowly changed, having a blue background and lateral bars. I realized I wanted to make my editor and not just a clone, and that's why today I'm continuing to develop Newtrodit.
 The name "Newtrodit" comes from 3 words: _neutron_ (hence the atom logo), _edit_, and _new_.
 
 ## Building
@@ -55,18 +55,18 @@ Or if you prefer using GCC:
 Newtrodit is compatible with OSes starting from Windows XP, but you can enable a small support for Windows 95/98/ME by changing the `_NEWTRODIT_OLD_SUPPORT` constant to **1** in [`newtrodit_core.h`](src/win32/newtrodit_core_win.h#L44).  However, this isn't recommended for regular builds, as the compiled executable will lack some features such as UTF-8 file reading.
 
 ## Bug reports
-To report a bug, feel free to create an issue explaining the bug and the way to get it. Contribution is highly appreciated as Newtrodit is still on beta, so there's a bunch of bugs needing to be fixed.
+To report a bug, feel free to create an issue explaining the bug and the way to get it. Contribution is highly appreciated as Newtrodit is still in beta, so there are a bunch of bugs that need to be fixed.
 
 ## Contributing
 If you want to contribute to Newtrodit, fork the project and create a pull request with the changes you want to do, describing the changes you made.
 
 ## Documentation
 To get information about the usage of Newtrodit, press F1 at Newtrodit or run `newtrodit --help`  
-The documentation shows contains everything you need to know to use Newtrodit. If you have any questions, contact me on <a href="https://discord.gg/J628dBqQgb" style="text-decoration: none">Discord</a>.
+The documentation contains everything you need to know to use Newtrodit. If you have any questions, contact me on <a href="https://discord.gg/J628dBqQgb" style="text-decoration: none">Discord</a>.
 
 ## Configuration
 
-Newtrodit offers some configuration capabilities by editing the file `newtrodit.config`, with the purpose of customizing the editor as per your preferences. The file format is INI-like.All the information required can be found on the documentation, with an example configuration file. Keep in mind that incorrectly modifying Newtrodit's settings can lead to unexpected issues.  
+Newtrodit offers some configuration capabilities by editing the file `newtrodit.config`, with the purpose of customizing the editor as per your preferences. The file format is INI-like. All the information required can be found in the documentation, with an example configuration file. Keep in mind that incorrectly modifying Newtrodit's settings can lead to unexpected issues.  
 For an example configuration file, you can see an [example](newtrodit.config) of a configuration file.
 
 ## Contact
@@ -77,12 +77,12 @@ Join the Newtrodit development channel on Discord!
 Newtrodit will be released in a short time, but you can compile using <a href="https://bellard.org/tcc/" style="text-decoration: none">TCC</a> and running the script [`make.bat`](../main/make.bat)
 Or you can run the binaries inside the [`bin`](../main/bin/) directory.
 
-Meanwhile, you can enjoy the 0.6 release candidate 1 version! Keep in mind that is has some known issues which have to be fixed. See more in the [security readme file](../main/SECURITY.md).
+Meanwhile, you can enjoy the 0.6 release candidate 1 version! Keep in mind that it has some known issues which have to be fixed. See more in the [security readme file](../main/SECURITY.md).
 
 
 ## Newtrodit-LCL
 
-Newtrodit Linux Compatibility Layer (aka Newtrodit-LCL) is, as the name says, a compatibility layer to run Newtrodit on Linux natively. It is currently being developed by **[@ZackeryRSmith](https://github.com/ZackeryRSmith)** and myself (anic17). Newtrodit-LCL will be released when Newtrodit 0.6 (the actual reelase) comes out, which shouldn't take long.
+Newtrodit Linux Compatibility Layer (aka Newtrodit-LCL) is, as the name says, a compatibility layer to run Newtrodit on Linux natively. It is currently being developed by **[@ZackeryRSmith](https://github.com/ZackeryRSmith)** and myself (anic17). Newtrodit-LCL will be released when Newtrodit 0.6 (the actual release) comes out, which shouldn't take long.
 
 <br />
 <a name="contributors"></a>
@@ -100,7 +100,7 @@ Newtrodit Linux Compatibility Layer (aka Newtrodit-LCL) is, as the name says, a 
 
 <hr>
 
-###### Copyright &copy; 2023 anic17 Software
+###### Copyright &copy; 2024 anic17 Software
 
 <!-- 
 View counter 
