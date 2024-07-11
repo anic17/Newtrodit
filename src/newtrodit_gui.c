@@ -1,392 +1,403 @@
-/*
-	Newtrodit: A console text editor
-	Copyright (c) 2021-2023 anic17 Software
 
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <https://www.gnu.org/licenses/>
-
-*/
-
-int SelectPrint(File_info *tstack, size_t yps);
-
-void TopHelpBar()
+/* void TopHelpBar()
 {
-	int xs = XSIZE;
-
-	SetColor(fg_color);
-	ClearPartial(0, 0, xs, 1);
-	printf("%.*s", xs, NEWTRODIT_DIALOG_MANUAL_TITLE);
-	SetColor(bg_color);
-	return;
+    SetColor(fg_color);
+    ClearPartial(0, 0, ed.xsize, 1);
+    printf("%.*s", ed.xsize, NEWTRODIT_DIALOG_MANUAL_TITLE);
+    SetColor(bg_color);
+    return;
 }
 
 void BottomHelpBar()
 {
-	SetColor(fg_color);
-	PrintBottomString(NEWTRODIT_DIALOG_MANUAL);
-	SetColor(bg_color);
+    SetColor(fg_color);
+    PrintBottomString(NEWTRODIT_DIALOG_MANUAL);
+    SetColor(bg_color);
+    return;
+}
+ */
+
+void newtrodit_name_load()
+{
+
+    set_color(title_font_color);
+    set_color(title_bg_color);
+    clear_partial(0, 0, ed.xsize, 1);
+    printf(" Newtrodit %s\n", newtrodit_version);
+}
+
+int center_text(char *text, int yps) // Algorithm: (ed.xsize / 2) - (len / 2)
+{
+
+    int center_text = (ed.xsize / 2) - (utf8len_n(text) / 2);
+    gotoxy(center_text, yps);
+    int pos = wrapSize - utf8len_n(text);
+    if (pos < 0)
+    {
+        pos = abs(pos);
+    }
+
+    printf("%.*s", pos, text);
+    return center_text;
+}
+
+void display_file_type(File *tstack)
+{
+    int x = ed.xsize - utf8len_n(tstack->language) - 2;
+    gotoxy(x, 0);
+    fputs(tstack->language, stdout);
+}
+
+void display_bottom_bar(char* status)
+{
+    gotoxy(0, ed.ysize - 1);
+    fputs((status != NULL) ? status : NEWTRODIT_DIALOG_BOTTOM_HELP, stdout);
+}
+
+void print_message(const char *str, ...)
+{
+    
+	va_list args;
+	va_start(args, str);
+	char *printbuf = calloc(ed.xsize + 1, sizeof(char));
+	vsnprintf(printbuf, ed.xsize + 1, str, args);
+	clear_partial(0, ed.ysize-1, ed.xsize, 1);
+	gotoxy(0, ed.ysize-1);
+    printf(str, printbuf    );
+	//printf("%.*s", ed.xsize, printbuf); // Don't get out of the buffer
+	free(printbuf);
+	va_end(args);
 	return;
 }
-
-int SetWrapSize()
+/* 
+void print_message(const char *str, ...)
 {
-	lineCount ? (wrapSize = XSIZE - 1 - Tab_stack[file_index].linecount_wide) : (wrapSize = XSIZE - 1);
+    va_list args;
+    va_start(args, str);
+    
+    va_list argscopy;
+    va_copy(argscopy, args);
 
-	(wrapSize < 0) ? wrapSize = 0 : wrapSize; // Check if wrapSize is negative
-	return wrapSize;
+    va_end(argscopy);
+
+    char *printbuf = calloc(ed.xsize+1, sizeof(char));
+    vsnprintf(printbuf, ed.xsize + 1, str, args);
+    va_end(args);
+
+	clear_partial(0, ed.ysize-1, ed.xsize, 1);
+	gotoxy(0, ed.ysize-1);
+
+    // Do something with printbuf, e.g., print it
+    printf("%ls", printbuf);
+
+    free(printbuf);
+}
+ */
+
+void display_cursor_pos(File *tstack, char* status)
+{
+    size_t len = 0;
+    if(!status)
+    
+        len =   utf8len_n(NEWTRODIT_DIALOG_BOTTOM_HELP);
+    else 
+        len = utf8len_n(status);
+    
+    clear_partial(len, ed.ysize, ed.xsize - len, 1);
+    size_t linecount_zero = false;
+    if (fullCursorInfoDisplay)
+    {
+        if (!tstack->linecount)
+        {
+            linecount_zero = 1;
+        }
+        printf(longPositionDisplay ? "Line %zu/%zu (%zu%%), Column %zu/%zu (%zu%%)" : "Ln %zu/%zu (%zu%%), Col %zu/%zu (%zu%%)", tstack->ypos, tstack->linecount + linecount_zero, 100 * tstack->ypos / (tstack->linecount + linecount_zero), tstack->uxpos + 1, tstack->line[_ypos]->ulen + 1, (size_t)100 * (tstack->uxpos) / (!tstack->line[_ypos]->ulen ? 1 : tstack->line[_ypos]->ulen));
+    }
+    else
+    {
+        printf(longPositionDisplay ? "Line %zu, Column %zu" : "Ln %zu, Col %zu", tstack->ypos, tstack->uxpos + 1); // +1 because it's zero indexed
+    }
 }
 
-int CenterText(char *text, int yps) // Algorithm: (XSIZE / 2) - (len / 2)
+void display_status(File *tstack, char* status_msg)
 {
-	if (!text)
-	{
-		WriteLogFile("%s", NEWTRODIT_INTERNAL_EXPECTED_NULL);
-		return 0;
-	}
-	SetColor(fg_color);
-	int center_text = (XSIZE / 2) - (strlen_n(text) / 2);
-	gotoxy(center_text, yps);
-	int pos = wrapSize - strlen_n(text);
-	if (pos < 0)
-	{
-		pos = abs(pos);
-	}
-
-	printf("%.*s", pos, text);
-	SetColor(bg_color);
-	return center_text;
+    display_bottom_bar(status_msg);
+    display_cursor_pos(tstack, status_msg);
 }
 
-int DisplayTabIndex(File_info *tstack)
+
+void load_line_count(File *tstack)
 {
-
-	if (open_files > 1)
-	{
-		int pos = (XSIZE / 2) + (strlen_n(StrLastTok(tstack->filename, PATHTOKENS)) / 2) + (strlen_n(StrLastTok(tstack->filename, PATHTOKENS)) % 2) + 1; // Center text and add a space
-		gotoxy(pos, 0);
-
-		SetColor(fg_color);
-
-		printf("(%d/%d)", file_index + 1, open_files);
-		SetColor(bg_color);
-	}
-	return 1;
+    if (ed.lineNumbers)
+    {
+        set_color(line_number_bg_color);
+        set_color(line_number_font_color);
+        clear_partial(0, 1, tstack->linenumber_wide, tstack->display_end - tstack->display_start);
+        for(size_t i = tstack->display_start; i < tstack->display_end; i++)
+        {
+            printf("%zu\n", i+1);
+        }
+        set_color(bg_color);
+        set_color(fg_color);
+    }
 }
 
-void DisplayFileType()
+void load_all_newtrodit(File *tstack, char* status)
 {
-	SetColor(fg_color);
-	size_t len = strlen_n(Tab_stack[file_index].language);
-	char *disp_ptr = calloc(len + DEFAULT_ALLOC_SIZE, sizeof(char));
-	if (!strcmp(Tab_stack[file_index].language, DEFAULT_LANGUAGE))
-	{
-		strncpy_n(disp_ptr, Tab_stack[file_index].language, len);
-	}
-	else
-	{
-		snprintf(disp_ptr, len + DEFAULT_ALLOC_SIZE, "File type: %s", Tab_stack[file_index].language);
-	}
-	gotoxy(XSIZE - strlen_n(disp_ptr) - 2, 0); // XSIZE - strlen_n(nl_type) - 2
-	fputs(disp_ptr, stdout);
-	free(disp_ptr);
-	SetColor(bg_color);
+    clear_screen();
+    newtrodit_name_load();
+    center_text(tstack->filename, 0);
+    display_file_type(tstack);
+    set_color(fg_color);
+    set_color(bg_color);
+    display_status(tstack, status);
+    load_line_count(tstack);
+    gotoxy(tstack->linenumber_wide+tstack->linenumber_padding, 1);
 }
 
-void ShowFindMenu()
-{
-	SetColor(bg_color);
-	ClearPartial(0, BOTTOM, XSIZE, 1);
 
-	SetColor(fg_color);
-	fputs("F3", stdout);
-	SetColor(bg_color);
-	fputs(": Next occurrence | ", stdout);
-	SetColor(fg_color);
-	fputs("F4", stdout);
-	SetColor(bg_color);
-	fputs(": Toggle case sensitive | ", stdout);
-	SetColor(fg_color);
-	fputs("F5", stdout);
-	SetColor(bg_color);
-	fputs(": Only match full words | ", stdout);
-	SetColor(fg_color);
-	fputs("ESC", stdout);
-	SetColor(bg_color);
-	fputs(": Quit", stdout);
-	if (!findInsensitive && !matchWholeWord)
-	{
-		fputs(" (No modifiers)", stdout);
-	}
-	else
-	{
-		fputs(" (", stdout);
-		if (findInsensitive)
-		{
-			printf("Case-insensitive");
-		}
-		if (matchWholeWord)
-		{
-			if (findInsensitive)
-			{
-				fputs(", ", stdout);
-			}
-			fputs("Whole words", stdout);
-		}
-		fputs(")", stdout);
-	}
-}
-
-void ShowBottomMenu()
-{
-	PrintBottomString(NEWTRODIT_DIALOG_BOTTOM_HELP);
-	return;
-}
-
-void SetCursorSettings(int visible, int size)
+void set_cursor_settings(int visible, int size)
 {
 #ifdef _WIN32
-	HANDLE Cursor = GetStdHandle(STD_OUTPUT_HANDLE);
-	CONSOLE_CURSOR_INFO info;
-	info.dwSize = size;
-	info.bVisible = visible;
-	SetConsoleCursorInfo(Cursor, &info);
+    HANDLE Cursor = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO info;
+    info.dwSize = size;
+    info.bVisible = visible;
+    SetConsoleCursorInfo(Cursor, &info);
 #else
-	/* 	info.dwSize = size;
-		info.bVisible = visible; */
+    /* 	info.dsize = size;
+        info.bVisible = visible; */
 
-	// Set cursor size
-	if (size > 50)
-	{
-		printf("\x1B[\x31 q"); // Blinking block
-	}
-	else
-	{
-		printf("\x1B[\x33 q"); // Blinking underline
-	}
+    // Set cursor size
+    if (size > 50)
+    {
+        printf("\x1B[\x31 q"); // Blinking block
+    }
+    else
+    {
+        printf("\x1B[\x33 q"); // Blinking underline
+    }
 
-	// Set cursor visibility
-	if (visible)
-	{
-		printf("\x1B[?25h");
-	}
-	else
-	{
-		printf("\x1B[?25l");
-	}
+    // Set cursor visibility
+    if (visible)
+    {
+        printf("\x1B[?25h");
+    }
+    else
+    {
+        printf("\x1B[?25l");
+    }
 #endif
 }
 
-void NewtroditNameLoad()
+/* void UpdateTitle(File *tstack)
 {
-	SetColor(0x70);
-	ClearPartial(0, 0, XSIZE, 1);
-	printf(" Newtrodit %s", newtrodit_version);
-	SetColor(0x07);
+    if (tstack->is_saved)
+    {
+        tstack->fullpath = utf8dup(FullPath(tstack->filename));
+    }
+    if (tstack->is_modified)
+    {
+        SetTitle("Newtrodit - %s (Modified)", (fullPathTitle && tstack->is_saved && !tstack->is_untitled) ? tstack->fullpath : tstack->filename);
+    }
+    else
+    {
+        SetTitle("Newtrodit - %s", (fullPathTitle && tstack->is_saved && !tstack->is_untitled) ? tstack->fullpath : tstack->filename);
+    }
+} */
+
+int yes_no_prompt(bool default_yes)
+{
+    return tolower(getch_n()) == (default_yes ? 'y' : 'n');
 }
 
-void DisplayCursorPos(File_info *tstack)
+void quit_newtrodit(File *tstack)
 {
-	int cursorvis = GetConsoleInfo(CURSOR_VISIBLE);
-	SetCursorSettings(false, GetConsoleInfo(CURSOR_SIZE));
-	size_t len = strlen_n(NEWTRODIT_DIALOG_BOTTOM_HELP);
-	ClearPartial(len, BOTTOM, XSIZE - len, 1);
-	bool linecount_zero = false;
-	if (fullCursorInfoDisplay)
-	{
-		if (!tstack->linecount)
-		{
-			linecount_zero = true;
-		}
-		size_t linelen = NoLfLen(tstack->strsave[tstack->ypos]);
-		printf(longPositionDisplay ? "Line %d/%d (%d%%), Column %d/%d (%d%%)" : "Ln %d/%d (%d%%), Col %d/%d (%u%%)", tstack->ypos, tstack->linecount + linecount_zero, 100 * tstack->ypos / (tstack->linecount + linecount_zero), tstack->xpos + 1, linelen + 1, (size_t)100 * (tstack->xpos) / (!linelen ? 1 : linelen));
-	}
-	else
-	{
-		printf(longPositionDisplay ? "Line %d, Column %d" : "Ln %d, Col %d", tstack->ypos, tstack->xpos + 1); // +1 because it's zero indexed
-	}
-	SetCursorSettings(cursorvis, GetConsoleInfo(CURSOR_SIZE));
+    if(tstack->file_flags & IS_MODIFIED)
+    {
+        print_message(NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
+        if(!yes_no_prompt(false))
+        {
+            save_file(tstack, tstack->filename, !!(tstack->file_flags & IS_UNTITLED)); // tstack->file_flags &~ IS_SAVED isn't needed due to being redundant
+        }
+    }
+    print_message(NEWTRODIT_PROMPT_QUIT);
+    if(yes_no_prompt(true))
+    {
+        end_editor();
+        exit(1);
+    }
+    ed.dirty = true;
 }
 
-void LoadAllNewtrodit()
+/* char *TypingFunction(int min_ascii, int max_ascii, int max_len, char *oldbuf)
 {
-	SetCursorSettings(false, GetConsoleInfo(CURSOR_SIZE)); // Hide cursor to reduce flickering
-	SetColor(bg_color);
-	SetWrapSize();
+    int chr = 0, index = 0;
+    char *num_str = calloc(max_len + 1, sizeof(utf8_int32_t));
+    int startx = 0, starty = ed.ysize-1, orig_cursize = GetConsoleInfo(CURSOR_SIZE);
+    bool overwrite_mode = false;
+    size_t cblen = 0, n = -1;
+    char *clipboard = NULL;
 
-	switch (clearAllBuffer)
-	{
-	case 0:
-		ClearScreen();
-		break;
-	case 1:
-		ClearPartial(0, 0, XSIZE, YSIZE);
-		break;
-	default: // We will be using this when we want a full screen refresh from outside the load function
-		break;
-	}
-	NewtroditNameLoad();
-	CenterText(StrLastTok(Tab_stack[file_index].filename, PATHTOKENS), 0);
-	DisplayTabIndex(&Tab_stack[file_index]);
-	DisplayFileType();
-	ShowBottomMenu();
+    while (chr != ENTER) // Loop while enter isn't pressed
+    {
+        chr = getch_n();
+        if (chr == ESC)
+        {
+            memset(num_str, 0, max_len); // Empty the string
+            break;
+        }
+        if (chr == BS) // Backspace
+        {
+            if (index > 0)
+            {
+                DeleteChar(num_str, --index);
+                ClearPartial(startx + index, starty, (startx + strlen(num_str) - index) >= XSIZE ? (XSIZE - startx - index) : startx + strlen(num_str) - index, 1);
+                printf("%s", num_str + index);
+                gotoxy(startx + index, starty);
+            }
+            continue;
+        }
 
-	if (lineCount)
-	{
-		DisplayLineCount(&Tab_stack[file_index], YSIZE - 3, 1);
-	}
-	SetCursorSettings(true, GetConsoleInfo(CURSOR_SIZE));
+        if (chr == CTRLC) // ^C (Copy to clipboard)
+        {
+            SetClipboardNewtrodit(num_str);
+            continue;
+        }
+        if (chr == CTRLV) // ^V (Paste from clipboard)
+        {
+            clipboard = GetClipboardNewtrodit(&cblen, true); // Distinguish it from the WinAPI one
+            if (clipboard)
+            {
+                n = 0;
+                while (clipboard[n] >= min_ascii && clipboard[n] <= max_ascii && n < cblen) // Only count until valid characters are found
+                {
+                    n++;
+                }
+                if (strlen_n(num_str) + n <= max_len && n > 0)
+                {
+                    num_str = InsertStr(num_str, clipboard, n, false, max_len);
+                    gotoxy(startx, starty);
+                    fputs(num_str, stdout);
+                    index += n;
+                }
+            }
+            else
+            {
+                printf("\a");
+            }
+            continue;
+        }
 
-	gotoxy(0, 1);
+        if (chr & BIT_ESC0)
+        {
+            switch (chr & ~(BIT_ESC0))
+            {
+            case ALTF4:
+
+                QuitProgram(SInf.color);
+                break;
+            default:
+                break;
+            }
+        }
+        if (chr & BIT_ESC224) // Special keys: 224 (0xE0)
+        {
+            switch (chr & (~BIT_ESC224))
+            {
+            case LEFT:
+                if (index > 0)
+                {
+                    putchar('\b');
+                    index--;
+                }
+                break;
+            case RIGHT:
+                if (index < max_len && num_str[index] != '\0')
+                {
+                    putchar(num_str[index++]);
+                }
+                break;
+            case UP:
+                if (oldbuf != NULL)
+                {
+                    memset(num_str, 0, max_len + 1);
+                    index = strlen_n(oldbuf);
+                    memcpy(num_str, oldbuf, index);
+
+                    ClearPartial(startx, starty, (startx + strlen(num_str)) >= XSIZE ? (XSIZE - startx) : startx + strlen(num_str), 1);
+                    fputs(num_str, stdout);
+                    gotoxy(startx + index, starty);
+                }
+            case DEL:
+                if (index < max_len)
+                {
+                    DeleteChar(num_str, index);
+                    ClearPartial(startx, starty, (startx + strlen(num_str)) >= XSIZE ? (XSIZE - startx) : startx + strlen(num_str), 1);
+                    fputs(num_str, stdout);
+                    gotoxy(startx + index, starty);
+                }
+                break;
+            case INS:
+                overwrite_mode = !overwrite_mode;
+                SetCursorSettings(true, overwrite_mode ? CURSIZE_INS : CURSIZE);
+                break;
+            case HOME:
+                index = 0;
+                gotoxy(startx, starty);
+                break;
+            case END:
+                index = strlen_n(num_str);
+                if (startx + index < XSIZE)
+                {
+                    gotoxy(startx + index, starty);
+                }
+                break;
+            default:
+                break;
+            }
+            continue;
+        }
+        if (chr >= min_ascii && chr <= max_ascii && chr != 0 && ((!overwrite_mode && (strlen(num_str) < max_len && index <= max_len)) || (overwrite_mode && (strlen(num_str) <= max_len && index < max_len)))) // Check if character is a between the range
+        {
+            if (overwrite_mode || index >= strlen(num_str))
+            {
+                num_str[index++] = chr;
+                putchar(chr);
+            }
+            else
+            {
+
+                InsertChar(num_str, chr, index++, false, max_len);
+                gotoxy(startx, starty);
+                fputs(num_str, stdout);
+                gotoxy(startx + index, starty);
+            }
+        }
+        else
+        {
+            if (chr != ENTER)
+            {
+                putchar('\a');
+            }
+        }
+    }
+    SetCursorSettings(cursor_visible, orig_cursize);
+    bool corrupted = false;
+    if (max_ascii > 0x7f)
+        for (int i = 0; i < strlen_n(num_str); i++)
+        {
+            if (num_str[i] < min_ascii || num_str[i] > max_ascii)
+            {
+                corrupted = true;
+                num_str[i] = min_ascii;
+            }
+        }
+    if (corrupted)
+    {
+        PrintBottomString("Warning: Possible stack corruption detected. Please report this issue.");
+        getch_n();
+    }
+    return num_str;
 }
-
-void NewtroditCrash(char *crash_reason, int crash_retval)
-{
-	signal(SIGSEGV, SIG_DFL); // Reset signal handler to avoid infinite crash loops
-	int get_le = 0;
-
-	char *crash_desc;
-
-#ifdef _WIN32
-	get_le = GetLastError();
-
-	crash_desc = (LPSTR)GetErrorDescription(get_le);
-
-#else
-	get_le = errno;
-	crash_desc = (char *)GetErrorDescription(get_le);
-
-#endif
-	putchar('\a');
-	crash_desc[strcspn(crash_desc, "\r")] = 0;
-	// LoadAllNewtrodit(); // Just to not have a blank screen and make it scary
-	int errno_temp = errno;
-	if (!errno_temp)
-	{
-		errno_temp = crash_retval;
-	}
-	ClearPartial(0, 1, XSIZE, YSIZE - 1);
-	char *buf = calloc(DEFAULT_ALLOC_SIZE, sizeof(char));
-	snprintf(buf, DEFAULT_ALLOC_SIZE * sizeof(char), "Newtrodit ran into a problem and it crashed. We're sorry.\nPlease report this issue to %s/issues\n\nDebug info:\nerrno: 0x%x (%s)\nGetLastError: 0x%x (%s)\nLast known debug information: %s\n\nProgram information:\nVersion: %s\nBuild date: %s\nCommand line arguments:\n", newtrodit_repository, errno_temp, strerror(errno_temp), get_le, crash_desc, last_known_exception, newtrodit_version, newtrodit_build_date);
-	fputs(buf, stdout);
-	WriteLogFile("%s", buf);
-	for (int i = 0; i < SInf.argc; i++)
-	{
-		printf("%s ", SInf.argv[i]); // Prints the command line arguments
-	}
-
-	snprintf(buf, DEFAULT_ALLOC_SIZE * sizeof(char), "\n\nEditing file '%s', line %d, column %d\nTabs open: %d, current tab: %d\n\nReason: %s\n\nPress enter to exit...\n", Tab_stack[file_index].filename, Tab_stack[file_index].ypos, Tab_stack[file_index].xpos + 1, open_files, file_index + 1, crash_reason);
-	fputs(buf, stdout);
-	WriteLogFile("%s", buf);
-	DisplayCursor(true);
-	getchar();
-	ExitRoutine(crash_retval); // Don't perform any cleanup, just exit
-}
-
-int QuitProgram(int color_quit)
-{
-	if (Tab_stack[file_index].is_modified) // Second condition should never happen
-	{
-		PrintBottomString("%s", NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
-		if (YesNoPrompt())
-		{
-			SaveFile(&Tab_stack[file_index], NULL, false);
-		}
-	}
-
-	PrintBottomString("%s", NEWTRODIT_PROMPT_QUIT);
-
-	if (YesNoPrompt())
-	{
-		SetColor(color_quit);
-		ClearScreen();
-		SetCursorSettings(true, CURSIZE);
-		RestoreConsoleBuffer();
-		ExitRoutine(0);
-	}
-	else
-	{
-		SetColor(bg_color);
-	}
-
-	return 0;
-}
-
-void UpdateTitle(File_info *tstack)
-{
-	if (tstack->is_saved)
-	{
-		tstack->fullpath = strdup(FullPath(tstack->filename));
-	}
-	if (tstack->is_modified)
-	{
-		SetTitle("Newtrodit - %s (Modified)", (fullPathTitle && tstack->is_saved && !tstack->is_untitled) ? tstack->fullpath : tstack->filename);
-	}
-	else
-	{
-		SetTitle("Newtrodit - %s", (fullPathTitle && tstack->is_saved && !tstack->is_untitled) ? tstack->fullpath : tstack->filename);
-	}
-}
-
-void print_line(char *line, size_t yps)
-{
-
-	size_t linelen = NoLfLen(line);
-
-	/*  TODO: Add proper selection
-
-		SelectPrint(&Tab_stack[file_index], yps);
-	*/
-	printf("%.*s", (linelen > wrapSize) ? wrapSize : linelen, line + Tab_stack[file_index].display_x);
-
-	if (syntaxHighlighting && !syntaxAfterDisplay)
-	{
-		color_line(line, Tab_stack[file_index].display_x, 0, yps);
-	}
-}
-
-int ToggleOption(int *option, char *text, int reloadScreen)
-{
-	*option ^= 1;
-
-	if (reloadScreen)
-	{
-		LoadAllNewtrodit();
-		DisplayFileContent(&Tab_stack[file_index], stdout, 0);
-	}
-
-	if (*option)
-	{
-		PrintBottomString("%s%s", text, NEWTRODIT_DIALOG_ENABLED);
-		WriteLogFile("%s%s", text, NEWTRODIT_DIALOG_ENABLED);
-	}
-	else
-	{
-		PrintBottomString("%s%s", text, NEWTRODIT_DIALOG_DISABLED);
-		WriteLogFile("%s%s", text, NEWTRODIT_DIALOG_DISABLED);
-	}
-	return *option;
-}
-
-void RefreshLine(File_info *tstack, size_t line_num, size_t disp_y, bool clearLine)
-{
-	if (clearLine)
-	{
-		ClearPartial(lineCount ? tstack->linecount_wide : 0, disp_y, wrapSize, 1);
-	}
-	else
-	{
-		gotoxy(lineCount ? tstack->linecount_wide : 0, disp_y);
-	}
-
-	print_line(tstack->strsave[line_num], line_num);
-}
+ */
