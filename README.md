@@ -1,5 +1,5 @@
 > [!NOTE]
-After almost a year and a half after the first release, Newtrodit 0.6 rc-1 is out! Feel free to try it, and remember, all feedback is highly appreciated!
+>  Newtrodit is undergoing a complete code rework, which will significantly enhance its performance, cross-compatibility, support for 24-bit RGB colors, memory management, and large file handling. Additionally, it will offer full Unicode support! 
 
 <a href="https://github.com/anic17/Newtrodit"><img src="https://github.com/anic17/Newtrodit/blob/main/res/logo_transp.png" align="right" width="150" height="150" /></a>
 
