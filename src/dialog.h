@@ -23,7 +23,7 @@ char NEWTRODIT_ERROR_UNKNOWN[] = "Unknown error.";
 char NEWTRODIT_ERROR_CLIPBOARD_COPY[] = "Cannot copy string to clipboard.";
 char NEWTRODIT_ERROR_CLIPBOARD_PASTE[] = "Cannot paste string from clipboard.";
 
-char NEWTRODIT_ERROR_INVALID_XPOS[] = "Invalid X position for cursor.";
+char NEWTRODIT_ERROR_INVALID_XPOS[] = "Invalid X cursor position.";
 char NEWTRODIT_ERROR_INVALID_YPOS[] = "Invalid row position.";
 char NEWTRODIT_ERROR_MANUAL_INVALID_LINE[] = "Invalid line (maximum line number is %d)"; // I could use NEWTRODIT_ERROR_INVALID_YPOS but I prefer more specific errors (or messages)
 char NEWTRODIT_ERROR_INVALID_POS_RESET[] = "Invalid position for cursor detected. Resetting coordinates.";
@@ -48,8 +48,6 @@ char NEWTRODIT_ERROR_TOO_MANY_FILES_OPEN[] = "Too many files open.";
 char NEWTRODIT_ERROR_CANNOT_OPEN_DEVICE[] = "Cannot open device file: ";
 char NEWTRODIT_ERROR_CONSOLE_HANDLE[] = "Cannot get console handle.";
 char NEWTRODIT_ERROR_UNKNOWN_COMMAND[] = "Unknown command: '%s'";
-char NEWTRODIT_LICENSE_INVALID_LICENSE[] = "Detected an invalid or outdated license file.";
-char NEWTRODIT_LICENSE_MISSING_LICENSE[] = "License file is missing: ";
 char NEWTRODIT_ERROR_INVALID_FILE_INDEX[] = "Invalid file index. Switching to the first file.";
 char NEWTRODIT_ERROR_NEW_FILE[] = "Failed to open a new file.";
 char NEWTRODIT_ERROR_REDIRECTED_TTY[] = "Newtrodit cannot be redirected to a file.";
@@ -75,7 +73,7 @@ char NEWTRODIT_ERROR_INVALID_COLOR[] = "Invalid color. Color range is between 0 
 // File IO error/info dialogs
 char NEWTRODIT_FS_FILE_TOO_LARGE[] = "File too large: ";
 char NEWTRODIT_FS_FILE_OPEN_ERR[] = "Failed to open the file: %s";
-char NEWTRODIT_FS_FILE_SAVE_ERR[] = "Cannot save the file.";
+char NEWTRODIT_FS_FILE_SAVE_ERR[] = "Failed to save the file: %s";
 char NEWTRODIT_FS_FILE_INVALID_NAME[] = "Invalid file name: ";
 char NEWTRODIT_FS_FILE_NAME_TOO_LONG[] = "File name too long: ";
 char NEWTRODIT_FS_FILE_NOT_FOUND[] = "File not found: ";
