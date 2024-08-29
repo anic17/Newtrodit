@@ -71,19 +71,11 @@ typedef int32_t utf8_int32_t;
 extern "C" {
 #endif
 
-#if defined(_MSC_VER)
+
 #define utf8_nonnull
 #define utf8_pure
 #define utf8_restrict __restrict
 #define utf8_weak __inline
-#elif defined(__clang__) || defined(__GNUC__)
-#define utf8_nonnull __attribute__((nonnull))
-#define utf8_pure __attribute__((pure))
-#define utf8_restrict __restrict__
-#define utf8_weak __attribute__((weak))
-#else
-#error Non clang, non gcc, non MSVC compiler found!
-#endif
 
 #ifdef __cplusplus
 #define utf8_null NULL
