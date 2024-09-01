@@ -9,6 +9,7 @@ Color line_number_font_color = {.r = 30, .g = 30, .b = 30, .background = false};
 
 void print_message(const char *str, ...);
 int save_file(File *tstack, char *savefile, bool saveDialog);
+int getch_n();
 
 #include "newtrodit_gui.c"
 

@@ -14,7 +14,7 @@ const char newtrodit_commit[] = ""; // Example commit
 
 char default_filename[MAX_PATH] = "Untitled";
 char default_language[MAX_PATH] = "File";
-char default_newline[] = "\n";
+char default_newline[] = "\r\n";
 
 
 const int MANUAL_BUFFER_X = 300;
@@ -24,8 +24,9 @@ int tab_width = 4;
 int line_number_wide = 4;
 
 // Boolean settings
+int postLoadRenderingDefault = true;
 int convertTabtoSpaces = true;
-int convertNull = true;
+int convertCtrlChars = true;
 int trimLongLines = false;
 int cursorSizeInsert = true;
 int wrapLine = false;
@@ -62,7 +63,7 @@ int c = 0; // Different error/debug codes
     static int multiLineComment = false;
 */
 
-int syntaxHighlighting = true;
+int syntaxHighlighting = false;
 int syntaxAfterDisplay = false; // Display syntax after display
 int allocateNewBuffer = true;
 int topBarMenu = false;

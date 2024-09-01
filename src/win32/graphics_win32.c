@@ -117,7 +117,7 @@ void clear_partial(int x, int y, int width, int height)
 	free(buf);
 }
 
-void get_cols_rows(int *cols, int *rows)
+void get_cols_rows(size_t *cols, size_t *rows)
 {
 	if (hStdout == INVALID_HANDLE_VALUE)
 	{
@@ -128,12 +128,12 @@ void get_cols_rows(int *cols, int *rows)
 	{
 		return;
 	}
-	*cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-	*rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+	*cols = (size_t) csbi.srWindow.Right - csbi.srWindow.Left + 1;
+	*rows = (size_t) csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 }
 
 int alternate_buffer(bool enabled)
 {
-	fputs(enabled ? "\e[?1049h" : "\e[?1049l", stdout);
+	fputs(enabled ? "\033[?1049h" : "\033[?1049l", stdout);
 	return enabled;
 }

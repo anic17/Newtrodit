@@ -72,34 +72,34 @@ void rgb(int r, int g, int b, int l)
 
 void echo_off()
 {
-	struct termios term;
+	/* struct termios term;
 	tcgetattr(1, &term);
 	term.c_lflag &= ~ECHO;
-	tcsetattr(1, TCSANOW, &term);
+	tcsetattr(1, TCSANOW, &term); */
 }
 
 void echo_on()
 {
-	struct termios term;
+	/* struct termios term;
 	tcgetattr(1, &term);
 	term.c_lflag |= ECHO;
-	tcsetattr(1, TCSANOW, &term);
+	tcsetattr(1, TCSANOW, &term); */
 }
 
 void canon_on()
 {
-	struct termios term;
+/* 	struct termios term;
 	tcgetattr(1, &term);
 	term.c_lflag |= ICANON;
 	tcsetattr(1, TCSANOW, &term);
+ */
 }
-
 void canon_off()
 {
-	struct termios term;
+	/* struct termios term;
 	tcgetattr(1, &term);
 	term.c_lflag &= ~ICANON;
-	tcsetattr(1, TCSANOW, &term);
+	tcsetattr(1, TCSANOW, &term); */
 }
 
 void get_cursor(int *X, int *Y)
@@ -153,16 +153,16 @@ void clear_partial(int x, int y, int width, int height)
 	free(buf);
 }
 
-void get_cols_rows(int *cols, int *rows)
+void get_cols_rows(size_t *cols, size_t *rows)
 {
 	struct winsize size;
 	ioctl(1, TIOCGWINSZ, &size);
-	*cols = size.ws_col;
-	*rows = size.ws_row;
+	*cols = (size_t) size.ws_col;
+	*rows = (size_t) size.ws_row;
 }
 
 int alternate_buffer(bool enabled)
 {
-	fputs(enabled ? "\e[?1049h" : "\e[?1049l", stdout);
+	fputs(enabled ? "\033[?1049h" : "\033[?1049l", stdout);
 	return enabled;
 }

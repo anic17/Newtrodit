@@ -41,9 +41,15 @@ char NEWTRODIT_ERROR_INVALID_SYNTAX[] = "Invalid syntax highlighting file: ";
 char NEWTRODIT_ERROR_SYNTAX_RULES[] = "No syntax highlighting rules found.";
 char NEWTRODIT_ERROR_FAILED_PROCESS_START[] = "Failed to start the process: ";
 char NEWTRODIT_ERROR_FAILED_CLOSE_FILE[] = "Failed to close the file '%s'";
+char NEWTRODIT_ERROR_FAILED_CONSOLE_ATTRIB[] = "Failed to retrieve or set the console attributes.";
 
 char NEWTRODIT_ERROR_INVALID_MACRO[] = "Invalid macro: ";
+
 char NEWTRODIT_ERROR_INVALID_UNICODE_SEQUENCE[] = "Invalid Unicode byte sequence.";
+char NEWTRODIT_ERROR_INVALID_UNICODE_POSITION[] = "Invalid Unicode string cursor position.";
+char NEWTRODIT_ERROR_UNSUPPORTED_ENCODING[] = "Unsupported encoding found. Newtrodit only supports UTF-8 encoding.";
+
+
 char NEWTRODIT_ERROR_TOO_MANY_FILES_OPEN[] = "Too many files open.";
 char NEWTRODIT_ERROR_CANNOT_OPEN_DEVICE[] = "Cannot open device file: ";
 char NEWTRODIT_ERROR_CONSOLE_HANDLE[] = "Cannot get console handle.";
@@ -129,6 +135,7 @@ char NEWTRODIT_PROMPT_SECOND_FILE_COMPARE[] = "Second file to compare: ";
 // Informational dialogs
 char NEWTRODIT_NO_ERROR[] = "No error.";
 char NEWTRODIT_FILE_SAVED[] = "File saved successfully.";
+char NEWTRODIT_FILE_OPENED[] = "File opened successfully.";
 char NEWTRODIT_FILE_RELOADED[] = "File reloaded successfully.";
 char NEWTRODIT_NEW_FILE_CREATED[] = "New file created successfully.";
 char NEWTRODIT_FILE_CLOSED[] = "File closed successfully.";
@@ -167,7 +174,7 @@ char NEWTRODIT_CLIPBOARD_COPIED[] = "Path copied to the system's clipboard (%s)"
 
 // Other dialogs
 
-char NEWTRODIT_DIALOG_BOTTOM_HELP[] = "For help, press F1 | ";
+char NEWTRODIT_DIALOG_BOTTOM_HELP[] = "For help, press F1";
 char NEWTRODIT_DIALOG_MANUAL[] = "Ctrl-X Close help | Alt-F4 Quit Newtrodit";
 char NEWTRODIT_DIALOG_MANUAL_TITLE[] = " Newtrodit help";
 char NEWTRODIT_DIALOG_BOTTOM_LOCATE[] = " | Space Next page | Ctrl-B Go back | Ctrl-D Go to dir | Ctrl-X Quit";

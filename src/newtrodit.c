@@ -1,55 +1,38 @@
 #include "newtrodit.h"
-#include "dialog.h"
-#include "globals.h"
 #include "line.h"
+#include "newtrodit_gui.h"
 #include "unicode.c"
 #include "input.h"
-
-
-Editor ed;
-
-File **file;
-
-#include "newtrodit_gui.h"
 #include "fileio.h"
 
-int allocate_buffer(File **tstack)
+void sigsegv_handler()
 {
-    *tstack = calloc(1, sizeof(File));
-    (*tstack)->file_flags = IS_UNTITLED;
-
-    (*tstack)->filename = calloc(MAX_PATH + 1, sizeof(char));
-    memcpy((*tstack)->filename, default_filename, MAX_PATH);
-
-    (*tstack)->fwrite_time = time(NULL);
-    (*tstack)->fread_time = time(NULL);
-    (*tstack)->language = calloc(DEFAULT_ALLOC_SIZE + 1, sizeof(char));
-    memcpy((*tstack)->language, default_language, utf8len_n(default_language));
-    (*tstack)->linenumber_wide = 3;
-    (*tstack)->linenumber_padding = 1;
-    (*tstack)->linecount = 0;
-    (*tstack)->xpos = 0;
-    (*tstack)->ypos = 1;
-    (*tstack)->display_start = 0;
-    (*tstack)->size = 0;
-    (*tstack)->alloc_lines = DEFAULT_ALLOC_LINES;
-    (*tstack)->line = calloc(DEFAULT_ALLOC_LINES, sizeof(Line *));
-    for (size_t i = 0; i < DEFAULT_ALLOC_LINES; i++)
-    {
-        create_line(*tstack, i);
-    }
-
-    (*tstack)->newline = calloc(DEFAULT_ALLOC_SIZE + 1, sizeof(char));
-    memcpy((*tstack)->newline, default_newline, utf8len_n(default_newline));
-
-    (*tstack)->display_end = (*tstack)->ypos;
-
-    return 1;
+    signal(SIGSEGV, sigsegv_handler);
+    alternate_buffer(false);
+    fprintf(stderr, "Fatal Newtrodit exception! (segmentation violation)\nReport this issue to the project's GitHub.");
+    fflush(stdout);
+    exit(errno);
 }
 
 int init_editor()
 {
 
+#ifdef WIN32
+
+    if (!_isatty(_fileno(stdout)) || !_isatty(_fileno(stderr)))
+#else
+    if (!isatty(STDIN_FILENO))
+#endif
+    {
+        /*
+             If for some reason stdout or stderr are still redirected to a file, show an error and quit
+        */
+        fprintf(stderr, "%s", NEWTRODIT_ERROR_REDIRECTED_TTY);
+        exit(1);
+    }
+
+    signal(SIGSEGV, sigsegv_handler);
+    signal(SIGINT, NULL);
     ed.open_files = 1;
     ed.file_index = 0;
     ed.log_file_name = NULL;
@@ -57,6 +40,7 @@ int init_editor()
     ed.useLogFile = false;
     ed.lineNumbers = true;
     ed.dirty = false;
+    ed.displayStatusOnce = false;
     // ed.status_msg = calloc(DEFAULT_ALLOC_SIZE, sizeof(utf8_int32_t));
     ed.status_msg = NULL;
     file = calloc(sizeof(File *), open_files);
@@ -64,19 +48,39 @@ int init_editor()
 #ifdef _WIN32
     hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     hStdin = GetStdHandle(STD_INPUT_HANDLE);
+
+    SetConsoleCtrlHandler(NULL, TRUE);
+    DWORD dwState = 0;
+
+    // GetConsoleMode(hStdin, &dwState);
+    // SetConsoleMode(hStdin, dwState);
+
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
-    system("chcp 65001");
+#else
+    if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
+    {
+        fprintf(stderr, "%s", NEWTRODIT_ERROR_FAILED_CONSOLE_ATTRIB);
+    }
+    /* input modes: no break, no CR to NL, no parity check, no strip char,
+     * no start/stop output control. */
+    orig_termios.c_iflag |= BRKINT | ICRNL | INPCK | ISTRIP | IXON;
+    /* output modes - disable post processing */
+    // raw.c_oflag &= ~(OPOST);
+    /* control modes - set 8 bit chars */
+    orig_termios.c_cflag &= ~(CS8);
+    /* local modes - choing off, canonical off, no extended functions,
+     * no signal chars (^Z,^C) */
+    orig_termios.c_lflag |= ECHO | ICANON | IEXTEN | ISIG;
 #endif
 
     get_cols_rows(&ed.xsize, &ed.ysize);
     vt_settings(true);
     alternate_buffer(true);
 
-    allocate_buffer(&file[ed.file_index]); // Pass the address of the File pointer
+    allocate_buffer(&file[ed.file_index]); // Pass the address of the file pointer
     load_all_newtrodit(file[ed.file_index], NULL);
-    echo_on();
-    canon_on();
+
     return 1;
 }
 
@@ -90,104 +94,245 @@ int end_editor()
 
 int handle_keystrokes(InputUTF8 ch, File *tstack)
 {
+    if (_ypos >= tstack->alloc_lines - 1)
+        change_allocated_lines(tstack, tstack->alloc_lines, tstack->alloc_lines + LINE_Y_INCREASE);
+
+    char *ptr = NULL, *ptr2 = NULL;
+    utf8_int32_t codep = 0;
     if (ch.flags != 0)
     {
         switch (ch.flags)
         {
         case LEFT:
-            if (_xpos > 0)
+            if (_uxpos > 0)
             {
-                _xpos--;
+                previous_char_xpos(tstack->line[_ypos]->str, &_xpos);
+                _uxpos--;
+            }
+            else if (_ypos > 1)
+            {
+                _xpos = tstack->line[--_ypos]->len;
+                _uxpos = tstack->line[_ypos]->ulen;
             }
             break;
         case RIGHT:
-            //        if(tstack->line[_ypos]->bufx[])
-            _xpos++;
+            if (_uxpos < tstack->line[_ypos]->ulen)
+            {
+                next_char_xpos(tstack->line[_ypos]->str, &_xpos);
+                _uxpos++;
+            }
+            else if (_ypos < tstack->linecount)
+            {
+                _xpos = 0;
+                _uxpos = 0;
+                _ypos++;
+            }
             break;
         case DOWN:
-            _ypos++;
-            break;
-        case ENTER:
-            _ypos++;
-            _xpos = 0;
+            if (_ypos <= tstack->linecount)
+            {
+                _ypos++;
+                if (_uxpos > tstack->line[_ypos]->ulen)
+                    _uxpos = tstack->line[_ypos]->ulen;
+                _xpos = utf8getxpos(tstack->line[_ypos]->str, _uxpos);
+            }
 
             break;
         case UP:
             if (_ypos > 1)
             {
                 _ypos--;
+
+                if (_uxpos > tstack->line[_ypos]->ulen)
+                {
+                    _uxpos = tstack->line[_ypos]->ulen;
+                    _xpos = utf8getxpos(tstack->line[_ypos]->str, _uxpos);
+                }
+            }
+            break;
+        case DEL:
+            if (_xpos < tstack->line[_ypos]->len)
+            {
+                ptr = tstack->line[_ypos]->str + _xpos;
+                ptr2 = utf8codepoint(tstack->line[_ypos]->str + _xpos, &codep);
+                if (delete_str(tstack->line[_ypos], _xpos, ptr2 - ptr))
+                    tstack->line[_ypos]->ulen--;
+            }
+            else
+            {
+                /* if (_ypos > 1)
+                {
+                    _ypos--;
+                    tstack->uxpos = tstack->line[_ypos]->ulen;
+                    tstack->xpos = tstack->line[_ypos]->len;
+                    tstack->linecount--;
+                } */
+            }
+            break;
+
+        case CTRLF4:
+        case ALTF4:
+            quit_newtrodit(tstack);
+            break;
+        case 0xc0000043:
+            if (ch.flags & ALT_BITMASK)
+            {
+                printf("Debug initiated crash\n");
+                raise(SIGSEGV);
             }
             break;
         }
     }
-    else if (ch.utf8char != 0)
+    if (ch.utf8char == CTRLI && devMode)
+    {
+        if (ch.flags & SHIFT_BITMASK)
+        {
+            char inbuf[100];
+            gotoxy(0, ed.ysize - 2);
+            printf("Insert hex: ");
+            scanf("%s", inbuf);
+            //(inbuf, sizeof inbuf, stdin);
+            //inbuf[strcspn(inbuf, "\r\n")] = '\0';
+            printf("inserthex ok \"%s\"", inbuf);
+            get_newtrodit_input();
+            display_status(tstack, NULL);
+            display_cursor_pos(tstack, NULL);
+            ch.utf8char = strtol(inbuf, NULL, 16);
+            ch.flags = 0;
+        }
+    }
+
+    if (ch.utf8char != 0)
     {
         switch (ch.utf8char)
         {
         case BS:
             if (_xpos > 0)
             {
-                fputs("\b \b", stdout);
-                _xpos--;
-                _uxpos--;
+                ptr = tstack->line[_ypos]->str + _xpos;
+                ptr2 = utf8rcodepoint(tstack->line[_ypos]->str + _xpos, &codep);
+                if (delete_str(tstack->line[_ypos], _xpos - (ptr - ptr2), ptr - ptr2))
+                {
+                    _xpos -= ptr - ptr2;
+                    _uxpos--;
+                    tstack->line[_ypos]->ulen--;
+                }
+            }
+            else
+            {
+                if (_ypos > 1)
+                {
+                    _ypos--;
+                    tstack->uxpos = tstack->line[_ypos]->ulen;
+                    tstack->xpos = tstack->line[_ypos]->len;
+                    tstack->linecount--;
+                }
+            }
+            break;
+        case ENTER:
+            if (_xpos == tstack->line[_ypos]->len && _ypos + 1 == tstack->linecount)
+            {
+                tstack->linecount++;
+                _ypos++;
+            }
+            else
+            {
+                split_row(tstack, &_xpos, &_ypos);
             }
             break;
         case CTRLS:
-            save_file(tstack, tstack->filename, false);
-            printf("OK");
+            save_file(tstack, tstack->filename, ch.flags & SHIFT_BITMASK); // If Shift is pressed, always display save as dialog
+            break;
+        case CTRLW:
+            close_file(tstack);
+            break;
+        case CTRLO:
+            open_file(tstack);
             break;
         case CTRLQ:
             quit_newtrodit(tstack);
             break;
-        default:
-            if (tstack->linecount == 0)
-                tstack->linecount++;
-            insert_utf8_char(tstack->line[_ypos], ch.utf8char, _xpos);
-                    //gotoxy(_xpos + file[ed.file_index]->linenumber_wide + file[ed.file_index]->linenumber_padding, _ypos);
-            display_char(ch.utf8char, stdout);
-            _xpos += codepoint_len(ch.utf8char);
-            _uxpos++;
-            tstack->file_flags |= IS_MODIFIED;
+        case CTRLC:
+            break;
+        case CTRLD:
+            if(ch.flags & SHIFT_BITMASK)
+                toggle_option(&devMode, NEWTRODIT_DEV_TOOLS);
+            else 
+                set_status_msg(true, "%s", tstack->line[_ypos]->str);
             
+            break;
+        case ESC:
+            clear_status_msg();
+            display_status(tstack, NULL);
+            break;
+        default:
+
+            if (ch.utf8char > 31)
+            {
+                if (tstack->linecount == 0)
+                    tstack->linecount++;
+                insert_utf8_char(tstack->line[_ypos], ch.utf8char, _xpos);
+                _xpos += codepoint_len(ch.utf8char);
+                _uxpos++;
+                tstack->file_flags |= IS_MODIFIED;
+            }
+            break;
         }
     }
+    if ((ch.utf8char > 31 || (ch.utf8char == 8 && !(ch.flags & SHIFT_BITMASK))) && !syntaxHighlighting)
+        render_line(tstack, _ypos);
+
     return 0;
 }
 
 int editor_main()
 {
-    InputUTF8 ch = {0};
+    InputUTF8 ch;
     Line *lptr;
+
     while (1)
     {
-        // display_cursor_pos(file[ed.file_index]);
-        gotoxy(_uxpos + file[ed.file_index]->linenumber_wide + file[ed.file_index]->linenumber_padding, _ypos);
 
-        ch = GetNewtroditInput();
-        if (_ypos >= file[ed.file_index]->alloc_lines - 1)
+        set_display_pos(file[ed.file_index]);
+
+        display_line_numbering(file[ed.file_index], _ypos);
+
+        gotoxy(_uwxpos + file[ed.file_index]->linenumber_wide + file[ed.file_index]->linenumber_padding, file[ed.file_index]->scroll_pos.y);
+
+        ch = get_newtrodit_input();
+
+        handle_keystrokes(ch, file[ed.file_index]);
+
+        if (ed.displayStatusOnce && !ed.dirty)
         {
-
-            change_allocated_lines(file[ed.file_index], file[ed.file_index]->alloc_lines, file[ed.file_index]->alloc_lines + LINE_Y_INCREASE);
-            print_message("Increasing line number by %zu", LINE_Y_INCREASE);
-            getchar();
+            clear_status_msg();
+            display_status(file[ed.file_index], ed.status_msg);
+            ed.displayStatusOnce = false;
         }
-        /* if (_xpos >= file[ed.file_index]->line[_ypos]->bufx - 1)
+
+        if (_xpos >= file[ed.file_index]->line[_ypos]->bufx - 1)
         {
             lptr = increase_line(file[ed.file_index]->line[_ypos], LINE_SIZE);
             if (!lptr)
             {
                 print_message(NEWTRODIT_ERROR_ALLOCATION_FAILED);
+                getch();
+                ed.dirty = true;
             }
-        } */
-        handle_keystrokes(ch, file[ed.file_index]);
+        }
+        correct_position(file[ed.file_index]->line[_ypos], &_xpos, &_uxpos);
+
         if (ed.dirty)
         {
             display_status(file[ed.file_index], ed.status_msg);
+            if (ed.displayStatusOnce)
+                ed.dirty = false;
         }
         else
         {
             display_cursor_pos(file[ed.file_index], NULL);
         }
+        display_line(file[ed.file_index], _ypos, file[ed.file_index]->line[_ypos]->rlen);
     }
     return 1;
 }
@@ -197,7 +342,8 @@ int main()
 
     setlocale(LC_ALL, ".utf8");
     init_editor();
-    editor_main();
 
+    editor_main();
+    
     end_editor();
 }
