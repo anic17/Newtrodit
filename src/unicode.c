@@ -58,7 +58,6 @@ size_t codepoint_len(int32_t value)
     return len;
 }
 
-
 int valid_position(char *s, size_t pos)
 {
     utf8_int32_t cp = 0;
@@ -66,32 +65,32 @@ int valid_position(char *s, size_t pos)
     return (unsigned int)cp < 0x10FFFFu; // a UTF-8 codepoint cannot be greater than U+10FFFF
 }
 
-size_t utf8wnlen(const char *s, size_t max_upos)
+size_t utf8wnlen(char *s, size_t max_upos)
 {
-	if (!s)
-		return 0;
-	char *ptr = s;
-	utf8_int32_t cp;
-	size_t wlen = 0, ulen = 0;
-	int cwidth = 0;
-	while (*ptr != '\0' && ulen < max_upos)
-	{
-		ptr = utf8codepoint(ptr, &cp);
-		ulen++;
-		cwidth = mk_wcwidth(cp);
-		if (cwidth < 0)
-			cwidth = 0;
-		wlen += cwidth;
-	}
-	return wlen;
+    if (!s)
+        return 0;
+    char *ptr = s;
+    utf8_int32_t cp;
+    size_t wlen = 0, ulen = 0;
+    int cwidth = 0;
+    while (*ptr != '\0' && ulen < max_upos)
+    {
+        ptr = utf8codepoint(ptr, &cp);
+        ulen++;
+        cwidth = mk_wcwidth(cp);
+        if (cwidth < 0)
+            cwidth = 0;
+        wlen += cwidth;
+    }
+    return wlen;
 }
 
-size_t utf8wlen(const char *s)
+size_t utf8wlen(char *s)
 {
-	return utf8wnlen(s, (size_t)(-1)); // -1 returns the max size of a size_t
+    return utf8wnlen(s, (size_t)(-1)); // -1 returns the max size of a size_t
 }
 
-size_t correct_position(Line *line, size_t *xpos, size_t *uxpos)
+size_t correct_position(Line *line, size_t *xpos, size_t *uxpos, size_t *uwxpos)
 {
     if (!valid_position(line->str, *xpos))
     {
@@ -100,6 +99,7 @@ size_t correct_position(Line *line, size_t *xpos, size_t *uxpos)
         char *backptr = utf8rcodepoint(line->str + *xpos, &cp);
         *xpos -= (&line->str[*xpos] - backptr); // Go back to the previous UTF-8 codepoint
         *uxpos = utf8nlen_n(line->str, *xpos);  // Set the new UTF-8 position
+        *uwxpos = utf8wlen(line->str);
     }
     return *xpos;
 }
@@ -119,25 +119,44 @@ char *int32_to_char_array(utf8_int32_t value, char *output)
     return output;
 }
 
-int codepoint_width(const char  *utf8_char, utf8_int32_t val) { // This function can take either a char string or a UTF-8 int32 code
-
+int codepoint_width(const char *utf8_char, utf8_int32_t val)
+{ // This function can take either a char string or a UTF-8 int32 code
 
     char utf8s[5] = {0};
 
-    
     utf8_int32_t uc = 0;
-    if(!utf8_char)
+    if (!utf8_char)
     {
         int32_to_char_array(val, utf8s);
-            utf8codepoint(utf8s, &uc);
-    } else {
-            utf8codepoint(utf8_char, &uc);
+        utf8codepoint(utf8s, &uc);
     }
-    
+    else
+    {
+        utf8codepoint(utf8_char, &uc);
+    }
 
     int cwidth = mk_wcwidth(uc);
-    if(cwidth < 0) cwidth = 0;
+    if (cwidth < 0)
+        cwidth = 0;
     return cwidth; // Returns 1 for narrow, 2 for wide, or 0 if not printable/blank space
+}
+
+size_t next_char_uwlen(const char *s, size_t xps)
+{
+    utf8_int32_t uc = 0;
+    utf8codepoint(s + xps, &uc);
+        set_status_msg(false, "[U+%04x '%c']", uc, uc);
+
+    return codepoint_width(NULL, uc);
+}
+
+size_t previous_char_uwlen(const char *s, size_t xps)
+{
+    utf8_int32_t uc = 0;
+    utf8rcodepoint(s + xps, &uc);
+            set_status_msg(false, "{U+%04x '%c'}", uc, uc);
+
+    return codepoint_width(NULL, uc);
 }
 
 size_t previous_char_xpos(char *s, size_t *xpos)
@@ -162,7 +181,8 @@ size_t next_char_xpos(char *s, size_t *xpos)
     if (*xpos > 0)
     {
         next_ptr = utf8codepoint(s + *xpos, &cp);
-        *xpos += next_ptr - s;
+        set_status_msg(true, "Increase: %zu, 0x%04x", next_ptr - s, cp);
+        *xpos = next_ptr-s;
         return *xpos;
     }
     return 0;
@@ -175,9 +195,8 @@ size_t utf8getxpos(char *s, size_t uxpos)
     for (size_t i = 0; i < uxpos; i++) // Loop over the UTF-8 string
     {
         if (!valid_position(s, ptr - s))
-        {
             return 0;
-        }
+        
         ptr = utf8rcodepoint(ptr, &out_cp);
     }
     return ptr - s;
@@ -186,9 +205,8 @@ size_t utf8getxpos(char *s, size_t uxpos)
 char *insert_utf8_char(Line *line, int32_t value, size_t index)
 {
     if (line->len + sizeof(int32_t) > line->bufx - 1)
-    {
         increase_line(line, LINE_SIZE);
-    }
+    
     /* size_t len_check[4] = {0};
     for (size_t i = 0; i < 4; i++)
     {
@@ -208,8 +226,8 @@ char *insert_utf8_char(Line *line, int32_t value, size_t index)
 
     memmove(line->str + index + len, line->str + index, line->len - index);
     memcpy(line->str + index, insert_str_utf8, len);
-    line->str[line->len + len + index] = '\0';
-    line->len += utf8size(insert_str_utf8);
+    line->str[line->len + len] = '\0';
+    line->len += len;
     line->ulen++;
     free(insert_str_utf8);
     return line->str;
@@ -219,9 +237,8 @@ char *insert_str(Line *line, char *s2, size_t pos)
 {
     size_t l2 = strlen_n(s2);
     if (line->len + l2 > line->bufx - 1)
-    {
         increase_line(line, l2);
-    }
+    
 
     memmove(line->str + pos + l2, line->str + pos, line->len);
     memcpy(line->str + pos, s2, l2);
@@ -234,9 +251,8 @@ char *insert_str(Line *line, char *s2, size_t pos)
 char *delete_str(Line *line, size_t pos, size_t count)
 {
     if (pos + count > line->len)
-    {
         return NULL;
-    }
+
     memmove(line->str + pos, line->str + pos + count, line->len - (pos + count));
     line->str[line->len - count] = '\0';
     line->len -= count;
@@ -275,7 +291,6 @@ uint16_t swap_le_be(uint16_t num)
     return (num >> 8) | (num << 8);
 }
 
-
 int is_utf16(const unsigned char *s, size_t len, size_t file_len) // Try to detect whether string of text without BOM is UTF-16, and try to guess if it's BE (wchar_t default) or LE (Windows default)
 {
     if (len % 2 || file_len % 2)
@@ -290,7 +305,7 @@ int is_utf16(const unsigned char *s, size_t len, size_t file_len) // Try to dete
         if (s[i] == '\0')
             zero_count_be++;
 
-        if (i + 1 < len && (unsigned char)(s[i] - s[i + 1]) > 0x60)
+        if (i + 1 < len && (unsigned char)(s[i] - s[i + 1]) > 0x60) // 0x60 comes from 0x80 (first non-ASCII character) - 0x20 (space, first printable ASCII character)
             difference_be++;
 
         if (s[i + 1] == '\0')
@@ -344,16 +359,13 @@ int is_utf16(const unsigned char *s, size_t len, size_t file_len) // Try to dete
         // Check if character is above valid Unicode range
         if (utfchar > 0x10FFFF)
             return -1;
-
-        fprintf(stderr, "U+%04X\n", utfchar);
     }
 
     // Return 2 for BE, 1 for LE, 0 for not UTF-16
     return 1 + is_bigendian;
 }
 
-
-size_t utf16_to_utf8(const uint16_t *u16_str, size_t u16_str_len, uint8_t *u8_str, size_t u8_str_size) // Code from Stack Overflow
+size_t utf16_to_utf8(const uint16_t *u16_str, size_t u16_str_len, uint8_t *u8_str, size_t u8_str_size, bool big_endian) // Code from Stack Overflow
 {
     size_t i = 0, j = 0;
 

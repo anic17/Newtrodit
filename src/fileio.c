@@ -61,6 +61,7 @@ int save_file(File *tstack, char *savefile, bool saveDialog)
         if (tmp_filename[0] == '\0')
         {
             load_all_newtrodit(tstack, NULL);
+            display_contents(tstack);
             function_aborted(tstack, tmp_filename);
             return 0;
         }
@@ -71,6 +72,8 @@ int save_file(File *tstack, char *savefile, bool saveDialog)
         {
             load_all_newtrodit(tstack, NULL);
             print_message("%s%s", NEWTRODIT_FS_FILE_INVALID_NAME, tmp_filename);
+                        display_contents(tstack);
+
             getch_n();
             return 0;
         }
@@ -86,11 +89,14 @@ int save_file(File *tstack, char *savefile, bool saveDialog)
     {
         load_all_newtrodit(tstack, NULL);
         print_message(NEWTRODIT_FS_FILE_SAVE_ERR, tmp_filename);
+                    display_contents(tstack);
+
         getch_n();
         return 0;
     }
     set_status_msg(true, NEWTRODIT_FILE_SAVED);
     load_all_newtrodit(tstack, ed.status_msg);
+            display_contents(tstack);
 
     write_file(tstack, savefp);
     fclose(savefp);
@@ -105,7 +111,7 @@ void save_modified_file(File *tstack)
     if (tstack->file_flags & IS_MODIFIED)
     {
         print_message("%s", NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
-        if (yes_no_prompt(true))
+        if (yes_no_prompt())
             save_file(tstack, NULL, false);
     }
 }
@@ -114,7 +120,7 @@ int close_file(File *tstack)
 {
     save_modified_file(tstack);
     print_message("%s", NEWTRODIT_PROMPT_CLOSE_FILE);
-    if (yes_no_prompt(false))
+    if (!yes_no_prompt())
     {
         display_status(tstack, ed.status_msg);
         return 0;
@@ -153,9 +159,29 @@ int close_file(File *tstack)
 int load_file(File *tstack, FILE *fp)
 {
     fseek(fp, 0, SEEK_SET); // Set fp to the beginning of the file pointer
-    char *read_header_bom = calloc(4, sizeof(char));
-    size_t headerbytesread = fread(read_header_bom, sizeof(char), 4, fp);
+    const size_t READ_HEADER = 64;
+    char *read_header_bom = calloc(READ_HEADER, sizeof(char));
+    size_t headerbytesread = fread(read_header_bom, sizeof(char), READ_HEADER, fp);
     tstack->encoding = get_file_encoding(read_header_bom, headerbytesread, &tstack->encoding_bom_len); // Identify the encoding of the file being read, assume UTF-8 if none is detected (could this be an issue?)
+    fseek(fp, 0, SEEK_END);
+    size_t file_size = ftell(fp);
+    if(tstack->encoding == ENCODING_UTF8)
+    {
+        int text_utf16 = is_utf16((unsigned char*) read_header_bom, headerbytesread, file_size);
+        switch(text_utf16 + 1)
+        {
+            case ENCODING_UTF16LE:
+                tstack->encoding = ENCODING_UTF16LE;
+                break;
+            case ENCODING_UTF16BE:
+                tstack->encoding = ENCODING_UTF16BE;
+                break;
+            default:
+                tstack->encoding = ENCODING_UTF8;
+                break;
+        }
+    }
+
     free(read_header_bom);
 
     fseek(fp, tstack->encoding_bom_len, SEEK_SET); // Start reading the file after the BOM, if present
@@ -183,7 +209,6 @@ int load_file(File *tstack, FILE *fp)
                 if (++nl_idx >= nl_len)
                 {
                     memset(&tstack->line[yps]->str[xps - nl_idx + 1], 0, nl_len - 1);
-                    printf("(\\n)\n");
                     tstack->linecount++;
                     tstack->size += nl_len;
                     xps = 0;
@@ -265,7 +290,7 @@ int load_file(File *tstack, FILE *fp)
 int open_file(File *tstack)
 {
     save_modified_file(tstack);
-    char *tmp_openfile = calloc(sizeof(utf8_int32_t), MAX_PATH + 1);
+    char *tmp_openfile = calloc(MAX_PATH + 1, sizeof(utf8_int32_t));
     print_message(NEWTRODIT_PROMPT_FOPEN);
     fgets(tmp_openfile, MAX_PATH * sizeof(utf8_int32_t), stdin);
     tmp_openfile[utf8cspn(tmp_openfile, "\r\n")] = '\0';

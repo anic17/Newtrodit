@@ -98,11 +98,17 @@ void display_cursor_pos(File *tstack, char *status)
         len += utf8len_n(status);
 
     clear_partial(len, ed.ysize, ed.xsize - len, 1);
+
     if (fullCursorInfoDisplay)
-        printf(longPositionDisplay ? "Line %zu/%zu (%zu%%), Column %zu/%zu (%zu%%)" : "Ln %zu/%zu (%zu%%), Col %zu/%zu (%zu%%)", tstack->ypos, tstack->linecount + !tstack->line[tstack->linecount]->len, 100 * tstack->ypos / (tstack->linecount + !tstack->line[tstack->linecount]->len), tstack->uxpos + 1, tstack->line[_ypos]->ulen + 1, (size_t)100 * (tstack->uxpos) / (!tstack->line[_ypos]->ulen ? 1 : tstack->line[_ypos]->ulen));
+        printf(longPositionDisplay ? "Line %zu/%zu (%zu%%), Column %zu/%zu (%zu%%)" : "Ln %zu/%zu (%zu%%), Col %zu/%zu (%zu%%)", tstack->ypos, tstack->linecount + !tstack->line[tstack->linecount]->len, 100 * tstack->ypos / (tstack->linecount + !tstack->line[tstack->linecount]->len), tstack->xpos + 1, tstack->line[_ypos]->len + 1, (size_t)100 * (tstack->xpos) / (!tstack->line[_ypos]->len ? 1 : tstack->line[_ypos]->len));
     else
-        printf(longPositionDisplay ? "Line %zu, Column %zu" : "Ln %zu, Col %zu", tstack->ypos, tstack->uxpos + 1); // +1 because it's zero indexed
-    
+        printf(longPositionDisplay ? "Line %zu, Column %zu" : "Ln %zu, Col %zu", tstack->ypos, tstack->xpos + 1); // +1 because it's zero indexed
+
+    /*     if (fullCursorInfoDisplay)
+            printf(longPositionDisplay ? "Line %zu/%zu (%zu%%), Column %zu/%zu (%zu%%)" : "Ln %zu/%zu (%zu%%), Col %zu/%zu (%zu%%)", tstack->ypos, tstack->linecount + !tstack->line[tstack->linecount]->len, 100 * tstack->ypos / (tstack->linecount + !tstack->line[tstack->linecount]->len), tstack->uxpos + 1, tstack->line[_ypos]->ulen + 1, (size_t)100 * (tstack->uxpos) / (!tstack->line[_ypos]->ulen ? 1 : tstack->line[_ypos]->ulen));
+        else
+            printf(longPositionDisplay ? "Line %zu, Column %zu" : "Ln %zu, Col %zu", tstack->ypos, tstack->uxpos + 1); // +1 because it's zero indexed
+         */
 }
 
 void display_status(File *tstack, char *status_msg)
@@ -111,15 +117,13 @@ void display_status(File *tstack, char *status_msg)
     display_cursor_pos(tstack, status_msg);
 }
 
-
-void function_aborted(File *tstack, char* status_msg)
+void function_aborted(File *tstack, char *status_msg)
 {
     print_message(NEWTRODIT_FUNCTION_ABORTED);
     getch_n();
     display_status(tstack, status_msg);
     return;
 }
-
 
 void load_line_numbering(File *tstack)
 {
@@ -143,9 +147,9 @@ void display_line_numbering(File *tstack, size_t ypos)
 {
     if (ed.lineNumbers)
     {
-        if ((size_t) (log10(_ypos) + 1) >= tstack->linenumber_wide)
+        if ((size_t)(log10(_ypos) + 1) >= tstack->linenumber_wide)
         {
-            tstack->linenumber_wide = (size_t) (log10(_ypos) + 2);
+            tstack->linenumber_wide = (size_t)(log10(_ypos) + 2);
             load_line_numbering(tstack);
         }
         set_color(line_number_bg_color);
@@ -221,9 +225,22 @@ void set_cursor_settings(int visible, int size)
     }
 } */
 
-int yes_no_prompt(bool default_yes)
+int yes_no_prompt()
 {
-    return tolower(getch_n()) == (default_yes ? 'y' : 'n');
+    while (1)
+    {
+        switch (tolower(getch_n()))
+        {
+        case 'y':
+            return 1;
+            break;
+        case 'n':
+            return 0;
+            break;
+        default:
+            continue;
+        }
+    }
 }
 
 void quit_newtrodit(File *tstack)
@@ -231,11 +248,11 @@ void quit_newtrodit(File *tstack)
     if (tstack->file_flags & IS_MODIFIED)
     {
         print_message(NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
-        if (!yes_no_prompt(false))
+        if (yes_no_prompt())
             save_file(tstack, tstack->filename, !!(tstack->file_flags & IS_UNTITLED)); // tstack->file_flags &~ IS_SAVED isn't needed due to being redundant
     }
     print_message(NEWTRODIT_PROMPT_QUIT);
-    if (yes_no_prompt(true))
+    if (yes_no_prompt())
     {
         end_editor();
         exit(1);
@@ -243,20 +260,62 @@ void quit_newtrodit(File *tstack)
     ed.dirty = true;
 }
 
-
-
 int display_line(File *tstack, size_t linenum, size_t rcount)
 {
     gotoxy(file[ed.file_index]->linenumber_wide + file[ed.file_index]->linenumber_padding, tstack->scroll_pos.y);
-
     fwrite(tstack->line[linenum]->render, rcount < tstack->line[linenum]->rlen ? rcount : tstack->line[linenum]->rlen, sizeof(char), stdout);
     return 0;
 }
 
-int toggle_option(int *option, char* msg)
+int set_scroll(File *tstack)
+{
+    tstack->begin_display.y = tstack->ypos - tstack->scroll_pos.y;
+    if (tstack->begin_display.y < 0)
+        tstack->begin_display.y = 0;
+    if (tstack->begin_display.y > tstack->linecount - tstack->scroll_pos.y)
+        tstack->begin_display.y = tstack->linecount - tstack->scroll_pos.y;
+    if(tstack->begin_display.y == 0 && tstack->ypos < ed.ysize - 3)
+    {
+        tstack->scroll_pos.y = tstack->ypos;
+    }
+    return 0;
+}
+
+int increase_scroll(File *tstack, size_t amount)
+{
+    if (tstack->scroll_pos.y + amount < tstack->linecount)
+    {
+        tstack->scroll_pos.y += amount;
+    }
+    if (tstack->scroll_pos.y >= ed.ysize - 3)
+    {
+        tstack->scroll_pos.y = ed.ysize - 3;
+        tstack->begin_display.y = tstack->linecount - tstack->scroll_pos.y - ed.ysize + 3;
+    }
+
+    set_scroll(tstack);
+    return 0;
+}
+
+int decrease_scroll(File *tstack, size_t amount)
+{
+    if (tstack->scroll_pos.y - amount >= 0)
+    {
+        tstack->scroll_pos.y -= amount;
+    }
+    if(tstack->scroll_pos.y <= 3)
+    {
+        tstack->begin_display.y  -= tstack->scroll_pos.y;
+    }
+    set_scroll(tstack);
+    return 0;
+}
+
+int toggle_option(int *option, char *msg)
 {
     *option ^= 1;
     set_status_msg(false, "%s%s", msg, *option ? NEWTRODIT_DIALOG_ENABLED : NEWTRODIT_DIALOG_DISABLED);
+    return *option;
 }
 
 /* char *TypingFunction(int min_ascii, int max_ascii, int max_len, char *oldbuf)

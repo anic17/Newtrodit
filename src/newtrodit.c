@@ -7,11 +7,11 @@
 
 void sigsegv_handler()
 {
-    signal(SIGSEGV, sigsegv_handler);
+    /* signal(SIGSEGV, sigsegv_handler);
     alternate_buffer(false);
     fprintf(stderr, "Fatal Newtrodit exception! (segmentation violation)\nReport this issue to the project's GitHub.");
     fflush(stdout);
-    exit(errno);
+    exit(errno); */
 }
 
 int init_editor()
@@ -21,13 +21,13 @@ int init_editor()
 
     if (!_isatty(_fileno(stdout)) || !_isatty(_fileno(stderr)))
 #else
-    if (!isatty(STDIN_FILENO))
+    if (!isatty(STDOUT_FILENO))
 #endif
     {
         /*
              If for some reason stdout or stderr are still redirected to a file, show an error and quit
         */
-        fprintf(stderr, "%s", NEWTRODIT_ERROR_REDIRECTED_TTY);
+        fprintf(stderr, "%s\n", NEWTRODIT_ERROR_REDIRECTED_TTY);
         exit(1);
     }
 
@@ -43,7 +43,7 @@ int init_editor()
     ed.displayStatusOnce = false;
     // ed.status_msg = calloc(DEFAULT_ALLOC_SIZE, sizeof(utf8_int32_t));
     ed.status_msg = NULL;
-    file = calloc(sizeof(File *), open_files);
+    file = calloc(open_files, sizeof(File *));
 
 #ifdef _WIN32
     hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -59,9 +59,7 @@ int init_editor()
     SetConsoleOutputCP(CP_UTF8);
 #else
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
-    {
         fprintf(stderr, "%s", NEWTRODIT_ERROR_FAILED_CONSOLE_ATTRIB);
-    }
     /* input modes: no break, no CR to NL, no parity check, no strip char,
      * no start/stop output control. */
     orig_termios.c_iflag |= BRKINT | ICRNL | INPCK | ISTRIP | IXON;
@@ -76,7 +74,7 @@ int init_editor()
 
     get_cols_rows(&ed.xsize, &ed.ysize);
     vt_settings(true);
-    alternate_buffer(true);
+    //alternate_buffer(true);
 
     allocate_buffer(&file[ed.file_index]); // Pass the address of the file pointer
     load_all_newtrodit(file[ed.file_index], NULL);
@@ -107,25 +105,34 @@ int handle_keystrokes(InputUTF8 ch, File *tstack)
             if (_uxpos > 0)
             {
                 previous_char_xpos(tstack->line[_ypos]->str, &_xpos);
+                                _uwxpos -= previous_char_uwlen(tstack->line[_ypos]->str, _xpos);
+
                 _uxpos--;
             }
             else if (_ypos > 1)
             {
                 _xpos = tstack->line[--_ypos]->len;
                 _uxpos = tstack->line[_ypos]->ulen;
+                _uwxpos = utf8wnlen(tstack->line[_ypos]->str, _uxpos);
+                decrease_scroll(tstack, 1);
             }
             break;
         case RIGHT:
             if (_uxpos < tstack->line[_ypos]->ulen)
             {
+
+                _uwxpos += next_char_uwlen(tstack->line[_ypos]->str, _xpos);
                 next_char_xpos(tstack->line[_ypos]->str, &_xpos);
+
                 _uxpos++;
             }
             else if (_ypos < tstack->linecount)
             {
                 _xpos = 0;
                 _uxpos = 0;
+                _uwxpos = 0;
                 _ypos++;
+                increase_scroll(tstack, 1);
             }
             break;
         case DOWN:
@@ -135,6 +142,9 @@ int handle_keystrokes(InputUTF8 ch, File *tstack)
                 if (_uxpos > tstack->line[_ypos]->ulen)
                     _uxpos = tstack->line[_ypos]->ulen;
                 _xpos = utf8getxpos(tstack->line[_ypos]->str, _uxpos);
+                set_status_msg(false, "Down: %zu", utf8wnlen(tstack->line[_ypos]->str, _uxpos));
+                _uwxpos = utf8wnlen(tstack->line[_ypos]->str, _uxpos);
+                increase_scroll(tstack, 1);
             }
 
             break;
@@ -147,6 +157,7 @@ int handle_keystrokes(InputUTF8 ch, File *tstack)
                 {
                     _uxpos = tstack->line[_ypos]->ulen;
                     _xpos = utf8getxpos(tstack->line[_ypos]->str, _uxpos);
+                    _uwxpos = utf8wnlen(tstack->line[_ypos]->str, _uxpos);
                 }
             }
             break;
@@ -188,13 +199,11 @@ int handle_keystrokes(InputUTF8 ch, File *tstack)
         if (ch.flags & SHIFT_BITMASK)
         {
             char inbuf[100];
-            gotoxy(0, ed.ysize - 2);
+            clear_partial(0, ed.ysize - 2, ed.xsize, 1);
             printf("Insert hex: ");
             scanf("%s", inbuf);
             //(inbuf, sizeof inbuf, stdin);
-            //inbuf[strcspn(inbuf, "\r\n")] = '\0';
-            printf("inserthex ok \"%s\"", inbuf);
-            get_newtrodit_input();
+            // inbuf[strcspn(inbuf, "\r\n")] = '\0';
             display_status(tstack, NULL);
             display_cursor_pos(tstack, NULL);
             ch.utf8char = strtol(inbuf, NULL, 16);
@@ -211,9 +220,15 @@ int handle_keystrokes(InputUTF8 ch, File *tstack)
             {
                 ptr = tstack->line[_ypos]->str + _xpos;
                 ptr2 = utf8rcodepoint(tstack->line[_ypos]->str + _xpos, &codep);
+                size_t temp_xpos = previous_char_uwlen(tstack->line[_ypos]->str, _xpos - 1);
+
                 if (delete_str(tstack->line[_ypos], _xpos - (ptr - ptr2), ptr - ptr2))
                 {
+                    // printf("delstr ok %zu: %zu", temp_xpos, _xpos);
+
                     _xpos -= ptr - ptr2;
+                    _uwxpos -= temp_xpos;
+
                     _uxpos--;
                     tstack->line[_ypos]->ulen--;
                 }
@@ -225,20 +240,15 @@ int handle_keystrokes(InputUTF8 ch, File *tstack)
                     _ypos--;
                     tstack->uxpos = tstack->line[_ypos]->ulen;
                     tstack->xpos = tstack->line[_ypos]->len;
+                    tstack->uwxpos = utf8wlen(tstack->line[_ypos]->str);
                     tstack->linecount--;
                 }
             }
             break;
         case ENTER:
-            if (_xpos == tstack->line[_ypos]->len && _ypos + 1 == tstack->linecount)
-            {
-                tstack->linecount++;
-                _ypos++;
-            }
-            else
-            {
-                split_row(tstack, &_xpos, &_ypos);
-            }
+                split_row(tstack, _xpos, &_ypos);
+                increase_scroll(tstack, 1);
+            
             break;
         case CTRLS:
             save_file(tstack, tstack->filename, ch.flags & SHIFT_BITMASK); // If Shift is pressed, always display save as dialog
@@ -255,11 +265,11 @@ int handle_keystrokes(InputUTF8 ch, File *tstack)
         case CTRLC:
             break;
         case CTRLD:
-            if(ch.flags & SHIFT_BITMASK)
+            if (ch.flags & SHIFT_BITMASK)
                 toggle_option(&devMode, NEWTRODIT_DEV_TOOLS);
-            else 
+            else
                 set_status_msg(true, "%s", tstack->line[_ypos]->str);
-            
+
             break;
         case ESC:
             clear_status_msg();
@@ -274,6 +284,7 @@ int handle_keystrokes(InputUTF8 ch, File *tstack)
                 insert_utf8_char(tstack->line[_ypos], ch.utf8char, _xpos);
                 _xpos += codepoint_len(ch.utf8char);
                 _uxpos++;
+                _uwxpos += codepoint_width(NULL, ch.utf8char);
                 tstack->file_flags |= IS_MODIFIED;
             }
             break;
@@ -296,12 +307,16 @@ int editor_main()
         set_display_pos(file[ed.file_index]);
 
         display_line_numbering(file[ed.file_index], _ypos);
-
         gotoxy(_uwxpos + file[ed.file_index]->linenumber_wide + file[ed.file_index]->linenumber_padding, file[ed.file_index]->scroll_pos.y);
 
         ch = get_newtrodit_input();
 
         handle_keystrokes(ch, file[ed.file_index]);
+        if (ed.status_msg == NULL && ed.dirty)
+        {
+            display_bottom_bar(NULL);
+            ed.dirty = false;
+        }
 
         if (ed.displayStatusOnce && !ed.dirty)
         {
@@ -320,7 +335,7 @@ int editor_main()
                 ed.dirty = true;
             }
         }
-        correct_position(file[ed.file_index]->line[_ypos], &_xpos, &_uxpos);
+        correct_position(file[ed.file_index]->line[_ypos], &_xpos, &_uxpos, &_uwxpos);
 
         if (ed.dirty)
         {
@@ -332,6 +347,7 @@ int editor_main()
         {
             display_cursor_pos(file[ed.file_index], NULL);
         }
+        set_scroll(file[ed.file_index]);
         display_line(file[ed.file_index], _ypos, file[ed.file_index]->line[_ypos]->rlen);
     }
     return 1;
@@ -344,6 +360,6 @@ int main()
     init_editor();
 
     editor_main();
-    
+
     end_editor();
 }

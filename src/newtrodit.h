@@ -11,8 +11,8 @@
 #include <string.h>
 #include <time.h>
 #include <wchar.h>
-#include <utf8/utf8.h>
-#include <wcwidth.h>
+#include "../include/utf8/utf8.h"
+#include "../include/wcwidth.h"
 
 #ifdef _WIN32
 #include <conio.h>
@@ -55,7 +55,7 @@ enum unicode_encodings
 };
 
 const char newtrodit_version[] = "1.0";
-const char newtrodit_date[] = "2024/08/25";
+const char newtrodit_date[] = "2024/09/05";
 
 typedef struct Line
 {
@@ -67,6 +67,7 @@ typedef struct Line
 
 	size_t len;	 // Line Length
 	size_t rlen; // Rendered length
+	size_t rnlen; // Rendered length without padding
 
 	size_t ulen; // UTF-8 length
 } Line;
@@ -144,7 +145,7 @@ File **file;
 int end_editor();
 int init_editor();
 Line *create_line(File *tstack, size_t ypos);
-int codepoint_width(const char *utf8_char);
+int codepoint_width(const char *utf8_char, utf8_int32_t val);
 
 #ifdef _WIN32
 #include "win32/graphics_win32.c"
@@ -165,11 +166,27 @@ size_t utf8len_n(const char *s)
 		return 0;
 	return utf8len(s);
 }
+
 size_t utf8nlen_n(const char *s, size_t n)
 {
 	if (!s)
 		return 0;
 	return utf8nlen(s, n);
+}
+
+size_t utf8len_null(char *s, size_t max_bytes) // Get the number of UTF-8 characters in a non-null terminated string with a known byte length
+{
+    if (!s)
+        return 0;
+    char *ptr = s;
+    utf8_int32_t cp=0;
+    size_t ulen = 0;
+    while (*ptr != '\0' && ulen < max_bytes)
+    {
+        ptr = utf8codepoint(ptr, &cp); // Get a pointer to the next codepoint
+        ulen++; // Increase the Unicode character counter
+    }
+    return ulen;
 }
 
 size_t strlen_n(const char *s)
@@ -254,6 +271,12 @@ char *remove_quotes(char *s)
 int trim_message(char *msg, size_t max_len)
 {
 	size_t ulen = utf8len(msg);
+	if (ulen > max_len)
+	{
+		msg[max_len] = '\0';
+		return 1;
+	}
+	return 0;
 }
 
 int set_status_msg(bool display_once, char *msg, ...)
@@ -269,9 +292,6 @@ int set_status_msg(bool display_once, char *msg, ...)
 	vsnprintf(ed.status_msg, copyamount, msg, args);
 	trim_message(ed.status_msg, ed.xsize - (fullCursorInfoDisplay ? 45 : 20));
 
-		printf("{%s}:[%s]", msg, ed.status_msg);
-	getch();
-
 	ed.dirty = true;
 	ed.displayStatusOnce = display_once;
 	return 1;
@@ -283,7 +303,7 @@ int clear_status_msg()
 		free(ed.status_msg);
 
 	ed.status_msg = NULL;
-	ed.dirty = false;
+	ed.dirty = true;
 	return 1;
 }
 
