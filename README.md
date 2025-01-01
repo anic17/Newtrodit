@@ -100,7 +100,7 @@ Newtrodit Linux Compatibility Layer (aka Newtrodit-LCL) is, as the name says, a 
 
 <hr>
 
-###### Copyright &copy; 2024 anic17 Software
+**Copyright &copy; 2025 anic17 Software**
 
 <!-- 
 View counter 
