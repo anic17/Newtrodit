@@ -23,7 +23,7 @@ char NEWTRODIT_ERROR_UNKNOWN[] = "Unknown error.";
 char NEWTRODIT_ERROR_CLIPBOARD_COPY[] = "Cannot copy string to clipboard.";
 char NEWTRODIT_ERROR_CLIPBOARD_PASTE[] = "Cannot paste string from clipboard.";
 
-char NEWTRODIT_ERROR_INVALID_XPOS[] = "Invalid X position for cursor.";
+char NEWTRODIT_ERROR_INVALID_XPOS[] = "Invalid X cursor position.";
 char NEWTRODIT_ERROR_INVALID_YPOS[] = "Invalid row position.";
 char NEWTRODIT_ERROR_MANUAL_INVALID_LINE[] = "Invalid line (maximum line number is %d)"; // I could use NEWTRODIT_ERROR_INVALID_YPOS but I prefer more specific errors (or messages)
 char NEWTRODIT_ERROR_INVALID_POS_RESET[] = "Invalid position for cursor detected. Resetting coordinates.";
@@ -41,15 +41,19 @@ char NEWTRODIT_ERROR_INVALID_SYNTAX[] = "Invalid syntax highlighting file: ";
 char NEWTRODIT_ERROR_SYNTAX_RULES[] = "No syntax highlighting rules found.";
 char NEWTRODIT_ERROR_FAILED_PROCESS_START[] = "Failed to start the process: ";
 char NEWTRODIT_ERROR_FAILED_CLOSE_FILE[] = "Failed to close the file '%s'";
+char NEWTRODIT_ERROR_FAILED_CONSOLE_ATTRIB[] = "Failed to retrieve or set the console attributes.";
 
 char NEWTRODIT_ERROR_INVALID_MACRO[] = "Invalid macro: ";
+
 char NEWTRODIT_ERROR_INVALID_UNICODE_SEQUENCE[] = "Invalid Unicode byte sequence.";
+char NEWTRODIT_ERROR_INVALID_UNICODE_POSITION[] = "Invalid Unicode string cursor position.";
+char NEWTRODIT_ERROR_UNSUPPORTED_ENCODING[] = "Unsupported encoding found. Newtrodit only supports UTF-8 encoding.";
+
+
 char NEWTRODIT_ERROR_TOO_MANY_FILES_OPEN[] = "Too many files open.";
 char NEWTRODIT_ERROR_CANNOT_OPEN_DEVICE[] = "Cannot open device file: ";
 char NEWTRODIT_ERROR_CONSOLE_HANDLE[] = "Cannot get console handle.";
 char NEWTRODIT_ERROR_UNKNOWN_COMMAND[] = "Unknown command: '%s'";
-char NEWTRODIT_LICENSE_INVALID_LICENSE[] = "Detected an invalid or outdated license file.";
-char NEWTRODIT_LICENSE_MISSING_LICENSE[] = "License file is missing: ";
 char NEWTRODIT_ERROR_INVALID_FILE_INDEX[] = "Invalid file index. Switching to the first file.";
 char NEWTRODIT_ERROR_NEW_FILE[] = "Failed to open a new file.";
 char NEWTRODIT_ERROR_REDIRECTED_TTY[] = "Newtrodit cannot be redirected to a file.";
@@ -75,7 +79,7 @@ char NEWTRODIT_ERROR_INVALID_COLOR[] = "Invalid color. Color range is between 0 
 // File IO error/info dialogs
 char NEWTRODIT_FS_FILE_TOO_LARGE[] = "File too large: ";
 char NEWTRODIT_FS_FILE_OPEN_ERR[] = "Failed to open the file: %s";
-char NEWTRODIT_FS_FILE_SAVE_ERR[] = "Cannot save the file.";
+char NEWTRODIT_FS_FILE_SAVE_ERR[] = "Failed to save the file: %s";
 char NEWTRODIT_FS_FILE_INVALID_NAME[] = "Invalid file name: ";
 char NEWTRODIT_FS_FILE_NAME_TOO_LONG[] = "File name too long: ";
 char NEWTRODIT_FS_FILE_NOT_FOUND[] = "File not found: ";
@@ -131,6 +135,7 @@ char NEWTRODIT_PROMPT_SECOND_FILE_COMPARE[] = "Second file to compare: ";
 // Informational dialogs
 char NEWTRODIT_NO_ERROR[] = "No error.";
 char NEWTRODIT_FILE_SAVED[] = "File saved successfully.";
+char NEWTRODIT_FILE_OPENED[] = "File opened successfully.";
 char NEWTRODIT_FILE_RELOADED[] = "File reloaded successfully.";
 char NEWTRODIT_NEW_FILE_CREATED[] = "New file created successfully.";
 char NEWTRODIT_FILE_CLOSED[] = "File closed successfully.";
@@ -169,7 +174,7 @@ char NEWTRODIT_CLIPBOARD_COPIED[] = "Path copied to the system's clipboard (%s)"
 
 // Other dialogs
 
-char NEWTRODIT_DIALOG_BOTTOM_HELP[] = "For help, press F1 | ";
+char NEWTRODIT_DIALOG_BOTTOM_HELP[] = "For help, press F1";
 char NEWTRODIT_DIALOG_MANUAL[] = "Ctrl-X Close help | Alt-F4 Quit Newtrodit";
 char NEWTRODIT_DIALOG_MANUAL_TITLE[] = " Newtrodit help";
 char NEWTRODIT_DIALOG_BOTTOM_LOCATE[] = " | Space Next page | Ctrl-B Go back | Ctrl-D Go to dir | Ctrl-X Quit";
