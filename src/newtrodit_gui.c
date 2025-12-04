@@ -1,3 +1,4 @@
+#include "newtrodit_gui.h"
 
 /* void TopHelpBar()
 {
@@ -68,6 +69,21 @@ void print_message(const char *str, ...)
     return;
 }
 
+
+void display_status(File *tstack, char *status_msg)
+{
+    display_bottom_bar(status_msg);
+    display_cursor_pos(tstack, status_msg);
+}
+
+void function_aborted(File *tstack, char *status_msg)
+{
+    print_message(NEWTRODIT_FUNCTION_ABORTED);
+    getch_n();
+    display_status(tstack, status_msg);
+    return;
+}
+
 int set_display_pos(File *tstack)
 {
     if (tstack->xpos - (ed.lineNumbers ? (tstack->linenumber_wide + tstack->linenumber_padding) : 0) > ed.xsize - 1)
@@ -111,19 +127,6 @@ void display_cursor_pos(File *tstack, char *status)
          */
 }
 
-void display_status(File *tstack, char *status_msg)
-{
-    display_bottom_bar(status_msg);
-    display_cursor_pos(tstack, status_msg);
-}
-
-void function_aborted(File *tstack, char *status_msg)
-{
-    print_message(NEWTRODIT_FUNCTION_ABORTED);
-    getch_n();
-    display_status(tstack, status_msg);
-    return;
-}
 
 void load_line_numbering(File *tstack)
 {
@@ -241,23 +244,6 @@ int yes_no_prompt()
             continue;
         }
     }
-}
-
-void quit_newtrodit(File *tstack)
-{
-    if (tstack->file_flags & IS_MODIFIED)
-    {
-        print_message(NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
-        if (yes_no_prompt())
-            save_file(tstack, tstack->filename, !!(tstack->file_flags & IS_UNTITLED)); // tstack->file_flags &~ IS_SAVED isn't needed due to being redundant
-    }
-    print_message(NEWTRODIT_PROMPT_QUIT);
-    if (yes_no_prompt())
-    {
-        end_editor();
-        exit(1);
-    }
-    ed.dirty = true;
 }
 
 int display_line(File *tstack, size_t linenum, size_t rcount)

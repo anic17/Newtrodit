@@ -1,3 +1,4 @@
+#include "fileio.h"
 
 int check_file(char *filename)
 {
@@ -28,8 +29,6 @@ int valid_filename(char *filename)
     return strpbrk(filename, "*?\"<>|\x1b") == NULL;
 }
 
-
-
 int write_file(File *tstack, FILE *fp)
 {
     size_t nl_len = strlen_n(tstack->newline); // Calculate the length just once and not for every iteration
@@ -37,9 +36,7 @@ int write_file(File *tstack, FILE *fp)
     {
         fwrite(tstack->line[i]->str, sizeof(char), tstack->line[i]->len, fp); // DANGER: This approach is dangerous and may lead to buffer overflows
         if (i < tstack->linecount)
-        {
             fwrite(tstack->newline, sizeof(char), nl_len, fp);
-        }
     }
     return 1;
 }
@@ -72,7 +69,7 @@ int save_file(File *tstack, char *savefile, bool saveDialog)
         {
             load_all_newtrodit(tstack, NULL);
             print_message("%s%s", NEWTRODIT_FS_FILE_INVALID_NAME, tmp_filename);
-                        display_contents(tstack);
+            display_contents(tstack);
 
             getch_n();
             return 0;
@@ -89,14 +86,14 @@ int save_file(File *tstack, char *savefile, bool saveDialog)
     {
         load_all_newtrodit(tstack, NULL);
         print_message(NEWTRODIT_FS_FILE_SAVE_ERR, tmp_filename);
-                    display_contents(tstack);
+        display_contents(tstack);
 
         getch_n();
         return 0;
     }
     set_status_msg(true, NEWTRODIT_FILE_SAVED);
     load_all_newtrodit(tstack, ed.status_msg);
-            display_contents(tstack);
+    display_contents(tstack);
 
     write_file(tstack, savefp);
     fclose(savefp);
@@ -165,20 +162,20 @@ int load_file(File *tstack, FILE *fp)
     tstack->encoding = get_file_encoding(read_header_bom, headerbytesread, &tstack->encoding_bom_len); // Identify the encoding of the file being read, assume UTF-8 if none is detected (could this be an issue?)
     fseek(fp, 0, SEEK_END);
     size_t file_size = ftell(fp);
-    if(tstack->encoding == ENCODING_UTF8)
+    if (tstack->encoding == ENCODING_UTF8)
     {
-        int text_utf16 = is_utf16((unsigned char*) read_header_bom, headerbytesread, file_size);
-        switch(text_utf16 + 1)
+        int text_utf16 = is_utf16((unsigned char *)read_header_bom, headerbytesread, file_size);
+        switch (text_utf16 + 1)
         {
-            case ENCODING_UTF16LE:
-                tstack->encoding = ENCODING_UTF16LE;
-                break;
-            case ENCODING_UTF16BE:
-                tstack->encoding = ENCODING_UTF16BE;
-                break;
-            default:
-                tstack->encoding = ENCODING_UTF8;
-                break;
+        case ENCODING_UTF16LE:
+            tstack->encoding = ENCODING_UTF16LE;
+            break;
+        case ENCODING_UTF16BE:
+            tstack->encoding = ENCODING_UTF16BE;
+            break;
+        default:
+            tstack->encoding = ENCODING_UTF8;
+            break;
         }
     }
 
@@ -300,7 +297,7 @@ int open_file(File *tstack)
     {
         set_status_msg(false, NEWTRODIT_FS_FILE_OPEN_ERR, tmp_openfile);
         load_all_newtrodit(tstack, ed.status_msg);
-            free(tmp_openfile);
+        free(tmp_openfile);
 
         return 0;
     }

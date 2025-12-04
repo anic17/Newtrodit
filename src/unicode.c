@@ -1,6 +1,4 @@
-#ifndef CP_UTF8
-#define CP_UTF8 65001
-#endif
+#include "unicode.h"
 
 int get_file_encoding(char *header, size_t header_size, size_t *p_bom_len)
 {
@@ -145,7 +143,7 @@ size_t next_char_uwlen(const char *s, size_t xps)
 {
     utf8_int32_t uc = 0;
     utf8codepoint(s + xps, &uc);
-        set_status_msg(false, "[U+%04x '%c']", uc, uc);
+    set_status_msg(false, "[U+%04x '%c']", uc, uc);
 
     return codepoint_width(NULL, uc);
 }
@@ -154,35 +152,33 @@ size_t previous_char_uwlen(const char *s, size_t xps)
 {
     utf8_int32_t uc = 0;
     utf8rcodepoint(s + xps, &uc);
-            set_status_msg(false, "{U+%04x '%c'}", uc, uc);
+    set_status_msg(false, "{U+%04x '%c'}", uc, uc);
 
     return codepoint_width(NULL, uc);
 }
 
-size_t previous_char_xpos(char *s, size_t *xpos)
+size_t next_char_xpos(const char *s, size_t *xpos)
 {
     utf8_int32_t cp = 0;
-    char *prev_ptr = s + *xpos;
     if (*xpos > 0)
     {
-        prev_ptr = utf8rcodepoint(s + *xpos, &cp);
-        *xpos = prev_ptr - s;
-        /* printf("pdif: %zu", (prev_ptr-s));
-        getch(); */
+        char *next_ptr = utf8codepoint(s + *xpos, &cp);
+        set_status_msg(true, "Increase: %zu, 0x%04x", next_ptr - s, cp);
+        *xpos = next_ptr - s;
         return *xpos;
     }
     return 0;
 }
 
-size_t next_char_xpos(char *s, size_t *xpos)
+size_t previous_char_xpos(const char *s, size_t *xpos)
 {
     utf8_int32_t cp = 0;
-    char *next_ptr;
     if (*xpos > 0)
     {
-        next_ptr = utf8codepoint(s + *xpos, &cp);
-        set_status_msg(true, "Increase: %zu, 0x%04x", next_ptr - s, cp);
-        *xpos = next_ptr-s;
+        char *prev_ptr = utf8rcodepoint(s + *xpos, &cp);
+        *xpos = prev_ptr - s;
+        /* printf("pdif: %zu", (prev_ptr-s));
+        getch(); */
         return *xpos;
     }
     return 0;
@@ -196,7 +192,7 @@ size_t utf8getxpos(char *s, size_t uxpos)
     {
         if (!valid_position(s, ptr - s))
             return 0;
-        
+
         ptr = utf8rcodepoint(ptr, &out_cp);
     }
     return ptr - s;
@@ -206,7 +202,7 @@ char *insert_utf8_char(Line *line, int32_t value, size_t index)
 {
     if (line->len + sizeof(int32_t) > line->bufx - 1)
         increase_line(line, LINE_SIZE);
-    
+
     /* size_t len_check[4] = {0};
     for (size_t i = 0; i < 4; i++)
     {
@@ -238,7 +234,6 @@ char *insert_str(Line *line, char *s2, size_t pos)
     size_t l2 = strlen_n(s2);
     if (line->len + l2 > line->bufx - 1)
         increase_line(line, l2);
-    
 
     memmove(line->str + pos + l2, line->str + pos, line->len);
     memcpy(line->str + pos, s2, l2);

@@ -1,11 +1,19 @@
+#ifndef GLOBALS_H
+#define GLOBALS_H
+#ifndef MAX_PATH
+    #ifdef _WIN32
+        #define MAX_PATH 260
+    #else
+            #include <linux/limits.h>
+            #define MAX_PATH PATH_MAX-1 // Leave one char for null terminator just in case
+    #endif
+#endif
 
-
-
-char manual_file[MAX_PATH] = "newtrodit.man";
-char settings_file[MAX_PATH] = "newtrodit.config";
-char syntax_dir[MAX_PATH] = "syntax";
-char syntax_ext[MAX_PATH] = ".nwtrd-syntax";
-const char newtrodit_commit[] = ""; // Example commit
+extern char manual_file[MAX_PATH] = "newtrodit.man";
+extern char settings_file[MAX_PATH] = "newtrodit.config";
+extern char syntax_dir[MAX_PATH] = "syntax";
+extern char syntax_ext[MAX_PATH] = ".nwtrd-syntax";
+extern const char newtrodit_commit[] = ""; // Example commit
 
 //const char* autocomplete_double[] = {"{}", "[]", "()", "\"\"", "''"};
 
@@ -195,3 +203,4 @@ static File_lang FileLang[] = {
     {"xm", "XM", 1},                                                           // XML
     {"yml|yam", "YAM", 2},                                                     // YAML
 };
+#endif // GLOBALS_H

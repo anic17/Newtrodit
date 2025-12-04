@@ -1,7 +1,5 @@
-size_t correct_position(Line *line, size_t *xpos, size_t *uxpos, size_t *uwxpos);
-void print_message(const char *str, ...);
-int set_scroll(File *tstack);
-int increase_scroll(File *tstack, size_t amount);
+#include "line.h"
+#include "newtrodit_gui.h"
 
 Line *create_line(File *tstack, size_t ypos)
 {
@@ -231,4 +229,81 @@ int display_contents(File *tstack)
         display_line(tstack, i, tstack->line[i]->rlen);
     }
     return 0;
+}
+
+
+int allocate_buffer(File **tstack)
+{
+	*tstack = calloc(1, sizeof(File));
+	(*tstack)->file_flags = IS_UNTITLED;
+
+	(*tstack)->filename = calloc(MAX_PATH * sizeof(utf8_int32_t) + 1, sizeof(char));
+	memcpy((*tstack)->filename, default_filename, MAX_PATH);
+
+	(*tstack)->fwrite_time = time(NULL);
+	(*tstack)->fread_time = time(NULL);
+	(*tstack)->language = calloc(DEFAULT_ALLOC_SIZE + 1, sizeof(char));
+	memcpy((*tstack)->language, default_language, utf8len_n(default_language));
+	(*tstack)->linenumber_wide = 3;
+	(*tstack)->linenumber_padding = 1;
+	(*tstack)->linecount = 0;
+	(*tstack)->xpos = 0;
+	(*tstack)->ypos = 1;
+	(*tstack)->size = 0;
+	(*tstack)->encoding = ENCODING_UTF8;
+	(*tstack)->encoding_bom_len = 0;
+	(*tstack)->post_load_rendering = true;
+
+	(*tstack)->line = calloc(DEFAULT_ALLOC_LINES, sizeof(Line *));
+
+	for (size_t i = 0; i <= DEFAULT_ALLOC_LINES; i++)
+		create_line(*tstack, i);
+
+	(*tstack)->line[0]->str = " Illegal row number. Report this issue to the GitHub repository."; // If for some reason line 0 is accessed
+
+	(*tstack)->newline = calloc(DEFAULT_ALLOC_SIZE + 1, sizeof(char));
+	memcpy((*tstack)->newline, default_newline, utf8len_n(default_newline));
+
+	return 1;
+}
+
+int free_buffer(File **tstack)
+{
+
+	for (size_t i = 1; i < (*tstack)->alloc_lines; i++)
+	{
+		free((*tstack)->line[i]->render);
+		free((*tstack)->line[i]->str);
+		free((*tstack)->line[i]);
+	}
+
+	// free((*tstack)->line);
+
+	free((*tstack)->newline);
+	free((*tstack)->filename);
+	free((*tstack)->language);
+
+	/*     free((*tstack)->compilerinfo.path);
+		free((*tstack)->compilerinfo.flags);
+		free((*tstack)->compilerinfo.output);
+
+		free((*tstack)->syntaxinfo.syntax_lang);
+		free((*tstack)->syntaxinfo.syntax_file);
+		free((*tstack)->syntaxinfo.separators);
+		free((*tstack)->syntaxinfo.comments);
+
+		for (int i = 0; i < (*tstack)->syntaxinfo.keyword_count; i++)
+		{
+			free((*tstack)->syntaxinfo.keywords[i]);
+		}
+
+		for (int i = 0; i < (*tstack)->syntaxinfo.comment_count; i++)
+		{
+			free((*tstack)->syntaxinfo.comments[i]);
+		}
+
+		free((*tstack)->syntaxinfo.keywords);
+		free((*tstack)->syntaxinfo.color);
+		free((*tstack)->syntaxinfo.comments); */
+	return 1;
 }

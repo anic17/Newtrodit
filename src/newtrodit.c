@@ -1,9 +1,7 @@
+
+#include "dialog.h"
+#include "globals.h"
 #include "newtrodit.h"
-#include "line.h"
-#include "newtrodit_gui.h"
-#include "unicode.c"
-#include "input.h"
-#include "fileio.h"
 
 void sigsegv_handler()
 {
@@ -14,7 +12,7 @@ void sigsegv_handler()
     exit(errno); */
 }
 
-int init_editor()
+int init_editor(int argc, char* argv[])
 {
 
 #ifdef WIN32
@@ -46,8 +44,8 @@ int init_editor()
     file = calloc(open_files, sizeof(File *));
 
 #ifdef _WIN32
-    hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-    hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
 
     SetConsoleCtrlHandler(NULL, TRUE);
     DWORD dwState = 0;
@@ -74,7 +72,7 @@ int init_editor()
 
     get_cols_rows(&ed.xsize, &ed.ysize);
     vt_settings(true);
-    //alternate_buffer(true);
+    // alternate_buffer(true);
 
     allocate_buffer(&file[ed.file_index]); // Pass the address of the file pointer
     load_all_newtrodit(file[ed.file_index], NULL);
@@ -82,12 +80,30 @@ int init_editor()
     return 1;
 }
 
+
 int end_editor()
 {
     alternate_buffer(false);
     echo_on();
     canon_on();
     return 1;
+}
+
+void quit_newtrodit(File *tstack)
+{
+    if (tstack->file_flags & IS_MODIFIED)
+    {
+        print_message(NEWTRODIT_PROMPT_SAVE_MODIFIED_FILE);
+        if (yes_no_prompt())
+            save_file(tstack, tstack->filename, !!(tstack->file_flags & IS_UNTITLED)); // tstack->file_flags &~ IS_SAVED isn't needed due to being redundant
+    }
+    print_message(NEWTRODIT_PROMPT_QUIT);
+    if (yes_no_prompt())
+    {
+        end_editor();
+        exit(1);
+    }
+    ed.dirty = true;
 }
 
 int handle_keystrokes(InputUTF8 ch, File *tstack)
@@ -105,7 +121,7 @@ int handle_keystrokes(InputUTF8 ch, File *tstack)
             if (_uxpos > 0)
             {
                 previous_char_xpos(tstack->line[_ypos]->str, &_xpos);
-                                _uwxpos -= previous_char_uwlen(tstack->line[_ypos]->str, _xpos);
+                _uwxpos -= previous_char_uwlen(tstack->line[_ypos]->str, _xpos);
 
                 _uxpos--;
             }
@@ -246,9 +262,9 @@ int handle_keystrokes(InputUTF8 ch, File *tstack)
             }
             break;
         case ENTER:
-                split_row(tstack, _xpos, &_ypos);
-                increase_scroll(tstack, 1);
-            
+            split_row(tstack, _xpos, &_ypos);
+            increase_scroll(tstack, 1);
+
             break;
         case CTRLS:
             save_file(tstack, tstack->filename, ch.flags & SHIFT_BITMASK); // If Shift is pressed, always display save as dialog
@@ -353,11 +369,11 @@ int editor_main()
     return 1;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
 
     setlocale(LC_ALL, ".utf8");
-    init_editor();
+    init_editor(argc, argv);
 
     editor_main();
 

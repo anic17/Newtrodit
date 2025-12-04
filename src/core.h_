@@ -1,0 +1,169 @@
+#ifndef CORE_H
+#define CORE_H
+#include <ctype.h>
+#include <errno.h>
+#include <locale.h>
+#include <math.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <wchar.h>
+#include "include/wcwidth.h"
+#include "utf8/utf8.h"
+
+#ifdef _WIN32
+#include <conio.h>
+#endif
+
+#ifndef MAX_PATH
+#define MAX_PATH 260
+#endif
+
+#include "dialog.h"
+#include "globals.h"
+
+const int DEFAULT_ALLOC_SIZE = 512;
+const size_t LINE_SIZE = 64;
+const size_t DEFAULT_ALLOC_LINES = 10;
+
+const size_t LINE_Y_INCREASE = 5;
+
+#if !defined ENABLE_VIRTUAL_TERMINAL_PROCESSING || !defined DISABLE_NEWLINE_AUTO_RETURN
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#define DISABLE_NEWLINE_AUTO_RETURN 0x0008
+#endif
+
+enum file_flags_modifier
+{
+	IS_MODIFIED = 1,
+	IS_SAVED = 2,
+	IS_UNTITLED = 4,
+	IS_READONLY = 8,
+};
+
+
+enum unicode_encodings
+{
+	ENCODING_UTF8 = 1,
+	ENCODING_UTF16LE = 2,
+	ENCODING_UTF16BE = 3,
+	ENCODING_UTF8BOM = 4,
+	ENCODING_UTF32LE = 5,
+	ENCODING_UTF32BE = 6,
+};
+
+
+
+const char newtrodit_version[] = "1.0";
+const char newtrodit_date[] = "2024/09/05";
+
+typedef struct Line
+{
+	char *str; // Buffer that contains the line
+	char *render;
+
+	size_t bufx;		// Allocated line size
+	size_t render_bufx; // Allocated render size
+
+	size_t len;	 // Line Length
+	size_t rlen; // Rendered length
+	size_t rnlen; // Rendered length without padding
+
+	size_t ulen; // UTF-8 length
+} Line;
+
+typedef struct Position
+{
+	size_t x;
+	size_t y;
+} Position;
+
+typedef struct Select
+{
+	Position start;
+	Position end;
+	bool is_selected;
+} Select;
+
+typedef struct File
+{
+	char *filename;
+	char *fullpath;
+	char *language; // Language (e.g: PowerShell, C, C++, etc.)
+
+	// File information
+	size_t xpos, ypos;
+	size_t uxpos;  // UTF-8 X position
+	size_t uwxpos; // UTF-8 width position
+
+	Line **line; // Store each line file
+	size_t alloc_lines;
+	size_t linecount;
+	long long size;
+
+	size_t linenumber_wide;
+	size_t linenumber_padding;
+
+	char *newline;
+	unsigned int file_flags;
+
+	unsigned int encoding;
+	size_t encoding_bom_len;
+	bool post_load_rendering;
+
+	time_t fwrite_time;
+	time_t fread_time;
+	Select selection;
+	Position begin_display;
+	Position scroll_pos;
+} File; // File information. This is used to store all the information about the file.
+
+typedef struct Editor
+{
+	size_t xsize, ysize; // Window size
+	int open_files;		 // Number of files open
+	int file_index;		 // Current file index
+
+	char *log_file_name;
+	char *status_msg;
+	bool useLogFile;
+	bool lineNumbers;
+	bool dirty;
+	bool displayStatusOnce;
+
+} Editor; // Editor information
+
+typedef struct Color
+{
+	int r, g, b;
+	bool background;
+} Color;
+
+Editor ed;
+File **file;
+
+int end_editor();
+int init_editor();
+Line *create_line(File *tstack, size_t ypos);
+int codepoint_width(const char *utf8_char, utf8_int32_t val);
+
+#ifdef _WIN32
+#include "win32/graphics_win32.h"
+const char PATHDELIMS[] = "\\/"; // Set the path delimiters for Windows and Linux
+#else
+#include "linux/graphics_linux.h	"
+const char PATHDELIMS[] = "/";
+#endif
+
+#define _xpos file[ed.file_index]->xpos
+#define _ypos file[ed.file_index]->ypos
+#define _uxpos file[ed.file_index]->uxpos
+#define _uwxpos file[ed.file_index]->uwxpos
+
+
+#endif // CORE_H

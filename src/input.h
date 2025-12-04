@@ -1,3 +1,12 @@
+#ifndef INPUT_H
+#define INPUT_H
+
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#endif
+#include "unicode.h"
+
 #ifndef _O_U16TEXT
 #define _O_U16TEXT 0x20000
 #endif
@@ -24,7 +33,6 @@ enum CONTROL_CODES
   BS = 0x08,
   ENTER = 0x0d,
   CTRLENTER = 0x0a,
-  
 
   CTRLA = 0x01,
   CTRLB = 0x02,
@@ -462,12 +470,12 @@ enum CONTROL_CODES
   CTRLALTY = 0xa0064d80,
   CTRLALTZ = 0xa0068d80,
 };
-#endif
+#endif // _WIN32
 
 #ifdef _WIN32
-#include <io.h>
-#include <fcntl.h>
-#include "win32/input_win32.c"
+#include "win32/input_win32.h"
 #else
-#include "linux/input_linux.c"
-#endif
+#include "linux/input_linux.h"
+#endif // _WIN32
+
+#endif // INPUT_H
